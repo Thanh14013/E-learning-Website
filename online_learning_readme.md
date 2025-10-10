@@ -880,65 +880,65 @@ backend/
 │   │   └── jwt.js                # JWT config
 │   │
 │   ├── models/
-│   │   ├── User.js
-│   │   ├── UserProfile.js
-│   │   ├── Course.js
-│   │   ├── Chapter.js
-│   │   ├── Lesson.js
-│   │   ├── Progress.js
-│   │   ├── Quiz.js
-│   │   ├── Question.js
-│   │   ├── QuizAttempt.js
-│   │   ├── Discussion.js
-│   │   ├── Comment.js
-│   │   ├── LiveSession.js
-│   │   ├── Notification.js
-│   │   └── Analytics.js
+│   │   ├── user.model.js
+│   │   ├── userProfile.model.js
+│   │   ├── course.model.js
+│   │   ├── chapter.model.js
+│   │   ├── lesson.model.js
+│   │   ├── progress.model.js
+│   │   ├── quiz.model.js
+│   │   ├── question.model.js
+│   │   ├── quizAttempt.model.js
+│   │   ├── discussion.model.js
+│   │   ├── comment.model.js
+│   │   ├── liveSession.model.js
+│   │   ├── notification.model.js
+│   │   └── analytics.model.js
 │   │
 │   ├── controllers/
-│   │   ├── authController.js
-│   │   ├── userController.js
-│   │   ├── courseController.js
-│   │   ├── chapterController.js
-│   │   ├── lessonController.js
-│   │   ├── progressController.js
-│   │   ├── quizController.js
-│   │   ├── discussionController.js
-│   │   ├── sessionController.js
-│   │   ├── notificationController.js
-│   │   └── analyticsController.js
+│   │   ├── auth.controller.js
+│   │   ├── user.controller.js
+│   │   ├── course.controller.js
+│   │   ├── chapter.controller.js
+│   │   ├── lesson.controller.js
+│   │   ├── progress.controller.js
+│   │   ├── quiz.controller.js
+│   │   ├── discussion.controller.js
+│   │   ├── session.controller.js
+│   │   ├── notification.controller.js
+│   │   └── analytics.controller.js
 │   │
 │   ├── routes/
-│   │   ├── authRoutes.js
-│   │   ├── userRoutes.js
-│   │   ├── courseRoutes.js
-│   │   ├── chapterRoutes.js
-│   │   ├── lessonRoutes.js
-│   │   ├── progressRoutes.js
-│   │   ├── quizRoutes.js
-│   │   ├── discussionRoutes.js
-│   │   ├── sessionRoutes.js
-│   │   ├── notificationRoutes.js
-│   │   └── analyticsRoutes.js
+│   │   ├── auth.routes.js
+│   │   ├── user.routes.js
+│   │   ├── course.routes.js
+│   │   ├── chapter.routes.js
+│   │   ├── lesson.routes.js
+│   │   ├── progress.routes.js
+│   │   ├── quiz.routes.js
+│   │   ├── discussion.routes.js
+│   │   ├── session.routes.js
+│   │   ├── notification.routes.js
+│   │   └── analytics.routes.js
 │   │
 │   ├── middleware/
 │   │   ├── auth.js               # JWT verification
 │   │   ├── authorize.js          # Role-based access
 │   │   ├── upload.js             # Multer config
 │   │   ├── validation.js         # Input validation
-│   │   ├── errorHandler.js       # Error handling
+│   │   ├── error.handler.js       # Error handling
 │   │   └── rateLimiter.js        # Rate limiting
 │   │
 │   ├── services/
-│   │   ├── emailService.js       # SendGrid email
-│   │   ├── uploadService.js      # Cloudinary upload
-│   │   └── notificationService.js # Notification logic
+│   │   ├── email.service.js       # SendGrid email
+│   │   ├── upload.service.js      # Cloudinary upload
+│   │   └── notification.service.js # Notification logic
 │   │
 │   ├── socket/
-│   │   ├── discussionHandler.js  # Discussion events
-│   │   ├── sessionHandler.js     # Video call events
-│   │   ├── notificationHandler.js # Notification events
-│   │   └── progressHandler.js    # Progress events
+│   │   ├── discussion.handler.js  # Discussion events
+│   │   ├── session.handler.js     # Video call events
+│   │   ├── notification.handler.js # Notification events
+│   │   └── progress.handler.js    # Progress events
 │   │
 │   ├── utils/
 │   │   ├── validators.js         # Validation helpers
