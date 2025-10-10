@@ -12,6 +12,7 @@
 - [API Endpoints](#-api-endpoints)
 - [Socket.IO Events](#-socketio-events)
 - [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+- [Cài đặt và Chạy](#-cài-đặt-và-chạy)
 
 ---
 
@@ -32,6 +33,7 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 ## 🛠 CÔNG NGHỆ SỬ DỤNG
 
 ### Backend
+
 - **Node.js** - JavaScript runtime
 - **Express.js** - Web framework
 - **MongoDB Atlas** - Cloud database
@@ -39,6 +41,7 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 - **WebRTC** - Video call P2P
 
 ### Frontend
+
 - **React** - UI library
 - **React Router** - Navigation
 - **Context API / Redux** - State management
@@ -46,11 +49,13 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 - **Socket.IO Client** - Real-time client
 
 ### Third-party Services
+
 - **Cloudinary** - Media storage (images, videos)
 - **SendGrid** - Email service
 - **JWT** - Authentication
 
 ### DevOps
+
 - **MongoDB Atlas** - Database hosting
 - **Vercel/Netlify** - Frontend deployment
 - **Heroku/Railway** - Backend deployment
@@ -109,6 +114,7 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 ### 1️⃣ **Authentication & Authorization Module** 🔐
 
 **Chức năng:**
+
 - Đăng ký, đăng nhập, đăng xuất
 - JWT-based authentication
 - Phân quyền: Admin, Teacher, Student
@@ -116,11 +122,13 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 - Email verification
 
 **Tech Stack:**
+
 - `bcryptjs` - Hash mật khẩu
 - `jsonwebtoken` - JWT tokens
 - `SendGrid` - Gửi email xác thực
 
 **Key Features:**
+
 - Access token (15 phút) + Refresh token (7 ngày)
 - Secure httpOnly cookies
 - Password strength validation
@@ -131,6 +139,7 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 ### 2️⃣ **User Management Module** 👥
 
 **Chức năng:**
+
 - Quản lý profile người dùng
 - Upload avatar
 - Xem lịch sử học tập
@@ -138,10 +147,12 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 - Admin: Quản lý tất cả users
 
 **Tech Stack:**
+
 - `Multer` - Upload files
 - `Cloudinary` - Lưu trữ avatar
 
 **Key Features:**
+
 - CRUD operations cho user profile
 - Image optimization và resize
 - Role-based access control
@@ -151,6 +162,7 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 ### 3️⃣ **Course Management Module** 📚
 
 **Chức năng:**
+
 - Tạo, sửa, xóa khóa học (Teacher)
 - Quản lý Chapters và Lessons
 - Upload thumbnail, tài liệu
@@ -159,15 +171,18 @@ Hệ thống học trực tuyến toàn diện với các tính năng:
 - Đánh giá và review
 
 **Tech Stack:**
+
 - `Multer` - Upload media
 - `Cloudinary` - Storage
 
 **Database Structure:**
+
 ```
 Course → Chapters → Lessons → Media/Resources
 ```
 
 **Key Features:**
+
 - Hierarchical course structure
 - Drag-and-drop reordering
 - Rich text editor cho description
@@ -178,6 +193,7 @@ Course → Chapters → Lessons → Media/Resources
 ### 4️⃣ **Lesson Content & Media Module** 🎥
 
 **Chức năng:**
+
 - Upload video bài giảng
 - Video streaming
 - Upload tài liệu (PDF, PPT, DOCX)
@@ -185,11 +201,13 @@ Course → Chapters → Lessons → Media/Resources
 - Resume từ vị trí đã xem
 
 **Tech Stack:**
+
 - `Cloudinary Video` - Video hosting & streaming
 - `Multer` - File upload
 - Adaptive bitrate streaming
 
 **Key Features:**
+
 - Video player controls
 - Playback speed adjustment
 - Thumbnail generation
@@ -201,6 +219,7 @@ Course → Chapters → Lessons → Media/Resources
 ### 5️⃣ **Quiz & Assessment Module** ✅
 
 **Chức năng:**
+
 - Tạo quiz với nhiều loại câu hỏi
 - Multiple choice, True/False, Essay
 - Thời gian làm bài
@@ -209,12 +228,14 @@ Course → Chapters → Lessons → Media/Resources
 - Thống kê kết quả
 
 **Question Types:**
+
 - Multiple Choice (4 options)
 - True/False
 - Fill in the Blank
 - Essay (manual grading)
 
 **Key Features:**
+
 - Question bank system
 - Random question order
 - Passing score threshold
@@ -226,6 +247,7 @@ Course → Chapters → Lessons → Media/Resources
 ### 6️⃣ **Discussion Forum Module** 💬
 
 **Chức năng:**
+
 - Tạo chủ đề thảo luận
 - Comment và reply
 - Like posts
@@ -234,9 +256,11 @@ Course → Chapters → Lessons → Media/Resources
 - Search và filter
 
 **Tech Stack:**
+
 - `Socket.IO` - Real-time updates
 
 **Key Features:**
+
 - Nested comments (threaded)
 - Rich text formatting
 - Mention users (@username)
@@ -248,6 +272,7 @@ Course → Chapters → Lessons → Media/Resources
 ### 7️⃣ **Video Call Module (WebRTC)** 📹
 
 **Chức năng:**
+
 - Video call 1-on-1 hoặc group
 - Share screen
 - In-call chat
@@ -255,11 +280,13 @@ Course → Chapters → Lessons → Media/Resources
 - Record session (optional)
 
 **Tech Stack:**
+
 - `WebRTC` - Peer-to-peer connection
 - `Socket.IO` - Signaling server
 - STUN/TURN servers
 
 **Key Features:**
+
 - HD video quality
 - Screen sharing
 - Grid/Speaker view
@@ -267,6 +294,7 @@ Course → Chapters → Lessons → Media/Resources
 - Session recordings
 
 **WebRTC Flow:**
+
 ```
 Client A                Signaling Server              Client B
    |                           |                          |
@@ -283,6 +311,7 @@ Client A                Signaling Server              Client B
 ### 8️⃣ **Notification Module** 🔔
 
 **Chức năng:**
+
 - Real-time notifications
 - Email notifications (SendGrid)
 - Đánh dấu đã đọc
@@ -290,6 +319,7 @@ Client A                Signaling Server              Client B
 - Notification center
 
 **Notification Types:**
+
 - New course enrollment
 - New quiz assigned
 - Discussion replies
@@ -297,10 +327,12 @@ Client A                Signaling Server              Client B
 - Grade received
 
 **Tech Stack:**
+
 - `Socket.IO` - Push notifications
 - `SendGrid` - Email notifications
 
 **Key Features:**
+
 - Unread counter badge
 - Mark all as read
 - Notification preferences
@@ -311,6 +343,7 @@ Client A                Signaling Server              Client B
 ### 9️⃣ **Analytics & Reporting Module** 📊
 
 **Chức năng:**
+
 - Dashboard cho Teacher/Admin
 - Thống kê số liệu khóa học
 - Tiến độ học sinh
@@ -319,6 +352,7 @@ Client A                Signaling Server              Client B
 - Export reports (CSV)
 
 **Teacher Analytics:**
+
 - Total students enrolled
 - Course completion rate
 - Average quiz scores
@@ -326,6 +360,7 @@ Client A                Signaling Server              Client B
 - Discussion activity
 
 **Student Analytics:**
+
 - Courses in progress
 - Completed lessons
 - Quiz scores history
@@ -333,6 +368,7 @@ Client A                Signaling Server              Client B
 - Certificates earned
 
 **Key Features:**
+
 - Interactive charts (Recharts/Chart.js)
 - Date range filters
 - Export to CSV
@@ -343,6 +379,7 @@ Client A                Signaling Server              Client B
 ## 🗄 DATABASE SCHEMA
 
 ### **User Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -362,6 +399,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **UserProfile Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -383,6 +421,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Course Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -402,6 +441,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Chapter Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -414,6 +454,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Lesson Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -435,6 +476,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Progress Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -451,6 +493,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Quiz Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -468,6 +511,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Question Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -488,6 +532,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **QuizAttempt Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -510,6 +555,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Discussion Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -526,6 +572,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Comment Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -540,6 +587,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **LiveSession Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -565,6 +613,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Notification Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -579,6 +628,7 @@ Client A                Signaling Server              Client B
 ```
 
 ### **Analytics Schema**
+
 ```javascript
 {
   _id: ObjectId,
@@ -601,6 +651,7 @@ Client A                Signaling Server              Client B
 ## 🔌 API ENDPOINTS
 
 ### **Authentication Routes** (`/api/auth`)
+
 ```
 POST   /register              - Đăng ký tài khoản mới
 POST   /login                 - Đăng nhập
@@ -612,6 +663,7 @@ PUT    /reset-password/:token - Reset password
 ```
 
 ### **User Routes** (`/api/users`)
+
 ```
 GET    /profile               - Lấy profile của user hiện tại
 GET    /profile/:id           - Lấy profile user khác (public)
@@ -623,6 +675,7 @@ DELETE /:id                   - Xóa user (Admin)
 ```
 
 ### **Course Routes** (`/api/courses`)
+
 ```
 POST   /                      - Tạo khóa học mới (Teacher)
 GET    /                      - Lấy danh sách khóa học (public)
@@ -637,6 +690,7 @@ POST   /:id/review            - Đánh giá khóa học (Student)
 ```
 
 ### **Chapter Routes** (`/api/chapters`)
+
 ```
 POST   /                      - Tạo chapter (Teacher)
 GET    /course/:courseId      - Lấy tất cả chapters của course
@@ -646,6 +700,7 @@ PUT    /reorder               - Sắp xếp lại thứ tự (Teacher)
 ```
 
 ### **Lesson Routes** (`/api/lessons`)
+
 ```
 POST   /                      - Tạo lesson (Teacher)
 GET    /chapter/:chapterId    - Lấy tất cả lessons của chapter
@@ -658,6 +713,7 @@ DELETE /:id/resource/:resId   - Xóa tài liệu (Teacher)
 ```
 
 ### **Progress Routes** (`/api/progress`)
+
 ```
 GET    /course/:courseId      - Tiến độ của user trong course
 GET    /lesson/:lessonId      - Tiến độ của user trong lesson
@@ -666,6 +722,7 @@ POST   /complete/:lessonId    - Đánh dấu hoàn thành lesson
 ```
 
 ### **Quiz Routes** (`/api/quizzes`)
+
 ```
 POST   /                      - Tạo quiz (Teacher)
 GET    /course/:courseId      - Lấy tất cả quizzes của course
@@ -679,6 +736,7 @@ GET    /:id/results/:attemptId - Xem kết quả chi tiết
 ```
 
 ### **Question Routes** (`/api/questions`)
+
 ```
 POST   /quiz/:quizId          - Thêm câu hỏi vào quiz (Teacher)
 GET    /quiz/:quizId          - Lấy tất cả câu hỏi
@@ -687,6 +745,7 @@ DELETE /:id                   - Xóa câu hỏi (Teacher)
 ```
 
 ### **Discussion Routes** (`/api/discussions`)
+
 ```
 POST   /                      - Tạo discussion (Student/Teacher)
 GET    /course/:courseId      - Lấy discussions của course
@@ -699,6 +758,7 @@ POST   /:id/comment           - Comment vào discussion
 ```
 
 ### **Comment Routes** (`/api/comments`)
+
 ```
 GET    /discussion/:discussionId - Lấy tất cả comments
 PUT    /:id                   - Sửa comment (Owner)
@@ -707,6 +767,7 @@ PUT    /:id/like              - Like/Unlike comment
 ```
 
 ### **Live Session Routes** (`/api/sessions`)
+
 ```
 POST   /                      - Tạo session (Teacher)
 GET    /course/:courseId      - Lấy sessions của course
@@ -719,6 +780,7 @@ POST   /:id/join              - Tham gia session (Student)
 ```
 
 ### **Notification Routes** (`/api/notifications`)
+
 ```
 GET    /                      - Lấy notifications của user
 GET    /unread-count          - Số notification chưa đọc
@@ -728,6 +790,7 @@ DELETE /:id                   - Xóa notification
 ```
 
 ### **Analytics Routes** (`/api/analytics`)
+
 ```
 GET    /course/:courseId      - Analytics của course (Teacher)
 GET    /student/:userId       - Analytics của student
@@ -740,61 +803,65 @@ GET    /export                - Export dữ liệu (CSV)
 ## 🔌 SOCKET.IO EVENTS
 
 ### **Namespace: `/discussion`**
+
 ```javascript
 // Client → Server
-'discussion:join'         // Join room theo courseId
-'discussion:leave'        // Leave room
-'discussion:new'          // Tạo discussion mới
-'comment:new'             // Comment mới
-'discussion:like'         // Like discussion
-'comment:like'            // Like comment
+"discussion:join"; // Join room theo courseId
+"discussion:leave"; // Leave room
+"discussion:new"; // Tạo discussion mới
+"comment:new"; // Comment mới
+"discussion:like"; // Like discussion
+"comment:like"; // Like comment
 
 // Server → Client
-'discussion:created'      // Discussion được tạo
-'comment:created'         // Comment được tạo
-'discussion:liked'        // Discussion được like
-'discussion:updated'      // Discussion được cập nhật
+"discussion:created"; // Discussion được tạo
+"comment:created"; // Comment được tạo
+"discussion:liked"; // Discussion được like
+"discussion:updated"; // Discussion được cập nhật
 ```
 
 ### **Namespace: `/session`** (Video Call)
+
 ```javascript
 // Client → Server
-'session:join'            // Tham gia session
-'session:leave'           // Rời session
-'webrtc:offer'            // Gửi WebRTC offer
-'webrtc:answer'           // Gửi WebRTC answer
-'webrtc:ice-candidate'    // Gửi ICE candidate
-'session:chat'            // Gửi chat message
-'session:screen-share'    // Bật/tắt share screen
-'session:toggle-video'    // Bật/tắt video
-'session:toggle-audio'    // Bật/tắt audio
-'session:raise-hand'      // Giơ tay
+"session:join"; // Tham gia session
+"session:leave"; // Rời session
+"webrtc:offer"; // Gửi WebRTC offer
+"webrtc:answer"; // Gửi WebRTC answer
+"webrtc:ice-candidate"; // Gửi ICE candidate
+"session:chat"; // Gửi chat message
+"session:screen-share"; // Bật/tắt share screen
+"session:toggle-video"; // Bật/tắt video
+"session:toggle-audio"; // Bật/tắt audio
+"session:raise-hand"; // Giơ tay
 
 // Server → Client
-'session:user-joined'     // User mới join
-'session:user-left'       // User rời phòng
-'webrtc:offer'            // Forward offer
-'webrtc:answer'           // Forward answer
-'webrtc:ice-candidate'    // Forward ICE candidate
-'session:chat-message'    // Chat message mới
-'session:user-screen-share' // User share screen
-'session:user-hand-raised'  // User giơ tay
+"session:user-joined"; // User mới join
+"session:user-left"; // User rời phòng
+"webrtc:offer"; // Forward offer
+"webrtc:answer"; // Forward answer
+"webrtc:ice-candidate"; // Forward ICE candidate
+"session:chat-message"; // Chat message mới
+"session:user-screen-share"; // User share screen
+"session:user-hand-raised"; // User giơ tay
 ```
 
 ### **Namespace: `/notification`**
+
 ```javascript
 // Server → Client
-'notification:new'        // Notification mới
-'notification:count'      // Update unread count
+"notification:new"; // Notification mới
+"notification:count"; // Update unread count
 ```
 
 ### **Namespace: `/progress`**
+
 ```javascript
 // Client → Server
-'progress:update'         // Cập nhật tiến độ xem video
+"progress:update"; // Cập nhật tiến độ xem video
 
 // Server → Client
-'progress:updated'        // Tiến độ đã được cập nhật
+"progress:updated"; // Tiến độ đã được cập nhật
 ```
 
 ---
@@ -802,6 +869,7 @@ GET    /export                - Export dữ liệu (CSV)
 ## 📁 CẤU TRÚC THƯ MỤC
 
 ### **Backend Structure**
+
 ```
 backend/
 ├── src/
@@ -877,4 +945,130 @@ backend/
 │   │   ├── helpers.js            # Helper functions
 │   │   └── constants.js          # Constants
 │   │
-│   ├── app.js
+│   ├── app.js                   # Express app setup
+│   └── server.js                # Server entry point
+│
+├── .env.example                 # Environment template
+├── .env                         # Environment variables
+├── .gitignore
+├── package.json
+├── package-lock.json
+└── README.md
+```
+
+### **Frontend Structure**
+
+```
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── common/
+│   │   │   ├── Button.jsx
+│   │   │   ├── Input.jsx
+│   │   │   ├── Modal.jsx
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   └── Loading.jsx
+│   │   │
+│   │   ├── auth/
+│   │   │   ├── LoginForm.jsx
+│   │   │   ├── RegisterForm.jsx
+│   │   │   └── PasswordReset.jsx
+│   │   │
+│   │   ├── course/
+│   │   │   ├── CourseCard.jsx
+│   │   │   ├── CourseList.jsx
+│   │   │   ├── CourseDetail.jsx
+│   │   │   ├── CourseForm.jsx
+│   │   │   └── CourseProgress.jsx
+│   │   │
+│   │   ├── lesson/
+│   │   │   ├── VideoPlayer.jsx
+│   │   │   ├── LessonContent.jsx
+│   │   │   ├── ResourceList.jsx
+│   │   │   └── LessonForm.jsx
+│   │   │
+│   │   ├── quiz/
+│   │   │   ├── QuizList.jsx
+│   │   │   ├── QuizDetail.jsx
+│   │   │   ├── QuizQuestion.jsx
+│   │   │   ├── QuizResult.jsx
+│   │   │   └── QuestionForm.jsx
+│   │   │
+│   │   ├── discussion/
+│   │   │   ├── DiscussionList.jsx
+│   │   │   ├── DiscussionThread.jsx
+│   │   │   ├── DiscussionForm.jsx
+│   │   │   └── CommentSection.jsx
+│   │   │
+│   │   ├── video-call/
+│   │   │   ├── VideoRoom.jsx
+│   │   │   ├── VideoGrid.jsx
+│   │   │   ├── VideoControls.jsx
+│   │   │   ├── ChatBox.jsx
+│   │   │   └── ParticipantsList.jsx
+│   │   │
+│   │   └── dashboard/
+│   │       ├── DashboardOverview.jsx
+│   │       ├── StatisticsChart.jsx
+│   │       ├── CourseAnalytics.jsx
+│   │       └── StudentPerformance.jsx
+│   │
+│   ├── pages/
+│   │   ├── Home.jsx
+│   │   ├── Courses.jsx
+│   │   ├── CourseDetail.jsx
+│   │   ├── LessonPlayer.jsx
+│   │   ├── Dashboard.jsx
+│   │   ├── Profile.jsx
+│   │   ├── AdminPanel.jsx
+│   │   ├── MyCourses.jsx
+│   │   └── TeacherCourses.jsx
+│   │
+│   ├── hooks/
+│   │   ├── useAuth.js           # Auth context hook
+│   │   ├── useSocket.js         # Socket.IO hook
+│   │   ├── useWebRTC.js         # WebRTC hook
+│   │   └── useApi.js            # API call hook
+│   │
+│   ├── services/
+│   │   ├── api.js               # Axios instance
+│   │   ├── authService.js       # Auth API calls
+│   │   ├── courseService.js     # Course API calls
+│   │   ├── quizService.js       # Quiz API calls
+│   │   ├── socketService.js     # Socket.IO setup
+│   │   └── webrtcService.js     # WebRTC setup
+│   │
+│   ├── contexts/
+│   │   ├── AuthContext.jsx      # Auth state
+│   │   ├── CourseContext.jsx    # Course state
+│   │   └── NotificationContext.jsx # Notification state
+│   │
+│   ├── utils/
+│   │   ├── validators.js        # Form validators
+│   │   ├── formatters.js        # Format data
+│   │   ├── constants.js         # Constants
+│   │   └── helpers.js           # Helper functions
+│   │
+│   ├── styles/
+│   │   ├── index.css
+│   │   ├── App.css
+│   │   └── components.css
+│   │
+│   ├── App.jsx
+│   ├── App.css
+│   ├── index.jsx
+│   └── index.css
+│
+├── public/
+│   ├── index.html
+│   ├── favicon.ico
+│   └── manifest.json
+│
+├── .env.example
+├── .env
+├── .gitignore
+├── package.json
+├── vite.config.js             # Or webpack.config.js
+└── README.md
+```
