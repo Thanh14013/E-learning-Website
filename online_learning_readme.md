@@ -1021,7 +1021,6 @@ frontend/
 │   │   ├── LessonPlayer.jsx
 │   │   ├── Dashboard.jsx
 │   │   ├── Profile.jsx
-│   │   ├── AdminPanel.jsx
 │   │   ├── MyCourses.jsx
 │   │   └── TeacherCourses.jsx
 │   │
