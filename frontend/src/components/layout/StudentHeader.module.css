@@ -1,0 +1,218 @@
+.StudentHeader {
+  background: var(--color-bg-surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 40px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* Logo */
+.logo {
+  color: var(--color-primary);
+  font-size: 24px;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* SearchBar */
+.searchBar {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.searchBar input {
+  width: 60%;
+  max-width: 400px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-base);
+  transition: 0.2s;
+}
+
+.searchBar input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+  background: var(--color-bg-hover);
+}
+
+/* Notification */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.notificationWrapper {
+  position: relative;
+}
+
+.bellBtn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  position: relative;
+  cursor: pointer;
+  transition: 0.2s;
+  padding: 6px;
+  transition: transform 0.2s;
+}
+
+.bellBtn:hover {
+  transform: scale(1.2);
+}
+
+.bellDot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-danger);
+  border-radius: 50%;
+  position: absolute;
+  top: 4px;
+  right: 5px;
+}
+
+/* Dropdown for Notifications */
+.notifDropdown {
+  position: absolute;
+  right: 0;
+  top: 115%;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  width: 260px;
+  overflow: hidden;
+  z-index: 20;
+}
+
+.notifTitle {
+  font-weight: bold;
+  font-size: 1rem;
+  color: var(--color-text-base);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notifList {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.notifItem {
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: var(--color-bg-surface);
+  transition: 0.2s;
+}
+
+.notifItem:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-base);
+}
+
+.viewAllBtn {
+  width: 100%;
+  text-align: center;
+  padding: 10px;
+  background: var(--color-bg-hover);
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.viewAllBtn:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Profile Menu */
+.profileMenu {
+  position: relative;
+}
+
+.avatarBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  transition: transform 0.2s;
+}
+.avatarBtn:hover {
+  transform: scale(1.05);
+} 
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.userName {
+  color: var(--color-text-base);
+  font-weight: 500;
+}
+
+.arrow {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 115%;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  z-index: 10;
+}
+
+.dropdown a,
+.dropdown button {
+  text-decoration: none;
+  background: none;
+  border: none;
+  padding: 10px 14px;
+  text-align: left;
+  color: var(--color-text-base);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+.dropdown a:hover,
+.dropdown button:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-primary);
+}
+
+/* Links khi chưa đăng nhập */
+.links a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: var(--color-text-base);
+  transition: 0.2s;
+}
+
+.links a:hover,
+.links a.active {
+  font-weight: bold;
+  color: var(--color-primary);
+}
