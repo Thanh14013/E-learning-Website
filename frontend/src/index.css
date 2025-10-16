@@ -11,23 +11,31 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --color-primary: #4F46E5;
+  --color-primary-hover: #4338CA;
+  --color-text-base: #222;
+  --color-text-muted: #444;
+  --color-bg-base: #F9FAFB;
+  --color-bg-surface: #FFFFFF;
+  --color-border: #E5E7EB;
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
+  color: var(--color-primary);
   text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--color-primary-hover);
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #f9f9f9; /* Thay đổi nền body mặc định cho light mode */
+  font-family: var(--font-body);
 }
 
 h1 {
@@ -47,20 +55,16 @@ button {
   transition: border-color 0.25s;
 }
 button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  border-color: var(--color-primary);
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: var(--color-text-base);
+    background-color: var(--color-bg-surface);
   }
   a:hover {
-    color: #747bff;
+    color: var(--color-primary-hover);
   }
   button {
     background-color: #f9f9f9;
