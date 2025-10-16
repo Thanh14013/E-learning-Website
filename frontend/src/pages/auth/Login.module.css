@@ -1,0 +1,70 @@
+.container {
+  padding: 50px;
+  text-align: center;
+  max-width: 400px;
+  margin: 80px auto;
+  background-color: var(--color-bg-surface); /* Sửa từ #fff */
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  margin-bottom: 20px;
+  color: var(--color-text-base); /* Sửa từ #333 */
+}
+.switchText {
+  margin-top: 15px;
+  font-size: 14px;
+  color: var(--color-text-muted); /* Sửa từ #666 */
+}
+
+.formGroup {
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #555;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--color-border); /* Sửa từ #ccc */
+  border-radius: 6px;
+  outline: none;
+  font-size: 16px;
+  color: var(--color-text-base);
+  background-color: #fff;
+}
+
+.input:focus {
+  border-color: var(--color-primary); /* Sửa từ #007bff */
+}
+
+.button {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--color-primary); /* Sửa từ #007bff */
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button:hover {
+  background-color: var(--color-primary-hover); /* Sửa từ #0056b3 */
+}
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Giữ nguyên media query */
+@media (max-width: 600px) {
+  /* ... */
+}
