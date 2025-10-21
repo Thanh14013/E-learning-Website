@@ -8,6 +8,7 @@ import Discussion from "../pages/discussion/Discussion.jsx";
 import NotFound from "../pages/notFound/NotFound.jsx";
 import Dashboard from "../pages/dashboard/Dashboard.jsx";
 import Profile from "../pages/profile/Profile.jsx";
+import QuizDemo from "../pages/QuizDemo.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
 
 
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
       { path: "register", element: <Register /> },
       { path: "courses", element: <Courses /> },
       { path: "discussion", element: <Discussion /> },
+      { path: "quiz-demo", element: <QuizDemo /> },
       {
         element: <ProtectedRoute />,
         children: [

@@ -1,0 +1,373 @@
+/* Quiz List Container */
+.quiz-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.quiz-list-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.quiz-list-header h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 2rem;
+}
+
+.quiz-count {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+/* Loading and Error States */
+.quiz-list-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.quiz-list-error {
+  text-align: center;
+  padding: 40px 20px;
+  color: #e74c3c;
+}
+
+.retry-btn {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: background-color 0.3s;
+}
+
+.retry-btn:hover {
+  background: #2980b9;
+}
+
+.no-quizzes {
+  text-align: center;
+  padding: 60px 20px;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+/* Quiz List Grid */
+.quiz-list {
+  display: grid;
+  gap: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+}
+
+/* Quiz Card */
+.quiz-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 25px;
+  border: 1px solid #e1e8ed;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.quiz-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* Quiz Header */
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.quiz-title-section {
+  flex: 1;
+  margin-right: 15px;
+}
+
+.quiz-title {
+  color: #2c3e50;
+  font-size: 1.4rem;
+  margin: 0 0 8px 0;
+  font-weight: 600;
+}
+
+.quiz-description {
+  color: #7f8c8d;
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Status Badge */
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-not-started {
+  background: #ecf0f1;
+  color: #7f8c8d;
+}
+
+.status-in-progress {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+/* Quiz Metadata */
+.quiz-metadata {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.metadata-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metadata-label {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+  font-weight: 500;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metadata-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.pass-score {
+  color: #27ae60;
+}
+
+.fail-score {
+  color: #e74c3c;
+}
+
+/* Quiz Attempts */
+.quiz-attempts {
+  margin-bottom: 20px;
+}
+
+.quiz-attempts h4 {
+  color: #2c3e50;
+  font-size: 1rem;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+.attempts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attempt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #3498db;
+}
+
+.attempt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.attempt-score {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.attempt-date {
+  font-size: 0.8rem;
+  color: #7f8c8d;
+}
+
+.attempt-status {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.attempt-status.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.attempt-status.in_progress {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Quiz Actions */
+.quiz-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e1e8ed;
+}
+
+.quiz-action-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.start-btn {
+  background: #27ae60;
+  color: white;
+}
+
+.start-btn:hover {
+  background: #229954;
+  transform: translateY(-1px);
+}
+
+.continue-btn {
+  background: #f39c12;
+  color: white;
+}
+
+.continue-btn:hover {
+  background: #e67e22;
+  transform: translateY(-1px);
+}
+
+.retake-btn {
+  background: #3498db;
+  color: white;
+}
+
+.retake-btn:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.quiz-details-btn {
+  background: transparent;
+  color: #7f8c8d;
+  border: 1px solid #bdc3c7;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quiz-details-btn:hover {
+  background: #7f8c8d;
+  color: white;
+  border-color: #7f8c8d;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .quiz-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .quiz-card {
+    padding: 20px;
+  }
+  
+  .quiz-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .quiz-metadata {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .quiz-actions {
+    flex-direction: column;
+  }
+  
+  .quiz-action-btn,
+  .quiz-details-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-list-container {
+    padding: 15px;
+  }
+  
+  .quiz-metadata {
+    grid-template-columns: 1fr;
+  }
+  
+  .attempt-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
