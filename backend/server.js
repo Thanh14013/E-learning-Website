@@ -3,6 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import connectDB from "./src/config/mongodb.config.js";
 import { connectCloudinary } from "./src/config/cloudinary.config.js";
+import authRoutes from "./src/routes/auth.routes.js";
 
 //App config
 const app = express();
@@ -14,6 +15,9 @@ await connectCloudinary();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//API routes
+app.use('/api/auth', authRoutes);
 
 // App listens on port
 app.listen(port, () => {
