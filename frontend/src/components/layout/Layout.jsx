@@ -7,7 +7,7 @@ export function Layout() {
     <>
       <StudentHeader />
       <main style={{ minHeight: "80vh", padding: "20px" }}>
-        <Outlet />   {}
+        <Outlet />
       </main>
       <Footer />
     </>
