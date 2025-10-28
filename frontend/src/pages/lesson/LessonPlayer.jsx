@@ -209,6 +209,7 @@ const LessonPlayer = () => {
                         title={currentLesson.title}
                         onProgress={handleVideoProgress}
                         startTime={watchedTime}
+                        videoQualities={currentLesson.qualities}
                     />
 
                     {/* Lesson information */}
