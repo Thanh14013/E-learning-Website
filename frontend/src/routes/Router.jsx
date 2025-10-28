@@ -11,6 +11,7 @@ import Profile from "../pages/profile/Profile.jsx";
 import QuizDemo from "../pages/QuizDemo.jsx";
 import QuizzList from "../components/quizz/QuizzList.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
+import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
 
 
 const router = createBrowserRouter([
@@ -27,13 +28,14 @@ const router = createBrowserRouter([
       // { path: "discussion", element: <Discussion /> },
       { path: "quiz-demo", element: <QuizDemo /> },
       { path: "quizzes", element: <QuizzList courseId="demo-course" /> },
+      { path: "courses/:courseId/lessons/:lessonId", element: <LessonPlayer /> },
       {
         element: <ProtectedRoute />,
         children: [
           // { path: "dashboard", element: <Dashboard /> },
           { path: "profile", element: <Profile /> },
-        ],   
-      },   
+        ],
+      },
     ],
   },
 ]);

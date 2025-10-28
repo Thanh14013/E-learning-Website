@@ -1,0 +1,369 @@
+/* ===========================================
+   LESSON PLAYER CONTAINER - Main Layout
+   =========================================== */
+.lessonPlayerContainer {
+  display: flex;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: #ffffff;
+}
+
+/* ===========================================
+   MAIN CONTENT AREA
+   =========================================== */
+.mainContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  transition: margin-right 0.3s ease;
+}
+
+.videoSection {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ===========================================
+   LESSON INFORMATION SECTION
+   =========================================== */
+.lessonInfo {
+  padding: 2rem;
+  background-color: #1a1a1a;
+}
+
+.lessonHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.lessonTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+
+.completedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #10b981;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ===========================================
+   LESSON METADATA
+   =========================================== */
+.lessonMeta {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+/* ===========================================
+   LESSON DESCRIPTION & CONTENT
+   =========================================== */
+.lessonDescription,
+.lessonContent {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #2d2d2d;
+}
+
+.lessonDescription h3,
+.lessonContent h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+.lessonDescription p {
+  line-height: 1.8;
+  color: #d1d5db;
+  font-size: 1rem;
+}
+
+.contentBody {
+  line-height: 1.8;
+  color: #d1d5db;
+}
+
+.contentBody h1,
+.contentBody h2,
+.contentBody h3 {
+  color: #ffffff;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.contentBody ul,
+.contentBody ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.contentBody li {
+  margin-bottom: 0.5rem;
+}
+
+.contentBody code {
+  background-color: #2d2d2d;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: "Courier New", monospace;
+  font-size: 0.9rem;
+}
+
+.contentBody pre {
+  background-color: #2d2d2d;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+/* ===========================================
+   NAVIGATION BUTTONS
+   =========================================== */
+.navigationButtons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #2d2d2d;
+}
+
+.navButton {
+  flex: 1;
+  padding: 1rem 2rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.navButton:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.navButton:disabled {
+  background-color: #374151;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ===========================================
+   SIDEBAR
+   =========================================== */
+.sidebar {
+  width: 400px;
+  background-color: #1a1a1a;
+  border-left: 1px solid #2d2d2d;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  transition: transform 0.3s ease;
+}
+
+.sidebarClosed {
+  transform: translateX(100%);
+  width: 0;
+}
+
+.sidebarToggle {
+  position: absolute;
+  left: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 60px;
+  background-color: #1a1a1a;
+  border: 1px solid #2d2d2d;
+  border-right: none;
+  color: #ffffff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 8px 0 0 8px;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.sidebarToggle:hover {
+  background-color: #2d2d2d;
+}
+
+/* ===========================================
+   LOADING & ERROR STATES
+   =========================================== */
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: #ffffff;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #2d2d2d;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.errorContainer h2 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+.backButton {
+  padding: 0.75rem 2rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.backButton:hover {
+  background-color: #2563eb;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+/* Tablet - 768px to 1024px */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 320px;
+  }
+
+  .lessonInfo {
+    padding: 1.5rem;
+  }
+
+  .lessonTitle {
+    font-size: 1.5rem;
+  }
+}
+
+/* Mobile - up to 768px */
+@media (max-width: 768px) {
+  .lessonPlayerContainer {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    max-width: 350px;
+    height: 100vh;
+    z-index: 1000;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebarClosed {
+    transform: translateX(100%);
+  }
+
+  .sidebarToggle {
+    left: -50px;
+    width: 50px;
+    height: 80px;
+  }
+
+  .lessonInfo {
+    padding: 1rem;
+  }
+
+  .lessonTitle {
+    font-size: 1.3rem;
+  }
+
+  .lessonMeta {
+    gap: 1rem;
+  }
+
+  .navigationButtons {
+    flex-direction: column;
+  }
+
+  .navButton {
+    width: 100%;
+  }
+}
+
+/* Small mobile - up to 480px */
+@media (max-width: 480px) {
+  .lessonHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lessonTitle {
+    font-size: 1.2rem;
+  }
+
+  .completedBadge {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .metaItem {
+    font-size: 0.85rem;
+  }
+
+  .sidebar {
+    max-width: 100%;
+  }
+}
