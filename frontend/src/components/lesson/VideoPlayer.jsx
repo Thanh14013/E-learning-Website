@@ -416,7 +416,7 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0, videoQualitie
                         <span className={styles.errorIcon}>⚠️</span>
                         <h3>Video playback error</h3>
                         <p>Unable to load the video. Please try again.</p>
-                        <button 
+                        <button
                             className={styles.retryButton}
                             onClick={() => {
                                 setHasError(false);
