@@ -1,0 +1,71 @@
+/* ===========================================
+   LESSON CONTENT COMPONENT
+   =========================================== */
+.lessonContent {
+  padding: 1.5rem;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  color: #ffffff;
+}
+
+.contentBody {
+  line-height: 1.8;
+  color: #d1d5db;
+}
+
+.contentBody h1,
+.contentBody h2,
+.contentBody h3,
+.contentBody h4 {
+  color: #ffffff;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.contentBody h1 {
+  font-size: 2rem;
+}
+
+.contentBody h2 {
+  font-size: 1.5rem;
+}
+
+.contentBody h3 {
+  font-size: 1.25rem;
+}
+
+.contentBody p {
+  margin-bottom: 1rem;
+}
+
+.contentBody ul,
+.contentBody ol {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.contentBody li {
+  margin-bottom: 0.5rem;
+}
+
+.contentBody code {
+  background-color: #2d2d2d;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.contentBody pre {
+  background-color: #2d2d2d;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+}
