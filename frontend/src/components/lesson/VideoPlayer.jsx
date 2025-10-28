@@ -5,9 +5,15 @@ import styles from './VideoPlayer.module.css';
 /**
  * VideoPlayer Component
  * Custom HTML5 video player with full controls
- * Features: play/pause, progress bar, volume, playback speed, fullscreen
+ * Features: play/pause, progress bar, volume, playback speed, fullscreen, quality selector, PiP
+ * 
+ * @param {string} videoUrl - Primary video source URL
+ * @param {string} title - Video title for accessibility
+ * @param {function} onProgress - Callback for progress updates (currentTime, duration)
+ * @param {number} startTime - Start playback from specific time (in seconds)
+ * @param {Array} videoQualities - Optional array of quality options [{quality: '1080p', label: '1080p', url: 'video-url'}]
  */
-const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
+const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0, videoQualities = null }) => {
     // Refs
     const videoRef = useRef(null);
     const progressBarRef = useRef(null);
@@ -23,16 +29,25 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [buffered, setBuffered] = useState(0);
+    const [currentQuality, setCurrentQuality] = useState(videoQualities?.[0]?.quality || 'auto');
+    const [hasError, setHasError] = useState(false);
+    const [isPiPSupported, setIsPiPSupported] = useState(false);
 
     // Refs for control hiding timeout
     const controlsTimeoutRef = useRef(null);
 
     /**
      * Initialize video player when component mounts
+     * Set up event listeners and check for Picture-in-Picture support
      */
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
+
+        // Check Picture-in-Picture support
+        if (document.pictureInPictureEnabled) {
+            setIsPiPSupported(true);
+        }
 
         // Set start time if provided
         if (startTime > 0) {
@@ -42,6 +57,7 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
         // Event listeners
         const handleLoadedMetadata = () => {
             setDuration(video.duration);
+            setHasError(false);
         };
 
         const handleTimeUpdate = () => {
@@ -65,11 +81,28 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
             setIsPlaying(false);
         };
 
+        const handleError = (e) => {
+            console.error('Video loading error:', e);
+            setHasError(true);
+            setIsPlaying(false);
+        };
+
+        const handleWaiting = () => {
+            // Video is buffering
+        };
+
+        const handleCanPlay = () => {
+            setHasError(false);
+        };
+
         // Attach event listeners
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
         video.addEventListener('timeupdate', handleTimeUpdate);
         video.addEventListener('progress', handleProgress);
         video.addEventListener('ended', handleEnded);
+        video.addEventListener('error', handleError);
+        video.addEventListener('waiting', handleWaiting);
+        video.addEventListener('canplay', handleCanPlay);
 
         // Cleanup
         return () => {
@@ -77,6 +110,9 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
             video.removeEventListener('timeupdate', handleTimeUpdate);
             video.removeEventListener('progress', handleProgress);
             video.removeEventListener('ended', handleEnded);
+            video.removeEventListener('error', handleError);
+            video.removeEventListener('waiting', handleWaiting);
+            video.removeEventListener('canplay', handleCanPlay);
         };
     }, [videoUrl, startTime, onProgress]);
 
@@ -222,6 +258,54 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
     };
 
     /**
+     * Change video quality
+     * Maintains playback position and playing state
+     * @param {string} quality - Quality identifier (e.g., '1080p', '720p')
+     */
+    const changeQuality = (quality) => {
+        const video = videoRef.current;
+        if (!video || !videoQualities) return;
+
+        const qualityOption = videoQualities.find(q => q.quality === quality);
+        if (!qualityOption) return;
+
+        // Save current state
+        const wasPlaying = !video.paused;
+        const currentTimeBackup = video.currentTime;
+
+        // Update video source
+        video.src = qualityOption.url;
+        video.load();
+
+        // Restore state
+        video.currentTime = currentTimeBackup;
+        setCurrentQuality(quality);
+
+        // Resume playing if it was playing
+        if (wasPlaying) {
+            video.play().catch(err => console.error('Error resuming playback:', err));
+        }
+    };
+
+    /**
+     * Toggle Picture-in-Picture mode
+     */
+    const togglePiP = async () => {
+        const video = videoRef.current;
+        if (!video || !isPiPSupported) return;
+
+        try {
+            if (document.pictureInPictureElement) {
+                await document.exitPictureInPicture();
+            } else {
+                await video.requestPictureInPicture();
+            }
+        } catch (error) {
+            console.error('Picture-in-Picture error:', error);
+        }
+    };
+
+    /**
      * Format time in MM:SS format
      * @param {number} time - Time in seconds
      * @returns {string} Formatted time string
@@ -247,6 +331,12 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
 
     /**
      * Handle keyboard shortcuts
+     * Space/K: play/pause
+     * Arrow Left/Right: skip backward/forward 10s
+     * Arrow Up/Down: volume up/down
+     * M: toggle mute
+     * F: toggle fullscreen
+     * P: toggle Picture-in-Picture
      * @param {KeyboardEvent} e - Keyboard event
      */
     const handleKeyDown = (e) => {
@@ -280,6 +370,10 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
                 e.preventDefault();
                 toggleFullscreen();
                 break;
+            case 'p':
+                e.preventDefault();
+                if (isPiPSupported) togglePiP();
+                break;
             default:
                 break;
         }
@@ -308,9 +402,30 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
             </video>
 
             {/* Loading overlay */}
-            {duration === 0 && (
+            {duration === 0 && !hasError && (
                 <div className={styles.loadingOverlay}>
                     <div className={styles.spinner}></div>
+                    <p className={styles.loadingText}>Loading video...</p>
+                </div>
+            )}
+
+            {/* Error overlay */}
+            {hasError && (
+                <div className={styles.errorOverlay}>
+                    <div className={styles.errorContent}>
+                        <span className={styles.errorIcon}>⚠️</span>
+                        <h3>Video playback error</h3>
+                        <p>Unable to load the video. Please try again.</p>
+                        <button 
+                            className={styles.retryButton}
+                            onClick={() => {
+                                setHasError(false);
+                                videoRef.current?.load();
+                            }}
+                        >
+                            Retry
+                        </button>
+                    </div>
                 </div>
             )}
 
@@ -359,6 +474,7 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
                             className={styles.controlButton}
                             onClick={togglePlay}
                             aria-label={isPlaying ? 'Pause' : 'Play'}
+                            title={isPlaying ? 'Pause (Space)' : 'Play (Space)'}
                         >
                             {isPlaying ? '⏸' : '▶'}
                         </button>
@@ -368,6 +484,7 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
                             className={styles.controlButton}
                             onClick={() => skip(-10)}
                             aria-label="Skip backward 10 seconds"
+                            title="Skip backward 10s (←)"
                         >
                             ⏪
                         </button>
@@ -377,6 +494,7 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
                             className={styles.controlButton}
                             onClick={() => skip(10)}
                             aria-label="Skip forward 10 seconds"
+                            title="Skip forward 10s (→)"
                         >
                             ⏩
                         </button>
@@ -387,6 +505,7 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
                                 className={styles.controlButton}
                                 onClick={toggleMute}
                                 aria-label={isMuted ? 'Unmute' : 'Mute'}
+                                title={isMuted ? 'Unmute (M)' : 'Mute (M)'}
                             >
                                 {isMuted || volume === 0 ? '🔇' : volume < 0.5 ? '🔉' : '🔊'}
                             </button>
@@ -413,6 +532,25 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
 
                     {/* Right controls */}
                     <div className={styles.rightControls}>
+                        {/* Quality selector */}
+                        {videoQualities && videoQualities.length > 0 && (
+                            <div className={styles.qualityControl}>
+                                <select
+                                    className={styles.qualitySelect}
+                                    value={currentQuality}
+                                    onChange={(e) => changeQuality(e.target.value)}
+                                    aria-label="Video quality"
+                                    title="Video quality"
+                                >
+                                    {videoQualities.map((q) => (
+                                        <option key={q.quality} value={q.quality}>
+                                            {q.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
                         {/* Playback speed */}
                         <div className={styles.speedControl}>
                             <select
@@ -420,6 +558,7 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
                                 value={playbackRate}
                                 onChange={(e) => changePlaybackRate(parseFloat(e.target.value))}
                                 aria-label="Playback speed"
+                                title="Playback speed"
                             >
                                 <option value="0.5">0.5x</option>
                                 <option value="0.75">0.75x</option>
@@ -431,11 +570,24 @@ const VideoPlayer = ({ videoUrl, title, onProgress, startTime = 0 }) => {
                             </select>
                         </div>
 
+                        {/* Picture-in-Picture button */}
+                        {isPiPSupported && (
+                            <button
+                                className={styles.controlButton}
+                                onClick={togglePiP}
+                                aria-label="Picture-in-Picture"
+                                title="Picture-in-Picture (P)"
+                            >
+                                📺
+                            </button>
+                        )}
+
                         {/* Fullscreen button */}
                         <button
                             className={styles.controlButton}
                             onClick={toggleFullscreen}
                             aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+                            title={isFullscreen ? 'Exit fullscreen (F)' : 'Enter fullscreen (F)'}
                         >
                             {isFullscreen ? '⛶' : '⛶'}
                         </button>
@@ -450,7 +602,14 @@ VideoPlayer.propTypes = {
     videoUrl: PropTypes.string.isRequired,
     title: PropTypes.string,
     onProgress: PropTypes.func,
-    startTime: PropTypes.number
+    startTime: PropTypes.number,
+    videoQualities: PropTypes.arrayOf(
+        PropTypes.shape({
+            quality: PropTypes.string.isRequired,
+            label: PropTypes.string.isRequired,
+            url: PropTypes.string.isRequired
+        })
+    )
 };
 
 export default VideoPlayer;
