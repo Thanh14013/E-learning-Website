@@ -17,6 +17,29 @@ export const mockLessonData = {
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     duration: 600, // 10 minutes in seconds
     views: 1250,
+    // Video quality options (in production, these would be different resolution streams)
+    qualities: [
+      {
+        quality: "1080p",
+        label: "1080p HD",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      },
+      {
+        quality: "720p",
+        label: "720p HD",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      },
+      {
+        quality: "480p",
+        label: "480p",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      },
+      {
+        quality: "360p",
+        label: "360p",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+      }
+    ],
     content: `
       <h2>Introduction to React Hooks</h2>
       <p>React Hooks are functions that let you use state and other React features in functional components.</p>
@@ -88,6 +111,24 @@ function Counter() {
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     duration: 720, // 12 minutes
     views: 980,
+    // Video quality options
+    qualities: [
+      {
+        quality: "1080p",
+        label: "1080p HD",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+      },
+      {
+        quality: "720p",
+        label: "720p HD",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+      },
+      {
+        quality: "480p",
+        label: "480p",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+      }
+    ],
     content: `
       <h2>Advanced State Management</h2>
       <p>Learn how to manage complex state logic in React applications.</p>
@@ -117,6 +158,19 @@ function Counter() {
       "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     duration: 540, // 9 minutes
     views: 750,
+    // Video quality options
+    qualities: [
+      {
+        quality: "720p",
+        label: "720p HD",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+      },
+      {
+        quality: "480p",
+        label: "480p",
+        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+      }
+    ],
     content: `
       <h2>Creating Custom Hooks</h2>
       <p>Custom hooks allow you to extract component logic into reusable functions.</p>
