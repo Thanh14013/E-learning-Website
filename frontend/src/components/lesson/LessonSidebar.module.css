@@ -1,0 +1,460 @@
+/* ===========================================
+   SIDEBAR CONTAINER
+   =========================================== */
+.sidebarContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  overflow-y: auto;
+}
+
+/* ===========================================
+   COURSE HEADER
+   =========================================== */
+.courseHeader {
+  padding: 1.5rem;
+  border-bottom: 1px solid #2d2d2d;
+  background-color: #0f0f0f;
+}
+
+.courseTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.courseInfo {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin: 0 0 1rem 0;
+}
+
+/* ===========================================
+   OVERALL PROGRESS
+   =========================================== */
+.overallProgress {
+  margin-top: 1rem;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progressText {
+  font-size: 0.85rem;
+  color: #d1d5db;
+}
+
+.progressPercentage {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+.progressBarContainer {
+  height: 6px;
+  background-color: #2d2d2d;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #10b981);
+  transition: width 0.3s ease;
+  border-radius: 3px;
+}
+
+/* ===========================================
+   CHAPTERS CONTAINER
+   =========================================== */
+.chaptersContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+}
+
+/* Custom scrollbar */
+.chaptersContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chaptersContainer::-webkit-scrollbar-track {
+  background: #0f0f0f;
+}
+
+.chaptersContainer::-webkit-scrollbar-thumb {
+  background: #2d2d2d;
+  border-radius: 3px;
+}
+
+.chaptersContainer::-webkit-scrollbar-thumb:hover {
+  background: #3d3d3d;
+}
+
+/* ===========================================
+   CHAPTER BLOCK
+   =========================================== */
+.chapterBlock {
+  border-bottom: 1px solid #2d2d2d;
+}
+
+.chapterHeader {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  text-align: left;
+}
+
+.chapterHeader:hover {
+  background-color: #2d2d2d;
+}
+
+.chapterInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.chapterIcon {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  transition: transform 0.2s ease;
+}
+
+.chapterDetails {
+  flex: 1;
+}
+
+.chapterTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.3rem 0;
+  line-height: 1.4;
+}
+
+.chapterMeta {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* ===========================================
+   LESSONS CONTAINER
+   =========================================== */
+.lessonsContainer {
+  background-color: #0f0f0f;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* ===========================================
+   LESSON ITEM
+   =========================================== */
+.lessonItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem 0.875rem 3rem;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  position: relative;
+}
+
+.lessonItem:hover {
+  background-color: #1f1f1f;
+}
+
+.lessonItem::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+/* ===========================================
+   LESSON STATES
+   =========================================== */
+
+/* Current lesson */
+.currentLesson {
+  background-color: #1e3a5f;
+}
+
+.currentLesson:hover {
+  background-color: #2a4a73;
+}
+
+.currentLesson::before {
+  background-color: #3b82f6;
+}
+
+/* Locked lesson */
+.lockedLesson {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lockedLesson:hover {
+  background-color: transparent;
+}
+
+/* ===========================================
+   LESSON ICON
+   =========================================== */
+.lessonIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #2d2d2d;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.currentLesson .lessonIcon {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.lessonItem:hover .lessonIcon {
+  background-color: #3d3d3d;
+}
+
+.currentLesson:hover .lessonIcon {
+  background-color: #3b82f6;
+}
+
+/* Completed lesson icon */
+.lessonItem .lessonIcon {
+  transition: all 0.2s ease;
+}
+
+/* ===========================================
+   LESSON INFO
+   =========================================== */
+.lessonInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.lessonTitle {
+  font-size: 0.9rem;
+  color: #ffffff;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.lessonMeta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.currentLesson .lessonTitle {
+  font-weight: 600;
+  color: #60a5fa;
+}
+
+/* ===========================================
+   CURRENT INDICATOR
+   =========================================== */
+.currentIndicator {
+  color: #3b82f6;
+  font-size: 0.8rem;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ===========================================
+   SIDEBAR FOOTER
+   =========================================== */
+.sidebarFooter {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #2d2d2d;
+  background-color: #0f0f0f;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footerButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: transparent;
+  border: 1px solid #2d2d2d;
+  color: #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.footerButton:hover {
+  background-color: #2d2d2d;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+/* Tablet - 768px to 1024px */
+@media (max-width: 1024px) {
+  .courseHeader {
+    padding: 1.25rem;
+  }
+  
+  .courseTitle {
+    font-size: 1.1rem;
+  }
+  
+  .chapterHeader {
+    padding: 0.875rem 1.25rem;
+  }
+  
+  .lessonItem {
+    padding: 0.75rem 1.25rem 0.75rem 2.75rem;
+  }
+}
+
+/* Mobile - up to 768px */
+@media (max-width: 768px) {
+  .courseHeader {
+    padding: 1rem;
+  }
+  
+  .courseTitle {
+    font-size: 1rem;
+  }
+  
+  .courseInfo {
+    font-size: 0.8rem;
+  }
+  
+  .chapterHeader {
+    padding: 0.75rem 1rem;
+  }
+  
+  .chapterTitle {
+    font-size: 0.95rem;
+  }
+  
+  .lessonItem {
+    padding: 0.65rem 1rem 0.65rem 2.5rem;
+  }
+  
+  .lessonTitle {
+    font-size: 0.85rem;
+  }
+  
+  .lessonMeta {
+    font-size: 0.7rem;
+  }
+  
+  .sidebarFooter {
+    padding: 0.875rem 1rem;
+  }
+  
+  .footerButton {
+    padding: 0.65rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Small mobile - up to 480px */
+@media (max-width: 480px) {
+  .courseHeader {
+    padding: 0.875rem;
+  }
+  
+  .progressInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  
+  .chapterHeader {
+    padding: 0.65rem 0.875rem;
+  }
+  
+  .lessonItem {
+    padding: 0.6rem 0.875rem 0.6rem 2.25rem;
+    gap: 0.5rem;
+  }
+  
+  .lessonIcon {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+  }
+}
+
+/* ===========================================
+   ACCESSIBILITY
+   =========================================== */
+.chapterHeader:focus,
+.lessonItem:focus,
+.footerButton:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .chapterHeader,
+  .lessonItem {
+    border: 1px solid transparent;
+  }
+  
+  .chapterHeader:focus,
+  .lessonItem:focus {
+    border-color: currentColor;
+  }
+}
