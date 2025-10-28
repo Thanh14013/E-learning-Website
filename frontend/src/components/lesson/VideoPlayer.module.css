@@ -40,10 +40,12 @@
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.8);
   z-index: 5;
+  gap: 1rem;
 }
 
 .spinner {
@@ -62,6 +64,73 @@
   100% {
     transform: rotate(360deg);
   }
+}
+
+.loadingText {
+  color: white;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* ===========================================
+   ERROR OVERLAY
+   =========================================== */
+.errorOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 5;
+}
+
+.errorContent {
+  text-align: center;
+  color: white;
+  padding: 2rem;
+  max-width: 400px;
+}
+
+.errorIcon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.errorContent h3 {
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  color: #ef4444;
+}
+
+.errorContent p {
+  font-size: 1rem;
+  margin: 0 0 1.5rem 0;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.retryButton {
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retryButton:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.retryButton:active {
+  transform: translateY(0);
 }
 
 /* ===========================================
@@ -310,6 +379,39 @@
 }
 
 /* ===========================================
+   QUALITY CONTROL
+   =========================================== */
+.qualityControl {
+  position: relative;
+}
+
+.qualitySelect {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.qualitySelect:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.qualitySelect:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+.qualitySelect option {
+  background-color: #1a1a1a;
+  color: white;
+}
+
+/* ===========================================
    RESPONSIVE DESIGN
    =========================================== */
 
@@ -359,9 +461,11 @@
     font-size: 0.8rem;
   }
 
-  .speedSelect {
+  .speedSelect,
+  .qualitySelect {
     font-size: 0.85rem;
     padding: 0.4rem;
+    min-width: 70px;
   }
 
   .progressContainer {
@@ -371,6 +475,18 @@
   .progressHandle {
     width: 16px;
     height: 16px;
+  }
+
+  .loadingText {
+    font-size: 0.9rem;
+  }
+
+  .errorContent h3 {
+    font-size: 1.2rem;
+  }
+
+  .errorContent p {
+    font-size: 0.9rem;
   }
 }
 
@@ -402,9 +518,24 @@
     padding: 0 0.25rem;
   }
 
-  .speedSelect {
+  .speedSelect,
+  .qualitySelect {
     font-size: 0.8rem;
     padding: 0.3rem;
+    min-width: 60px;
+  }
+
+  .errorIcon {
+    font-size: 3rem;
+  }
+
+  .errorContent {
+    padding: 1.5rem;
+  }
+
+  .retryButton {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
   }
 }
 
@@ -433,7 +564,8 @@
    ACCESSIBILITY
    =========================================== */
 .controlButton:focus,
-.speedSelect:focus {
+.speedSelect:focus,
+.qualitySelect:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
