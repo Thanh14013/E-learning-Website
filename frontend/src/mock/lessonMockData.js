@@ -8,11 +8,13 @@
  * In production, this would come from API calls
  */
 export const mockLessonData = {
-  'lesson-1': {
-    id: 'lesson-1',
-    title: 'Introduction to React Hooks',
-    description: 'Learn the fundamentals of React Hooks including useState, useEffect, and useContext. This lesson covers basic concepts and practical examples.',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+  "lesson-1": {
+    id: "lesson-1",
+    title: "Introduction to React Hooks",
+    description:
+      "Learn the fundamentals of React Hooks including useState, useEffect, and useContext. This lesson covers basic concepts and practical examples.",
+    videoUrl:
+      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     duration: 600, // 10 minutes in seconds
     views: 1250,
     content: `
@@ -52,36 +54,38 @@ function Counter() {
     `,
     resources: [
       {
-        id: 'res-1',
-        name: 'React Hooks Cheat Sheet.pdf',
-        type: 'pdf',
+        id: "res-1",
+        name: "React Hooks Cheat Sheet.pdf",
+        type: "pdf",
         size: 2048000, // 2MB
-        url: 'https://example.com/resources/react-hooks-cheatsheet.pdf',
-        description: 'Complete reference guide for all React Hooks'
+        url: "https://example.com/resources/react-hooks-cheatsheet.pdf",
+        description: "Complete reference guide for all React Hooks",
       },
       {
-        id: 'res-2',
-        name: 'Code Examples.zip',
-        type: 'zip',
+        id: "res-2",
+        name: "Code Examples.zip",
+        type: "zip",
         size: 5120000, // 5MB
-        url: 'https://example.com/resources/code-examples.zip',
-        description: 'Source code for all examples in this lesson'
+        url: "https://example.com/resources/code-examples.zip",
+        description: "Source code for all examples in this lesson",
       },
       {
-        id: 'res-3',
-        name: 'Presentation Slides.pptx',
-        type: 'pptx',
+        id: "res-3",
+        name: "Presentation Slides.pptx",
+        type: "pptx",
         size: 3072000, // 3MB
-        url: 'https://example.com/resources/slides.pptx',
-        description: 'PowerPoint presentation used in this lesson'
-      }
-    ]
+        url: "https://example.com/resources/slides.pptx",
+        description: "PowerPoint presentation used in this lesson",
+      },
+    ],
   },
-  'lesson-2': {
-    id: 'lesson-2',
-    title: 'Advanced State Management',
-    description: 'Deep dive into advanced state management patterns using useReducer and Context API.',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+  "lesson-2": {
+    id: "lesson-2",
+    title: "Advanced State Management",
+    description:
+      "Deep dive into advanced state management patterns using useReducer and Context API.",
+    videoUrl:
+      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     duration: 720, // 12 minutes
     views: 980,
     content: `
@@ -96,27 +100,29 @@ function Counter() {
     `,
     resources: [
       {
-        id: 'res-4',
-        name: 'State Management Guide.pdf',
-        type: 'pdf',
+        id: "res-4",
+        name: "State Management Guide.pdf",
+        type: "pdf",
         size: 1536000,
-        url: 'https://example.com/resources/state-management.pdf'
-      }
-    ]
+        url: "https://example.com/resources/state-management.pdf",
+      },
+    ],
   },
-  'lesson-3': {
-    id: 'lesson-3',
-    title: 'Custom Hooks',
-    description: 'Create reusable custom hooks to share logic across components.',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  "lesson-3": {
+    id: "lesson-3",
+    title: "Custom Hooks",
+    description:
+      "Create reusable custom hooks to share logic across components.",
+    videoUrl:
+      "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     duration: 540, // 9 minutes
     views: 750,
     content: `
       <h2>Creating Custom Hooks</h2>
       <p>Custom hooks allow you to extract component logic into reusable functions.</p>
     `,
-    resources: []
-  }
+    resources: [],
+  },
 };
 
 /**
@@ -124,157 +130,157 @@ function Counter() {
  * Represents the complete course with chapters and lessons
  */
 export const mockCourseStructure = {
-  'course-1': {
-    id: 'course-1',
-    title: 'Complete React Development Course',
-    instructor: 'John Doe',
+  "course-1": {
+    id: "course-1",
+    title: "Complete React Development Course",
+    instructor: "John Doe",
     chapters: [
       {
-        id: 'chapter-1',
-        title: 'React Fundamentals',
+        id: "chapter-1",
+        title: "React Fundamentals",
         order: 1,
-        duration: '45 min',
+        duration: "45 min",
         lessons: [
           {
-            id: 'lesson-1',
-            title: 'Introduction to React Hooks',
-            type: 'video',
-            duration: '10 min',
+            id: "lesson-1",
+            title: "Introduction to React Hooks",
+            type: "video",
+            duration: "10 min",
             completed: false,
-            locked: false
+            locked: false,
           },
           {
-            id: 'lesson-2',
-            title: 'Advanced State Management',
-            type: 'video',
-            duration: '12 min',
+            id: "lesson-2",
+            title: "Advanced State Management",
+            type: "video",
+            duration: "12 min",
             completed: false,
-            locked: false
+            locked: false,
           },
           {
-            id: 'lesson-3',
-            title: 'Custom Hooks',
-            type: 'video',
-            duration: '9 min',
+            id: "lesson-3",
+            title: "Custom Hooks",
+            type: "video",
+            duration: "9 min",
             completed: false,
-            locked: false
+            locked: false,
           },
           {
-            id: 'quiz-1',
-            title: 'React Fundamentals Quiz',
-            type: 'quiz',
-            duration: '15 min',
+            id: "quiz-1",
+            title: "React Fundamentals Quiz",
+            type: "quiz",
+            duration: "15 min",
             completed: false,
-            locked: false
-          }
-        ]
+            locked: false,
+          },
+        ],
       },
       {
-        id: 'chapter-2',
-        title: 'Component Architecture',
+        id: "chapter-2",
+        title: "Component Architecture",
         order: 2,
-        duration: '60 min',
+        duration: "60 min",
         lessons: [
           {
-            id: 'lesson-4',
-            title: 'Component Composition',
-            type: 'video',
-            duration: '15 min',
+            id: "lesson-4",
+            title: "Component Composition",
+            type: "video",
+            duration: "15 min",
             completed: false,
-            locked: false
+            locked: false,
           },
           {
-            id: 'lesson-5',
-            title: 'Higher-Order Components',
-            type: 'video',
-            duration: '18 min',
+            id: "lesson-5",
+            title: "Higher-Order Components",
+            type: "video",
+            duration: "18 min",
             completed: false,
-            locked: false
+            locked: false,
           },
           {
-            id: 'lesson-6',
-            title: 'Render Props Pattern',
-            type: 'video',
-            duration: '12 min',
+            id: "lesson-6",
+            title: "Render Props Pattern",
+            type: "video",
+            duration: "12 min",
             completed: false,
-            locked: false
+            locked: false,
           },
           {
-            id: 'reading-1',
-            title: 'Architecture Best Practices',
-            type: 'reading',
-            duration: '10 min',
+            id: "reading-1",
+            title: "Architecture Best Practices",
+            type: "reading",
+            duration: "10 min",
             completed: false,
-            locked: false
-          }
-        ]
+            locked: false,
+          },
+        ],
       },
       {
-        id: 'chapter-3',
-        title: 'Performance Optimization',
+        id: "chapter-3",
+        title: "Performance Optimization",
         order: 3,
-        duration: '50 min',
+        duration: "50 min",
         lessons: [
           {
-            id: 'lesson-7',
-            title: 'React.memo and useMemo',
-            type: 'video',
-            duration: '14 min',
+            id: "lesson-7",
+            title: "React.memo and useMemo",
+            type: "video",
+            duration: "14 min",
             completed: false,
-            locked: true
+            locked: true,
           },
           {
-            id: 'lesson-8',
-            title: 'Code Splitting',
-            type: 'video',
-            duration: '16 min',
+            id: "lesson-8",
+            title: "Code Splitting",
+            type: "video",
+            duration: "16 min",
             completed: false,
-            locked: true
+            locked: true,
           },
           {
-            id: 'lesson-9',
-            title: 'Lazy Loading',
-            type: 'video',
-            duration: '12 min',
+            id: "lesson-9",
+            title: "Lazy Loading",
+            type: "video",
+            duration: "12 min",
             completed: false,
-            locked: true
-          }
-        ]
+            locked: true,
+          },
+        ],
       },
       {
-        id: 'chapter-4',
-        title: 'Testing React Applications',
+        id: "chapter-4",
+        title: "Testing React Applications",
         order: 4,
-        duration: '40 min',
+        duration: "40 min",
         lessons: [
           {
-            id: 'lesson-10',
-            title: 'Unit Testing with Jest',
-            type: 'video',
-            duration: '15 min',
+            id: "lesson-10",
+            title: "Unit Testing with Jest",
+            type: "video",
+            duration: "15 min",
             completed: false,
-            locked: true
+            locked: true,
           },
           {
-            id: 'lesson-11',
-            title: 'Testing React Components',
-            type: 'video',
-            duration: '18 min',
+            id: "lesson-11",
+            title: "Testing React Components",
+            type: "video",
+            duration: "18 min",
             completed: false,
-            locked: true
+            locked: true,
           },
           {
-            id: 'quiz-2',
-            title: 'Final Assessment',
-            type: 'quiz',
-            duration: '20 min',
+            id: "quiz-2",
+            title: "Final Assessment",
+            type: "quiz",
+            duration: "20 min",
             completed: false,
-            locked: true
-          }
-        ]
-      }
-    ]
-  }
+            locked: true,
+          },
+        ],
+      },
+    ],
+  },
 };
 
 /**
@@ -304,8 +310,8 @@ export const markLessonCompleted = (courseId, lessonId) => {
   const course = mockCourseStructure[courseId];
   if (!course) return;
 
-  course.chapters.forEach(chapter => {
-    const lesson = chapter.lessons.find(l => l.id === lessonId);
+  course.chapters.forEach((chapter) => {
+    const lesson = chapter.lessons.find((l) => l.id === lessonId);
     if (lesson) {
       lesson.completed = true;
     }
@@ -323,11 +329,11 @@ export const getNextLesson = (courseId, currentLessonId) => {
   if (!course) return null;
 
   const allLessons = [];
-  course.chapters.forEach(chapter => {
+  course.chapters.forEach((chapter) => {
     allLessons.push(...chapter.lessons);
   });
 
-  const currentIndex = allLessons.findIndex(l => l.id === currentLessonId);
+  const currentIndex = allLessons.findIndex((l) => l.id === currentLessonId);
   if (currentIndex >= 0 && currentIndex < allLessons.length - 1) {
     return allLessons[currentIndex + 1];
   }
@@ -346,11 +352,11 @@ export const getPreviousLesson = (courseId, currentLessonId) => {
   if (!course) return null;
 
   const allLessons = [];
-  course.chapters.forEach(chapter => {
+  course.chapters.forEach((chapter) => {
     allLessons.push(...chapter.lessons);
   });
 
-  const currentIndex = allLessons.findIndex(l => l.id === currentLessonId);
+  const currentIndex = allLessons.findIndex((l) => l.id === currentLessonId);
   if (currentIndex > 0) {
     return allLessons[currentIndex - 1];
   }

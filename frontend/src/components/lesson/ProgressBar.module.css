@@ -122,7 +122,8 @@
 }
 
 @keyframes completePulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -165,7 +166,8 @@
 }
 
 @keyframes celebrate {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(0deg) scale(1);
   }
   25% {
@@ -191,28 +193,28 @@
   .progressBarContainer {
     padding: 0.65rem 1.25rem;
   }
-  
+
   .progressText {
     font-size: 0.85rem;
   }
-  
+
   .progressPercentage {
     font-size: 0.8rem;
   }
-  
+
   .progressTrack {
     height: 7px;
   }
-  
+
   .completionBadge {
     right: 1.25rem;
     padding: 0.4rem 0.8rem;
   }
-  
+
   .badgeIcon {
     font-size: 1.1rem;
   }
-  
+
   .badgeText {
     font-size: 0.85rem;
   }
@@ -223,19 +225,19 @@
   .progressBarContainer {
     padding: 0.6rem 1rem;
   }
-  
+
   .progressText {
     font-size: 0.8rem;
   }
-  
+
   .progressPercentage {
     font-size: 0.75rem;
   }
-  
+
   .progressTrack {
     height: 6px;
   }
-  
+
   .completionBadge {
     position: static;
     transform: none;
@@ -250,34 +252,34 @@
   .progressBarContainer {
     padding: 0.5rem 0.75rem;
   }
-  
+
   .progressTextContainer {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
   }
-  
+
   .progressText {
     font-size: 0.75rem;
   }
-  
+
   .progressPercentage {
     font-size: 0.7rem;
   }
-  
+
   .progressTrack {
     height: 5px;
   }
-  
+
   .completionBadge {
     padding: 0.35rem 0.65rem;
     gap: 0.35rem;
   }
-  
+
   .badgeIcon {
     font-size: 1rem;
   }
-  
+
   .badgeText {
     font-size: 0.75rem;
   }
@@ -303,7 +305,7 @@
   .progressBarContainer {
     border-top-width: 2px;
   }
-  
+
   .progressTrack {
     border: 1px solid currentColor;
   }

@@ -191,7 +191,7 @@
 }
 
 .lessonItem::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 0;
@@ -299,7 +299,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -350,15 +351,15 @@
   .courseHeader {
     padding: 1.25rem;
   }
-  
+
   .courseTitle {
     font-size: 1.1rem;
   }
-  
+
   .chapterHeader {
     padding: 0.875rem 1.25rem;
   }
-  
+
   .lessonItem {
     padding: 0.75rem 1.25rem 0.75rem 2.75rem;
   }
@@ -369,39 +370,39 @@
   .courseHeader {
     padding: 1rem;
   }
-  
+
   .courseTitle {
     font-size: 1rem;
   }
-  
+
   .courseInfo {
     font-size: 0.8rem;
   }
-  
+
   .chapterHeader {
     padding: 0.75rem 1rem;
   }
-  
+
   .chapterTitle {
     font-size: 0.95rem;
   }
-  
+
   .lessonItem {
     padding: 0.65rem 1rem 0.65rem 2.5rem;
   }
-  
+
   .lessonTitle {
     font-size: 0.85rem;
   }
-  
+
   .lessonMeta {
     font-size: 0.7rem;
   }
-  
+
   .sidebarFooter {
     padding: 0.875rem 1rem;
   }
-  
+
   .footerButton {
     padding: 0.65rem;
     font-size: 0.8rem;
@@ -413,22 +414,22 @@
   .courseHeader {
     padding: 0.875rem;
   }
-  
+
   .progressInfo {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.25rem;
   }
-  
+
   .chapterHeader {
     padding: 0.65rem 0.875rem;
   }
-  
+
   .lessonItem {
     padding: 0.6rem 0.875rem 0.6rem 2.25rem;
     gap: 0.5rem;
   }
-  
+
   .lessonIcon {
     min-width: 20px;
     height: 20px;
@@ -452,7 +453,7 @@
   .lessonItem {
     border: 1px solid transparent;
   }
-  
+
   .chapterHeader:focus,
   .lessonItem:focus {
     border-color: currentColor;

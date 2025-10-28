@@ -22,49 +22,49 @@ const LessonPlayer = () => {
     const [progress, setProgress] = useState(0);
     const [watchedTime, setWatchedTime] = useState(0);
     const [isCompleted, setIsCompleted] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [loading, setLoading] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [loading, setLoading] = useState(true);
 
-  /**
-   * Fetch lesson data from mock data (would be API call in production)
-   */
-  const loadLessonData = async () => {
-    try {
-      setLoading(true);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Load mock data
-      const lesson = mockLessonData[lessonId] || mockLessonData['lesson-1'];
-      const structure = mockCourseStructure[courseId] || mockCourseStructure['course-1'];
-      
-      setCurrentLesson(lesson);
-      setCourseStructure(structure);
-      
-      // Load saved progress from localStorage
-      const savedProgress = localStorage.getItem(`lesson-progress-${lessonId}`);
-      if (savedProgress) {
-        const { progress: savedProg, watchedTime: savedTime, completed } = JSON.parse(savedProgress);
-        setProgress(savedProg);
-        setWatchedTime(savedTime);
-        setIsCompleted(completed);
-      }
-      
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading lesson:', error);
-      setLoading(false);
-    }
-  };
+    /**
+     * Fetch lesson data from mock data (would be API call in production)
+     */
+    const loadLessonData = async () => {
+        try {
+            setLoading(true);
 
-  /**
-   * Load lesson data when component mounts or lessonId changes
-   */
-  useEffect(() => {
-    loadLessonData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lessonId, courseId]);    /**
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Load mock data
+            const lesson = mockLessonData[lessonId] || mockLessonData['lesson-1'];
+            const structure = mockCourseStructure[courseId] || mockCourseStructure['course-1'];
+
+            setCurrentLesson(lesson);
+            setCourseStructure(structure);
+
+            // Load saved progress from localStorage
+            const savedProgress = localStorage.getItem(`lesson-progress-${lessonId}`);
+            if (savedProgress) {
+                const { progress: savedProg, watchedTime: savedTime, completed } = JSON.parse(savedProgress);
+                setProgress(savedProg);
+                setWatchedTime(savedTime);
+                setIsCompleted(completed);
+            }
+
+            setLoading(false);
+        } catch (error) {
+            console.error('Error loading lesson:', error);
+            setLoading(false);
+        }
+    };
+
+    /**
+     * Load lesson data when component mounts or lessonId changes
+     */
+    useEffect(() => {
+        loadLessonData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lessonId, courseId]);    /**
      * Handle video progress updates
      * @param {number} currentTime - Current playback time in seconds
      * @param {number} duration - Total video duration in seconds
