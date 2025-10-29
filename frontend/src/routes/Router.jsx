@@ -9,6 +9,7 @@ import Register from "../pages/auth/Register.jsx";
 //import Dashboard from "../pages/dashboard/Dashboard.jsx";
 import Profile from "../pages/profile/Profile.jsx";
 import QuizDemo from "../pages/QuizDemo.jsx";
+import QuizTimerDemo from "../pages/QuizTimerDemo.jsx";
 import QuizzList from "../components/quizz/QuizzList.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
 import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
       // { path: "courses", element: <Courses /> },
       // { path: "discussion", element: <Discussion /> },
       { path: "quiz-demo", element: <QuizDemo /> },
+      { path: "quiz-timer-demo", element: <QuizTimerDemo /> },
       { path: "quizzes", element: <QuizzList courseId="demo-course" /> },
       { path: "courses/:courseId/lessons/:lessonId", element: <LessonPlayer /> },
       {

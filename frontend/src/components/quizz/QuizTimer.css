@@ -1,0 +1,300 @@
+/* Quiz Timer Container */
+.quiz-timer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Timer Display */
+.quiz-timer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.quiz-timer.normal {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
+
+.quiz-timer.warning {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.quiz-timer.critical {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.quiz-timer.expired {
+  border-color: #991b1b;
+  background: #fee2e2;
+}
+
+.quiz-timer.pulse {
+  animation: pulse-warning 2s ease-in-out infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+}
+
+/* Timer Icon */
+.quiz-timer-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.quiz-timer.normal .quiz-timer-icon {
+  color: #10b981;
+}
+
+.quiz-timer.warning .quiz-timer-icon {
+  color: #f59e0b;
+}
+
+.quiz-timer.critical .quiz-timer-icon {
+  color: #ef4444;
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+.quiz-timer.expired .quiz-timer-icon {
+  color: #991b1b;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+
+/* Timer Content */
+.quiz-timer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.quiz-timer-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Timer Display */
+.quiz-timer-display {
+  font-family: 'Courier New', monospace;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 2px;
+  transition: color 0.3s ease;
+}
+
+.quiz-timer-display.normal {
+  color: #10b981;
+}
+
+.quiz-timer-display.warning {
+  color: #f59e0b;
+}
+
+.quiz-timer-display.critical {
+  color: #ef4444;
+  animation: blink 1s ease-in-out infinite;
+}
+
+.quiz-timer-display.expired {
+  color: #991b1b;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Warning Message */
+.quiz-timer-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quiz-timer-warning.warning {
+  background: #fffbeb;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+}
+
+.quiz-timer-warning.critical {
+  background: #fef2f2;
+  border: 1px solid #ef4444;
+  color: #991b1b;
+}
+
+.warning-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.warning-text {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Expired Message */
+.quiz-timer-expired {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: #fee2e2;
+  border: 2px solid #ef4444;
+  border-radius: 8px;
+  animation: slideIn 0.3s ease;
+}
+
+.expired-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.expired-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #991b1b;
+}
+
+/* Compact Variant */
+.quiz-timer-container.compact .quiz-timer {
+  padding: 8px 16px;
+}
+
+.quiz-timer-container.compact .quiz-timer-display {
+  font-size: 20px;
+}
+
+.quiz-timer-container.compact .quiz-timer-label {
+  font-size: 11px;
+}
+
+/* Inline Variant */
+.quiz-timer-container.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.quiz-timer-container.inline .quiz-timer {
+  padding: 8px 12px;
+}
+
+.quiz-timer-container.inline .quiz-timer-label {
+  display: none;
+}
+
+.quiz-timer-container.inline .quiz-timer-display {
+  font-size: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .quiz-timer {
+    padding: 10px 16px;
+  }
+
+  .quiz-timer-display {
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .quiz-timer-label {
+    font-size: 11px;
+  }
+
+  .warning-text {
+    font-size: 13px;
+  }
+
+  .expired-text {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .quiz-timer {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .quiz-timer-display {
+    font-size: 18px;
+  }
+
+  .quiz-timer-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Accessibility */
+.quiz-timer:focus-within {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .quiz-timer {
+    border-width: 3px;
+  }
+
+  .quiz-timer-display {
+    font-weight: 900;
+  }
+}
+
