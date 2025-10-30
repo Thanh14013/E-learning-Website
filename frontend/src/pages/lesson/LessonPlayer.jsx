@@ -5,8 +5,8 @@ import LessonSidebar from '../../components/lesson/LessonSidebar';
 import LessonResources from '../../components/lesson/LessonResources';
 import ProgressBar from '../../components/lesson/ProgressBar';
 import { mockLessonData, mockCourseStructure } from '../../mock/lessonMockData';
-import { 
-    calculateCourseProgress, 
+import {
+    calculateCourseProgress,
     updateCourseStructureWithProgress,
     saveLessonProgress,
     markLessonAsCompleted
@@ -127,7 +127,7 @@ const LessonPlayer = () => {
      */
     const markLessonComplete = () => {
         setIsCompleted(true);
-        
+
         // Save completion to localStorage
         markLessonAsCompleted(lessonId, currentLesson?.duration || 0);
 
@@ -135,7 +135,7 @@ const LessonPlayer = () => {
         if (courseStructure) {
             const updatedStructure = updateCourseStructureWithProgress(courseStructure);
             setCourseStructure(updatedStructure);
-            
+
             const progressStats = calculateCourseProgress(updatedStructure);
             setCourseProgress(progressStats);
         }

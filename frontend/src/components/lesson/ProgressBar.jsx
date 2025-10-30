@@ -12,8 +12,8 @@ import styles from './ProgressBar.module.css';
  * - Time spent on current lesson
  * - Auto-mark lesson complete at 90% watched
  */
-const ProgressBar = ({ 
-    progress = 0, 
+const ProgressBar = ({
+    progress = 0,
     isCompleted = false,
     courseProgress = null,
     timeSpent = 0

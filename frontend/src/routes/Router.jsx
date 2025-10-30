@@ -8,7 +8,7 @@ import Register from "../pages/auth/Register.jsx";
 // import NotFound from "../pages/notFound/NotFound.jsx";
 // import Dashboard from "../pages/dashboard/Dashboard.jsx";
 import Profile from "../pages/profile/Profile.jsx";
-import QuizDemo from "../pages/QuizDemo.jsx";
+import QuizDemo from "../pages/quizz/QuizDemo.jsx";
 import QuizzList from "../components/quizz/QuizzList.jsx";
 import QuizDetail from "../components/quizz/QuizDetail.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";

@@ -22,7 +22,7 @@ export const calculateCourseProgress = (courseStructure) => {
     if (chapter.lessons && Array.isArray(chapter.lessons)) {
       chapter.lessons.forEach((lesson) => {
         totalLessons++;
-        
+
         // Check if lesson is completed from localStorage or lesson object
         const isCompleted = lesson.completed || isLessonCompleted(lesson.id);
         if (isCompleted) {
@@ -33,12 +33,13 @@ export const calculateCourseProgress = (courseStructure) => {
   });
 
   // Calculate percentage
-  const percentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+  const percentage =
+    totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
   return {
     completed: completedLessons,
     total: totalLessons,
-    percentage: Math.round(percentage * 100) / 100 // Round to 2 decimal places
+    percentage: Math.round(percentage * 100) / 100, // Round to 2 decimal places
   };
 };
 
@@ -55,7 +56,7 @@ export const isLessonCompleted = (lessonId) => {
     const data = JSON.parse(progressData);
     return data.completed === true;
   } catch (error) {
-    console.error('Error checking lesson completion:', error);
+    console.error("Error checking lesson completion:", error);
     return false;
   }
 };
@@ -72,7 +73,7 @@ export const getLessonProgress = (lessonId) => {
 
     return JSON.parse(progressData);
   } catch (error) {
-    console.error('Error getting lesson progress:', error);
+    console.error("Error getting lesson progress:", error);
     return null;
   }
 };
@@ -87,13 +88,16 @@ export const saveLessonProgress = (lessonId, progressData) => {
   try {
     const dataToSave = {
       ...progressData,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
-    
-    localStorage.setItem(`lesson-progress-${lessonId}`, JSON.stringify(dataToSave));
+
+    localStorage.setItem(
+      `lesson-progress-${lessonId}`,
+      JSON.stringify(dataToSave)
+    );
     return true;
   } catch (error) {
-    console.error('Error saving lesson progress:', error);
+    console.error("Error saving lesson progress:", error);
     return false;
   }
 };
@@ -110,7 +114,7 @@ export const markLessonAsCompleted = (lessonId, duration = 0) => {
     watchedTime: duration,
     completed: true,
     completedAt: new Date().toISOString(),
-    lastUpdated: new Date().toISOString()
+    lastUpdated: new Date().toISOString(),
   };
 
   return saveLessonProgress(lessonId, progressData);
@@ -148,17 +152,19 @@ export const getTotalTimeSpent = (courseStructure) => {
  * @returns {string} Formatted time string
  */
 export const formatTime = (seconds) => {
-  if (!seconds || seconds < 0) return '0:00';
+  if (!seconds || seconds < 0) return "0:00";
 
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
 
   if (hours > 0) {
-    return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   }
 
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  return `${minutes}:${secs.toString().padStart(2, "0")}`;
 };
 
 /**
@@ -211,7 +217,7 @@ export const clearCourseProgress = (courseStructure) => {
 
     return true;
   } catch (error) {
-    console.error('Error clearing course progress:', error);
+    console.error("Error clearing course progress:", error);
     return false;
   }
 };
