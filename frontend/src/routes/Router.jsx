@@ -6,12 +6,11 @@ import Register from "../pages/auth/Register.jsx";
 // import Courses from "../pages/courses/Courses.jsx";
 // import Discussion from "../pages/discussion/Discussion.jsx";
 // import NotFound from "../pages/notFound/NotFound.jsx";
-//import Dashboard from "../pages/dashboard/Dashboard.jsx";
+// import Dashboard from "../pages/dashboard/Dashboard.jsx";
 import Profile from "../pages/profile/Profile.jsx";
-import QuizDemo from "../pages/QuizDemo.jsx";
-import QuizTimerDemo from "../pages/QuizTimerDemo.jsx";
-import QuizQuestionDemo from "../pages/QuizQuestionDemo.jsx";
-import QuizzList from "../components/quizz/QuizzList.jsx";
+// import QuizDemo from "../pages/QuizDemo.jsx";
+// import QuizzList from "../components/quizz/QuizzList.jsx";
+import QuizDetail from "../components/quizz/QuizDetail.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
 import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
 
@@ -28,11 +27,9 @@ const router = createBrowserRouter([
       { path: "register", element: <Register /> },
       // { path: "courses", element: <Courses /> },
       // { path: "discussion", element: <Discussion /> },
-      { path: "quiz-demo", element: <QuizDemo /> },
-      { path: "quiz-timer-demo", element: <QuizTimerDemo /> },
-      { path: "quiz-question-demo", element: <QuizQuestionDemo /> },
-      { path: "quizzes", element: <QuizzList courseId="demo-course" /> },
-      { path: "courses/:courseId/lessons/:lessonId", element: <LessonPlayer /> },
+      // { path: "quiz-demo", element: <QuizDemo /> },
+      // { path: "quizzes", element: <QuizzList courseId="demo-course" /> },
+      { path: "quiz/:quizId", element: <QuizDetail /> },
       {
         element: <ProtectedRoute />,
         children: [
