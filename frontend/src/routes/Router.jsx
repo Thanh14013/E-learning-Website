@@ -12,6 +12,7 @@ import Profile from "../pages/profile/Profile.jsx";
 // import QuizzList from "../components/quizz/QuizzList.jsx";
 import QuizDetail from "../components/quizz/QuizDetail.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
+import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
 
 
 const router = createBrowserRouter([
@@ -34,8 +35,8 @@ const router = createBrowserRouter([
         children: [
           // { path: "dashboard", element: <Dashboard /> },
           { path: "profile", element: <Profile /> },
-        ],   
-      },   
+        ],
+      },
     ],
   },
 ]);

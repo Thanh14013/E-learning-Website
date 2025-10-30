@@ -1,0 +1,325 @@
+/* ===========================================
+   PROGRESS BAR CONTAINER (Fixed at bottom)
+   =========================================== */
+.progressBarContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #1a1a1a;
+  border-top: 1px solid #2d2d2d;
+  padding: 0.75rem 1.5rem;
+  z-index: 100;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ===========================================
+   PROGRESS CONTENT
+   =========================================== */
+.progressContent {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progressTextContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressText {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.progressPercentage {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+/* ===========================================
+   PROGRESS TRACK
+   =========================================== */
+.progressTrack {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  background-color: #2d2d2d;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ===========================================
+   PROGRESS FILL
+   =========================================== */
+.progressFill {
+  position: relative;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  overflow: hidden;
+}
+
+/* Progress shine animation */
+.progressShine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shine 2s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  50%,
+  100% {
+    left: 100%;
+  }
+}
+
+/* ===========================================
+   PROGRESS COLOR STATES
+   =========================================== */
+
+/* Minimal progress (0-25%) */
+.minimal {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Low progress (25-50%) */
+.low {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+/* Medium progress (50-75%) */
+.medium {
+  background: linear-gradient(90deg, #eab308, #ca8a04);
+}
+
+/* High progress (75-100%) */
+.high {
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+/* Completed */
+.completed {
+  background: linear-gradient(90deg, #10b981, #059669);
+  animation: completePulse 1.5s ease-in-out;
+}
+
+@keyframes completePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* ===========================================
+   COMPLETION BADGE
+   =========================================== */
+.completionBadge {
+  position: absolute;
+  top: 50%;
+  right: 1.5rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  animation: badgeAppear 0.5s ease-out;
+}
+
+@keyframes badgeAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+.badgeIcon {
+  font-size: 1.2rem;
+  animation: celebrate 1s ease-in-out infinite;
+}
+
+@keyframes celebrate {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-10deg) scale(1.1);
+  }
+  75% {
+    transform: rotate(10deg) scale(1.1);
+  }
+}
+
+.badgeText {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+/* Tablet - 768px to 1024px */
+@media (max-width: 1024px) {
+  .progressBarContainer {
+    padding: 0.65rem 1.25rem;
+  }
+
+  .progressText {
+    font-size: 0.85rem;
+  }
+
+  .progressPercentage {
+    font-size: 0.8rem;
+  }
+
+  .progressTrack {
+    height: 7px;
+  }
+
+  .completionBadge {
+    right: 1.25rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .badgeIcon {
+    font-size: 1.1rem;
+  }
+
+  .badgeText {
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile - up to 768px */
+@media (max-width: 768px) {
+  .progressBarContainer {
+    padding: 0.6rem 1rem;
+  }
+
+  .progressText {
+    font-size: 0.8rem;
+  }
+
+  .progressPercentage {
+    font-size: 0.75rem;
+  }
+
+  .progressTrack {
+    height: 6px;
+  }
+
+  .completionBadge {
+    position: static;
+    transform: none;
+    margin-top: 0.5rem;
+    align-self: flex-end;
+    padding: 0.4rem 0.75rem;
+  }
+}
+
+/* Small mobile - up to 480px */
+@media (max-width: 480px) {
+  .progressBarContainer {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .progressTextContainer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .progressText {
+    font-size: 0.75rem;
+  }
+
+  .progressPercentage {
+    font-size: 0.7rem;
+  }
+
+  .progressTrack {
+    height: 5px;
+  }
+
+  .completionBadge {
+    padding: 0.35rem 0.65rem;
+    gap: 0.35rem;
+  }
+
+  .badgeIcon {
+    font-size: 1rem;
+  }
+
+  .badgeText {
+    font-size: 0.75rem;
+  }
+}
+
+/* ===========================================
+   ACCESSIBILITY
+   =========================================== */
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .progressFill,
+  .progressShine,
+  .completionBadge,
+  .badgeIcon {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .progressBarContainer {
+    border-top-width: 2px;
+  }
+
+  .progressTrack {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Screen reader only text */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
