@@ -63,34 +63,62 @@ const LessonResources = ({ resources }) => {
 
     /**
      * Handle resource download
-     * @param {Object} resource - Resource object
+     * In production, this would make an API call to track downloads
+     * and serve the file from cloud storage (e.g., AWS S3, Cloudinary)
+     * @param {Object} resource - Resource object containing file metadata
      */
     const handleDownload = (resource) => {
-        // In production, this would trigger actual file download
-        console.log('Downloading:', resource);
+        console.log('Downloading:', resource.name);
 
-        // Create a temporary link and trigger download
+        // Create a temporary anchor element to trigger download
         const link = document.createElement('a');
         link.href = resource.url;
-        link.download = resource.name;
-        link.target = '_blank';
+        link.download = resource.name; // Suggests filename for download
+        link.target = '_blank'; // Fallback to open in new tab if download fails
+        link.rel = 'noopener noreferrer'; // Security best practice
+        
+        // Append to DOM, trigger click, then remove
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+
+        // TODO: In production, track download analytics
+        // trackResourceDownload(resource.id);
     };
 
     /**
      * Handle resource preview
-     * @param {Object} resource - Resource object
+     * Opens resource in new tab for preview
+     * Supported types: PDF, images, videos
+     * @param {Object} resource - Resource object containing file metadata
      */
     const handlePreview = (resource) => {
-        // Open in new tab for preview
-        window.open(resource.url, '_blank');
+        console.log('Previewing:', resource.name);
+        
+        // Open resource URL in new tab with security attributes
+        const previewWindow = window.open(resource.url, '_blank', 'noopener,noreferrer');
+        
+        // Handle popup blocker
+        if (!previewWindow || previewWindow.closed || typeof previewWindow.closed === 'undefined') {
+            alert('Please enable popups to preview this resource.');
+        }
+
+        // TODO: In production, track preview analytics
+        // trackResourcePreview(resource.id);
     };
 
-    // Don't render if no resources
+    // Don't render component if no resources are available
     if (!resources || resources.length === 0) {
-        return null;
+        return (
+            <div className={styles.resourcesContainer}>
+                <h3 className={styles.resourcesTitle}>
+                    📚 Lesson Resources
+                </h3>
+                <p className={styles.noResourcesMessage}>
+                    No resources available for this lesson yet.
+                </p>
+            </div>
+        );
     }
 
     return (
