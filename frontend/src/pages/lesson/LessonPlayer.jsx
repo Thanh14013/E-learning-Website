@@ -5,6 +5,12 @@ import LessonSidebar from '../../components/lesson/LessonSidebar';
 import LessonResources from '../../components/lesson/LessonResources';
 import ProgressBar from '../../components/lesson/ProgressBar';
 import { mockLessonData, mockCourseStructure } from '../../mock/lessonMockData';
+import { 
+    calculateCourseProgress, 
+    updateCourseStructureWithProgress,
+    saveLessonProgress,
+    markLessonAsCompleted
+} from '../../utils/progressTracker';
 import styles from './LessonPlayer.module.css';
 
 /**
@@ -24,6 +30,7 @@ const LessonPlayer = () => {
     const [isCompleted, setIsCompleted] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [loading, setLoading] = useState(true);
+    const [courseProgress, setCourseProgress] = useState(null);
 
     /**
      * Fetch lesson data from mock data (would be API call in production)
@@ -39,8 +46,15 @@ const LessonPlayer = () => {
             const lesson = mockLessonData[lessonId] || mockLessonData['lesson-1'];
             const structure = mockCourseStructure[courseId] || mockCourseStructure['course-1'];
 
+            // Update course structure with progress from localStorage
+            const updatedStructure = updateCourseStructureWithProgress(structure);
+
             setCurrentLesson(lesson);
-            setCourseStructure(structure);
+            setCourseStructure(updatedStructure);
+
+            // Calculate overall course progress
+            const progressStats = calculateCourseProgress(updatedStructure);
+            setCourseProgress(progressStats);
 
             // Load saved progress from localStorage
             const savedProgress = localStorage.getItem(`lesson-progress-${lessonId}`);
@@ -49,6 +63,11 @@ const LessonPlayer = () => {
                 setProgress(savedProg);
                 setWatchedTime(savedTime);
                 setIsCompleted(completed);
+            } else {
+                // Reset progress for new lesson
+                setProgress(0);
+                setWatchedTime(0);
+                setIsCompleted(false);
             }
 
             setLoading(false);
@@ -89,6 +108,7 @@ const LessonPlayer = () => {
 
     /**
      * Save lesson progress to localStorage
+     * Uses the progressTracker utility for consistent storage
      * @param {number} prog - Progress percentage
      * @param {number} time - Watched time in seconds
      */
@@ -96,26 +116,31 @@ const LessonPlayer = () => {
         const progressData = {
             progress: prog,
             watchedTime: time,
-            completed: isCompleted,
-            lastUpdated: new Date().toISOString()
+            completed: isCompleted
         };
-        localStorage.setItem(`lesson-progress-${lessonId}`, JSON.stringify(progressData));
+        saveLessonProgress(lessonId, progressData);
     };
 
     /**
-     * Mark lesson as completed
+     * Mark lesson as completed and update course progress
+     * Auto-triggered when video reaches 90% completion
      */
     const markLessonComplete = () => {
         setIsCompleted(true);
-        const progressData = {
-            progress: 100,
-            watchedTime: currentLesson?.duration || 0,
-            completed: true,
-            completedAt: new Date().toISOString()
-        };
-        localStorage.setItem(`lesson-progress-${lessonId}`, JSON.stringify(progressData));
+        
+        // Save completion to localStorage
+        markLessonAsCompleted(lessonId, currentLesson?.duration || 0);
 
-        // Update course progress
+        // Update course structure and recalculate progress
+        if (courseStructure) {
+            const updatedStructure = updateCourseStructureWithProgress(courseStructure);
+            setCourseStructure(updatedStructure);
+            
+            const progressStats = calculateCourseProgress(updatedStructure);
+            setCourseProgress(progressStats);
+        }
+
+        // In production, this would also be an API call
         updateCourseProgress();
     };
 
@@ -297,6 +322,8 @@ const LessonPlayer = () => {
             <ProgressBar
                 progress={progress}
                 isCompleted={isCompleted}
+                courseProgress={courseProgress}
+                timeSpent={watchedTime}
             />
         </div>
     );
