@@ -154,3 +154,78 @@ export const refreshAccessToken = async (req, res) => {
     res.status(500).json({ message: "Server error during token refresh." });
   }
 };
+
+/**
+ * POST /api/auth/login
+ */
+export const login = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please provide your email and password.' });
+        }
+
+        const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid email or password.' });
+        }
+
+        const isMatch = await user.matchPassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid email or password.' });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({ message: 'Your account has not been verified. Please check your email.' });
+        }
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        const cookieOptions = {
+            httpOnly: true,
+            secure: isProduction, // true khi deploy https
+            sameSite: isProduction ? 'None' : 'Lax',
+            maxAge: (() => {
+                const expires = process.env.JWT_REFRESH_EXPIRE || '7d';
+
+                if (expires.endsWith('d')) {
+                    const days = parseInt(expires.replace('d', ''), 10);
+                    return days * 24 * 60 * 60 * 1000;
+                }
+
+                return 7 * 24 * 60 * 60 * 1000; // 7 days
+            })(),
+        };
+
+        res.cookie('refreshToken', refreshToken, cookieOptions);
+
+        const userProfile = await UserProfile.findOne({ userId: user._id });
+
+        res.status(200).json({
+            message: 'Login successful.',
+            user: {
+                id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+                isVerified: user.isVerified,
+                profile: userProfile ? {
+                    phone: userProfile.phone,
+                    address: userProfile.address,
+                } : null
+            },
+            tokens: {
+                accessToken,
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Server error during login.' });
+    }
+};
