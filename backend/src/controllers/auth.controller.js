@@ -1,8 +1,12 @@
-import User from '../models/user.model.js';
-import UserProfile from '../models/userProfile.model.js';
-import crypto from 'crypto';
-import { sendVerificationEmail } from '../services/email.services.js';
-import { generateTokenPair, verifyRefreshToken, generateAccessToken } from '../config/jwt.config.js';
+import User from "../models/user.model.js";
+import UserProfile from "../models/userProfile.model.js";
+import crypto from "crypto";
+import { sendVerificationEmail } from "../services/email.services.js";
+import {
+  generateTokenPair,
+  verifyRefreshToken,
+  generateAccessToken,
+} from "../config/jwt.config.js";
 
 /**
  * POST /api/auth/register
@@ -119,7 +123,9 @@ export const refreshAccessToken = async (req, res) => {
     // Verify refresh token using JWT config
     const decoded = verifyRefreshToken(refreshToken);
     if (!decoded) {
-      return res.status(401).json({ message: "Invalid or expired refresh token." });
+      return res
+        .status(401)
+        .json({ message: "Invalid or expired refresh token." });
     }
 
     // Find user and verify refresh token matches stored token
