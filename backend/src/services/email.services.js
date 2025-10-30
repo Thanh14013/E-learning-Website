@@ -1,20 +1,24 @@
 import sgMail from '@sendgrid/mail';
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const frontendDomain = process.env.FRONTEND_URL || '';
+const sendGridApiKey = process.env.SENDGRID_API_KEY || '';
+const sendGridGromEmail = process.env.SENDGRID_FROM_EMAIL || '';
+
+sgMail.setApiKey(sendGridApiKey);
 
 export const sendVerificationEmail = async (email, fullName, token) => {
-    const verifyUrl = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+    const verifyUrl = `${frontendDomain}/verify-email/${token}`;
 
     const msg = {
         to: email,
-        from: process.env.SENDGRID_FROM_EMAIL,
+        from: sendGridGromEmail,
         subject: 'Xác thực tài khoản của bạn',
         html: `
-            <h3>Xin chào ${fullName},</h3>
-            <p>Cảm ơn bạn đã đăng ký tài khoản. Vui lòng nhấn vào liên kết dưới đây để xác thực email:</p>
-            <a href="${verifyUrl}" style="color:#1a73e8;">Xác thực tài khoản</a>
+            <h3>Hello ${fullName},</h3>
+            <p>Thank you for registering an account. Please click the link below to verify your email:</p>
+            <a href="${verifyUrl}" style="color:#1a73e8;">Verify your account</a>
             <br/><br/>
-            <p>Nếu bạn không thực hiện hành động này, hãy bỏ qua email này.</p>
+            <p>If you didn’t perform this request, there’s nothing else you need to do.</p>
         `,
     };
 
