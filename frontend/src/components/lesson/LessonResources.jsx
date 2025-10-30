@@ -76,7 +76,7 @@ const LessonResources = ({ resources }) => {
         link.download = resource.name; // Suggests filename for download
         link.target = '_blank'; // Fallback to open in new tab if download fails
         link.rel = 'noopener noreferrer'; // Security best practice
-        
+
         // Append to DOM, trigger click, then remove
         document.body.appendChild(link);
         link.click();
@@ -94,10 +94,10 @@ const LessonResources = ({ resources }) => {
      */
     const handlePreview = (resource) => {
         console.log('Previewing:', resource.name);
-        
+
         // Open resource URL in new tab with security attributes
         const previewWindow = window.open(resource.url, '_blank', 'noopener,noreferrer');
-        
+
         // Handle popup blocker
         if (!previewWindow || previewWindow.closed || typeof previewWindow.closed === 'undefined') {
             alert('Please enable popups to preview this resource.');
