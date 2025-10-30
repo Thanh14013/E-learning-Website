@@ -1,9 +1,9 @@
 import express from 'express';
-import { register } from '../controllers/auth.controller.js';
+import { register, verifyEmail } from '../controllers/auth.controller.js';
 
 const router = express.Router();
 
-// POST /api/auth/register
 router.post('/register', register);
+router.post('/verify-email/:token', verifyEmail);
 
 export default router;

@@ -70,3 +70,32 @@ export const register = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+/**
+ * POST /api/auth/verify-email/:token
+ */
+export const verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.params;
+
+        if (!token) {
+            return res.status(400).json({ message: 'Invalid verification token.' });
+        }
+
+        const user = await User.findOne({ verificationToken: token });
+        if (!user) {
+            return res.status(400).json({ message: 'Token not found or has expired.' });
+        }
+
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        await user.save({ validateBeforeSave: false });
+
+        res.status(200).json({
+            message: 'Email verified successfully. You can now log in.',
+        });
+    } catch (error) {
+        console.error('Email verification error:', error);
+        res.status(500).json({ message: 'Server error during email verification.' });
+    }
+};
