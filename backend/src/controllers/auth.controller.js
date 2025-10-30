@@ -5,8 +5,7 @@ import crypto from 'crypto';
 import { sendVerificationEmail } from '../services/email.services.js';
 
 /**
- * Đăng ký tài khoản mới
- * @route POST /api/auth/register
+ * POST /api/auth/register
  */
 export const register = async (req, res) => {
     try {
@@ -14,13 +13,13 @@ export const register = async (req, res) => {
 
         // Validate input data
         if (!fullName || !email || !password) {
-            return res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin.' });
+            return res.status(400).json({ message: 'Please fill in all required fields.' });
         }
 
         // Handle duplicate email error
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: 'Email đã tồn tại trong hệ thống.' });
+            return res.status(400).json({ message: 'This email already exists in our system.' });
         }
 
         // Generate verification token
@@ -56,7 +55,7 @@ export const register = async (req, res) => {
         await user.save({ validateBeforeSave: false });
 
         res.status(201).json({
-            message: 'Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.',
+            message: 'Registration successful. Please check your email to verify your account.',
             user: {
                 id: user._id,
                 fullName: user.fullName,
