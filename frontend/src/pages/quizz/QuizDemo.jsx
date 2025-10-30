@@ -1,6 +1,6 @@
 import React from 'react';
-import { AuthProvider } from '../contexts/AuthContext';
-import QuizzList from '../components/quizz/QuizzList';
+import { AuthProvider } from '../../contexts/AuthContext';
+import QuizzList from '../../components/quizz/QuizzList';
 import './QuizDemo.css';
 
 const QuizDemo = () => {
@@ -20,7 +20,7 @@ const QuizDemo = () => {
             <li>✅ Add quiz details link</li>
           </ul>
         </div>
-        
+
         <QuizzList courseId="demo-course-123" />
       </div>
     </AuthProvider>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import QuizQuestion from '../components/quizz/QuizQuestion';
+import QuizQuestion from '../../components/quizz/QuizQuestion';
 import './QuizQuestionDemo.css';
 
 const QuizQuestionDemo = () => {
@@ -150,13 +150,10 @@ const QuizQuestionDemo = () => {
             {questions.map((q, index) => (
               <button
                 key={q.id}
-                className={`nav-btn ${
-                  index === currentQuestionIndex ? 'active' : ''
-                } ${
-                  answers[index] ? 'answered' : ''
-                } ${
-                  bookmarkedQuestions.includes(index) ? 'bookmarked' : ''
-                }`}
+                className={`nav-btn ${index === currentQuestionIndex ? 'active' : ''
+                  } ${answers[index] ? 'answered' : ''
+                  } ${bookmarkedQuestions.includes(index) ? 'bookmarked' : ''
+                  }`}
                 onClick={() => setCurrentQuestionIndex(index)}
               >
                 {index + 1}
