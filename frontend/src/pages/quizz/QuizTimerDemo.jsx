@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import QuizTimer from '../components/quizz/QuizTimer';
-import { Button } from '../components/common/Button';
+import QuizTimer from '../../components/quizz/QuizTimer';
+import { Button } from '../../components/common/Button';
 import './QuizTimerDemo.css';
 
 const QuizTimerDemo = () => {
@@ -19,7 +19,7 @@ const QuizTimerDemo = () => {
   const handleWarning = (remainingTime, threshold) => {
     const message = `Warning: ${Math.floor(remainingTime / 60)} minutes remaining (${threshold}s threshold)`;
     setWarningLog((prev) => [...prev, { time: new Date().toLocaleTimeString(), message }]);
-    
+
     // Show browser notification if permission granted
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Quiz Timer Warning', {

@@ -82,7 +82,7 @@ function Counter() {
         type: "pdf",
         size: 2048000, // 2MB
         url: "https://example.com/resources/react-hooks-cheatsheet.pdf",
-        description: "Complete reference guide for all React Hooks",
+        description: "Complete reference guide for all React Hooks with examples and best practices",
       },
       {
         id: "res-2",
@@ -90,7 +90,7 @@ function Counter() {
         type: "zip",
         size: 5120000, // 5MB
         url: "https://example.com/resources/code-examples.zip",
-        description: "Source code for all examples in this lesson",
+        description: "Source code for all examples demonstrated in this lesson",
       },
       {
         id: "res-3",
@@ -98,7 +98,15 @@ function Counter() {
         type: "pptx",
         size: 3072000, // 3MB
         url: "https://example.com/resources/slides.pptx",
-        description: "PowerPoint presentation used in this lesson",
+        description: "PowerPoint presentation slides used in this lesson",
+      },
+      {
+        id: "res-4",
+        name: "Exercise Solutions.docx",
+        type: "docx",
+        size: 1024000, // 1MB
+        url: "https://example.com/resources/exercise-solutions.docx",
+        description: "Solutions to practice exercises",
       },
     ],
   },
@@ -141,11 +149,20 @@ function Counter() {
     `,
     resources: [
       {
-        id: "res-4",
+        id: "res-5",
         name: "State Management Guide.pdf",
         type: "pdf",
-        size: 1536000,
+        size: 1536000, // 1.5MB
         url: "https://example.com/resources/state-management.pdf",
+        description: "Comprehensive guide to state management patterns in React",
+      },
+      {
+        id: "res-6",
+        name: "useReducer Examples.xlsx",
+        type: "xlsx",
+        size: 512000, // 512KB
+        url: "https://example.com/resources/usereducer-examples.xlsx",
+        description: "Spreadsheet with useReducer code examples and comparisons",
       },
     ],
   },
@@ -175,7 +192,24 @@ function Counter() {
       <h2>Creating Custom Hooks</h2>
       <p>Custom hooks allow you to extract component logic into reusable functions.</p>
     `,
-    resources: [],
+    resources: [
+      {
+        id: "res-7",
+        name: "Custom Hooks Library.zip",
+        type: "zip",
+        size: 2048000, // 2MB
+        url: "https://example.com/resources/custom-hooks.zip",
+        description: "Collection of reusable custom hooks for common use cases",
+      },
+      {
+        id: "res-8",
+        name: "Hook Patterns.pdf",
+        type: "pdf",
+        size: 768000, // 768KB
+        url: "https://example.com/resources/hook-patterns.pdf",
+        description: "Design patterns for building custom React hooks",
+      },
+    ],
   },
 };
 
