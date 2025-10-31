@@ -1,8 +1,8 @@
 import express from "express";
 import {
-  register,
-  verifyEmail,
-  refreshAccessToken,
+    register,
+    verifyEmail,
+    refreshAccessToken, resetPassword,
 } from "../controllers/auth.controller.js";
 import {
   registerLimiter,
@@ -29,5 +29,8 @@ router.post(
 
 // POST /api/auth/refresh-token - Refresh access token with validation
 router.post("/refresh-token", validateRefreshToken, refreshAccessToken);
+
+// PUT /api/auth/reset-password/:token - Reset user password using valid token
+router.put("/reset-password/:token", resetPassword)
 
 export default router;

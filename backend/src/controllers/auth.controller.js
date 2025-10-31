@@ -229,3 +229,56 @@ export const login = async (req, res) => {
         res.status(500).json({ message: 'Server error during login.' });
     }
 };
+
+/**
+ * PUT /api/auth/reset-password/:token
+ * Reset user password using valid token
+ */
+export const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { password } = req.body;
+
+        if (!password) {
+            return res.status(400).json({ message: "New password is required." });
+        }
+
+        // Validate password strength
+        if (password.length < 6) {
+            return res
+                .status(400)
+                .json({ message: "Password must be at least 6 characters long." });
+        }
+
+        // Hash the token
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        // Find user by reset token and ensure token is still valid
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res
+                .status(400)
+                .json({ message: "Invalid or expired password reset token." });
+        }
+
+        // Update password
+        user.password = password;
+
+        // Clear reset token + expiry
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+
+        return res.status(200).json({
+            message: "Password has been reset successfully. You can now log in.",
+        });
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({ message: "Server error while resetting password." });
+    }
+};
