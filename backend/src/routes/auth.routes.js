@@ -2,7 +2,10 @@ import express from "express";
 import {
     register,
     verifyEmail,
-    refreshAccessToken, forgotPassword,
+    refreshAccessToken,
+    login,
+    logout,
+    forgotPassword,
 } from "../controllers/auth.controller.js";
 import {
   registerLimiter,
@@ -30,6 +33,11 @@ router.post(
 // POST /api/auth/refresh-token - Refresh access token with validation
 router.post("/refresh-token", validateRefreshToken, refreshAccessToken);
 
+// POST /api/auth/logout
+router.post('/login', login);
+
+// POST /api/auth/logout
+router.post("/logout", logout);
 // POST /api/auth/forgot-password - Generate password reset token
 router.post("forgot-password", forgotPassword);
 

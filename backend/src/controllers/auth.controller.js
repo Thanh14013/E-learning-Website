@@ -181,8 +181,11 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: 'Your account has not been verified. Please check your email.' });
         }
 
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
+        const { accessToken, refreshToken } = generateTokenPair({
+            id: user._id,
+            role: user.role,
+            email: user.email,
+        });
 
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
@@ -232,6 +235,47 @@ export const login = async (req, res) => {
 };
 
 /**
+ * POST /api/auth/logout
+ */
+export const logout = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token is required.' });
+        }
+
+        // Verify refresh token using JWT config
+        const decoded = verifyRefreshToken(refreshToken);
+        if (!decoded) {
+            return res
+                .status(401)
+                .json({ message: "Invalid or expired refresh token." });
+        }
+
+        const user = await User.findById(decoded.id);
+
+        if (user) {
+            user.refreshToken = null;
+            await user.save({ validateBeforeSave: false });
+        } else {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Lax',
+        });
+
+        return res.status(200).json({
+            message: 'Log out successfully.',
+        });
+    } catch (error) {
+        console.error('Log out error:', error);
+        res.status(500).json({ message: 'Server error during log out.' });
+    }
+};
  * POST /api/auth/forgot-password
  * Generate password reset token and send reset link to user's email
  */
