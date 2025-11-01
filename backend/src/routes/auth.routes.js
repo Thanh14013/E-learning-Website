@@ -2,6 +2,7 @@ import express from "express";
 import {
     register,
     verifyEmail,
+    resetPassword,
     refreshAccessToken,
     login,
     logout,
@@ -33,6 +34,8 @@ router.post(
 // POST /api/auth/refresh-token - Refresh access token with validation
 router.post("/refresh-token", validateRefreshToken, refreshAccessToken);
 
+// PUT /api/auth/reset-password/:token - Reset user password using valid token
+router.put("/reset-password/:token", resetPassword)
 // POST /api/auth/logout
 router.post('/login', login);
 
