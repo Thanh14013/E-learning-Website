@@ -7,6 +7,7 @@ import {
   verifyRefreshToken,
   generateAccessToken,
 } from "../config/jwt.config.js";
+import { sendEmail } from "../config/sendGrid.config.js";
 
 /**
  * POST /api/auth/register
@@ -180,8 +181,11 @@ export const login = async (req, res) => {
             return res.status(403).json({ message: 'Your account has not been verified. Please check your email.' });
         }
 
-        const accessToken = generateAccessToken(user);
-        const refreshToken = generateRefreshToken(user);
+        const { accessToken, refreshToken } = generateTokenPair({
+            id: user._id,
+            role: user.role,
+            email: user.email,
+        });
 
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
@@ -280,5 +284,114 @@ export const resetPassword = async (req, res) => {
     } catch (error) {
         console.error("Reset password error:", error);
         res.status(500).json({ message: "Server error while resetting password." });
+ * POST /api/auth/logout
+ */
+export const logout = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+
+        if (!refreshToken) {
+            return res.status(400).json({ message: 'Refresh token is required.' });
+        }
+
+        // Verify refresh token using JWT config
+        const decoded = verifyRefreshToken(refreshToken);
+        if (!decoded) {
+            return res
+                .status(401)
+                .json({ message: "Invalid or expired refresh token." });
+        }
+
+        const user = await User.findById(decoded.id);
+
+        if (user) {
+            user.refreshToken = null;
+            await user.save({ validateBeforeSave: false });
+        } else {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        res.clearCookie('refreshToken', {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Lax',
+        });
+
+        return res.status(200).json({
+            message: 'Log out successfully.',
+        });
+    } catch (error) {
+        console.error('Log out error:', error);
+        res.status(500).json({ message: 'Server error during log out.' });
+    }
+};
+ * POST /api/auth/forgot-password
+ * Generate password reset token and send reset link to user's email
+ */
+export const forgotPassword = async (req, res) => {
+    let user;
+
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: "Email is required." });
+        }
+
+        // Check if user exists
+        user = await User.findOne({ email });
+        if (!user) {
+            // (Optional) To prevent email enumeration, return generic message
+            return res.status(200).json({
+                message:
+                    "If an account with that email exists, a password reset link has been sent.",
+            });
+        }
+
+        // Generate reset token
+        const resetToken = crypto.randomBytes(32).toString("hex");
+
+        // Hash token before saving to DB (for security)
+        const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+        // Set reset token + expiry (10 minutes)
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+        await user.save({ validateBeforeSave: false });
+
+        // Build reset URL (frontend)
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+        // Email content
+        const html = `
+            <h2>Password Reset Request</h2>
+            <p>Hello ${user.fullName || "User"},</p>
+            <p>You requested to reset your password. Click the link below to reset it:</p>
+            <a href="${resetUrl}" target="_blank">${resetUrl}</a>
+            <p>This link will expire in 10 minutes.</p>
+            <p>If you did not request this, please ignore this email.</p>
+        `;
+
+        // Send via SendGrid
+        await sendEmail(user.email, "Password Reset Request", "", { html });
+
+        res.status(200).json({
+            message:
+                "If an account with that email exists, a password reset link has been sent.",
+        });
+    } catch (error) {
+        console.error("Forgot password error:", error);
+
+        // Reset token cleanup if error occurred after saving
+        if (user) {
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+            await user.save({ validateBeforeSave: false });
+        }
+
+        res
+            .status(500)
+            .json({ message: "Server error while sending password reset email." });
     }
 };
