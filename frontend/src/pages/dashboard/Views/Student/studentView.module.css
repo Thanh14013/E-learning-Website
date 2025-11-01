@@ -1,0 +1,97 @@
+/* ==========================================================================
+   COURSE CAROUSEL CONTAINER
+   ========================================================================== */
+.carouselContainer {
+  position: relative;
+  /* Căn giữa carousel nếu nó không chiếm hết chiều rộng */
+  max-width: fit-content;
+  margin: 0 auto;
+}
+
+/* Các biến để dễ dàng thay đổi */
+:root {
+  --card-width: 280px;
+  --gap: 24px; /* var(--spacing-3) */
+}
+
+.scrollWrapper {
+  /* TÍNH TOÁN CHIỀU RỘNG ĐỂ HIỂN THỊ ĐÚNG 4 THẺ */
+  width: calc((var(--card-width) * 4) + (var(--gap) * 3));
+  overflow: hidden; /* Ẩn thanh cuộn hoàn toàn */
+  scroll-behavior: smooth;
+}
+
+.courseList {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--gap);
+  padding-bottom: 16px;
+}
+
+/* ==========================================================================
+   CAROUSEL NAVIGATION BUTTONS
+   ========================================================================== */
+.navButton {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background-color: white;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+.navButton:hover {
+  background-color: var(--color-gray-100);
+  transform: translateY(-50%) scale(1.05);
+}
+.navButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: translateY(-50%) scale(0.95);
+}
+.navButton.left {
+  left: -22px;
+}
+.navButton.right {
+  right: -22px;
+}
+.navButton svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--color-gray-700);
+}
+
+/* ==========================================================================
+   COURSE CARD STYLES
+   ========================================================================== */
+.courseCard {
+  width: var(--card-width); /* Sử dụng biến CSS */
+  flex-shrink: 0;
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: var(--transition-base);
+  border: 1px solid var(--color-gray-200);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ... giữ nguyên các style .courseCard... khác của bạn ... */
+.courseCardImage { height: 120px; background-color: var(--color-gray-200); }
+.courseCardContent { padding: var(--spacing-2); flex-grow: 1; display: flex; flex-direction: column; }
+.courseCardContent h4 { font-size: 1rem; font-weight: 600; margin: 0 0 4px 0; }
+.courseCardContent a { color: var(--color-gray-900); text-decoration: none; }
+.courseCardContent a:hover { color: var(--color-student-primary); }
+.courseProgress { margin-top: auto; padding-top: var(--spacing-2); }
+.progressBar { height: 8px; background-color: var(--color-gray-200); border-radius: 999px; overflow: hidden; }
+.progressBarFill { height: 100%; background-color: var(--color-success); border-radius: 999px; }
+.progressLabel { font-size: 0.8rem; color: var(--color-gray-500); margin-top: 4px; }

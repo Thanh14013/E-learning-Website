@@ -1,0 +1,172 @@
+/* ==========================================================================
+   1. BỐ CỤC DASHBOARD CHÍNH (3 CỘT)
+   ========================================================================== */
+.dashboardLayout {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px; /* Tăng nhẹ kích thước sidebar */
+  grid-template-areas: "nav main calendar";
+  gap: 32px; /* Tăng khoảng cách */
+  padding: 32px;
+  max-width: 100%;
+  margin: 0 auto;
+  align-items: start; /* Căn các cột theo đỉnh */
+}
+
+/* Gán các khu vực */
+.navSidebar { grid-area: nav; }
+.mainContent { grid-area: main; }
+.calendarSidebar { grid-area: calendar; }
+
+/* ==========================================================================
+   2. TIÊU ĐỀ CHÍNH
+   ========================================================================== */
+.mainTitle {
+  font-size: 1.75rem; /* ~28px */
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--color-gray-1000);  
+}
+.mainSubtitle {
+  font-size: 1rem;
+  color: var(--color-gray-1200);
+  margin-top: 0;
+  margin-bottom: 32px;
+}
+
+/* ==========================================================================
+   3. SIDEBAR TRÁI (NAVIGATION) - NÂNG CẤP
+   ========================================================================== */
+.block {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-3);
+}
+.block h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: var(--spacing-3);
+  color: var(--color-gray-700);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.navLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* <-- THÊM MỚI: để đẩy icon ra xa */
+  gap: 12px;
+  color: var(--color-gray-600);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 12px;
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s ease-in-out;
+  cursor: pointer; /* <-- THÊM MỚI: Cho thấy có thể click */
+}
+.navLink:hover, .navLinkActive {
+  color: var(--color-student-primary);
+}
+
+/* --- Style cho icon thu gọn --- */
+.navIcon {
+  transition: transform 0.3s ease;
+  width: 16px;
+  height: 16px;
+}
+.navIcon.expanded {
+  transform: rotate(90deg);
+}
+
+/* --- Style cho danh sách khóa học con --- */
+.courseSublist {
+  list-style: none;
+  padding-left: 28px;
+  margin: 0; /* <-- THAY ĐỔI: Bỏ margin-top mặc định */
+  overflow: hidden; /* <-- THÊM MỚI: Ẩn nội dung khi thu gọn */
+  max-height: 0; /* <-- THÊM MỚI: Trạng thái mặc định là đóng */
+  transition: max-height 0.3s ease-in-out, margin-top 0.3s ease-in-out; /* <-- THÊM MỚI: Hiệu ứng */
+}
+.courseSublist.expanded {
+  max-height: 300px; /* <-- THÊM MỚI: Chiều cao tối đa khi mở (điều chỉnh nếu cần) */
+  margin-top: 8px; /* <-- THÊM MỚI: Thêm khoảng cách khi mở */
+}
+.courseSublist a {
+  font-size: 0.9rem;
+  color: var(--color-gray-500);
+  text-decoration: none;
+  padding: 4px 0;
+  display: block;
+}
+.courseSublist a:hover {
+  text-decoration: underline;
+}
+/* ==========================================================================
+   4. SIDEBAR PHẢI (CALENDAR & EVENTS) - NÂNG CẤP
+   ========================================================================== */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  gap: 8px;
+}
+.calendarGrid span {
+  padding: 4px;
+  font-size: 0.9rem;
+}
+.dayHeader {
+  font-weight: 600;
+  color: var(--color-gray-500);
+  font-size: 0.8rem !important;
+}
+.day {
+  color: var(--color-gray-700);
+}
+.day.today {
+  background-color: var(--color-admin-primary);
+  color: var(--color-white);
+  border-radius: 50%;
+  font-weight: 700;
+}
+.day.event-due {
+  background-color: var(--color-error-light);
+  color: var(--color-error-hover);
+  border-radius: 50%;
+}
+.eventItem {
+  margin-top: 16px;
+}
+.eventItem a {
+  color: var(--color-error);
+  font-weight: 600;
+}
+.eventItem p {
+  font-size: 0.85rem;
+  color: var(--color-gray-500);
+  margin: 4px 0 0 0;
+}
+.addEventButton {
+  width: 100%;
+  margin-top: 16px;
+  background-color: var(--color-teacher-primary);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.addEventButton:hover {
+  background-color: var(--color-teacher-primary-hover);
+}
