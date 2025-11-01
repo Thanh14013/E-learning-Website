@@ -5,6 +5,7 @@ import {
     refreshAccessToken,
     login,
     logout,
+    forgotPassword,
 } from "../controllers/auth.controller.js";
 import {
   registerLimiter,
@@ -37,5 +38,7 @@ router.post('/login', login);
 
 // POST /api/auth/logout
 router.post("/logout", logout);
+// POST /api/auth/forgot-password - Generate password reset token
+router.post("forgot-password", forgotPassword);
 
 export default router;
