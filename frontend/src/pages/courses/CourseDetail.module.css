@@ -1,0 +1,247 @@
+/* src/pages/courses/courseDetail.module.css */
+
+.pageWrapper {
+  background-color: var(--color-white);
+  padding-bottom: var(--spacing-5);
+}
+
+.headerContainer {
+  background-color: var(--color-gray-800);
+  color: var(--color-white);
+  padding: var(--spacing-4) var(--spacing-3);
+}
+
+.headerContent {
+  max-width: 800px;
+}
+
+.headerContent h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: var(--spacing-1);
+}
+
+.headerContent p {
+  font-size: 1.1rem;
+  color: var(--color-gray-300);
+  margin-bottom: var(--spacing-2);
+}
+
+.metaInfo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  font-size: 0.9rem;
+}
+
+.ratingInfo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ratingInfo .avg {
+  font-weight: 700;
+  color: #f59e0b;
+}
+.ratingInfo .count {
+  color: var(--color-gray-400);
+  text-decoration: underline;
+}
+.ratingInfo svg {
+  color: #f59e0b;
+}
+
+/* --- Layout chính của trang --- */
+.pageLayout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-5);
+  max-width: 1200px;
+  margin: var(--spacing-4) auto;
+  padding: 0 var(--spacing-3);
+}
+
+@media (min-width: 992px) {
+  .pageLayout {
+    grid-template-columns: 1fr 380px;
+  }
+}
+
+/* --- Các khối nội dung --- */
+.sectionBox {
+  border: 1px solid var(--color-gray-200);
+  padding: var(--spacing-3);
+  margin-top: var(--spacing-4);
+  color: black;
+  font-size: 14px;
+}
+
+.sectionBox h3 {
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: var(--spacing-3);
+  color: rgb(37, 37, 37);
+}
+
+.highlightsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--spacing-2);
+  list-style: none;
+}
+@media (min-width: 768px) {
+  .highlightsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.highlightsGrid li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.highlightsGrid li svg {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* --- Nội dung khóa học (Accordion) --- */
+.accordionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--color-gray-50);
+  padding: var(--spacing-2);
+  border: 1px solid var(--color-gray-200);
+  cursor: pointer;
+  font-weight: 700;
+}
+.accordionContent {
+  border: 1px solid var(--color-gray-200);
+  border-top: none;
+}
+.lessonItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px var(--spacing-2);
+  text-decoration: none;
+  color: var(--color-gray-800);
+  transition: background-color 0.2s;
+}
+.lessonItem:hover {
+  background-color: var(--color-gray-100);
+}
+.lessonItem:not(:last-child) {
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+/* --- Sidebar --- */
+.sidebar {
+  position: relative;
+}
+.sidebarCard {
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-lg);
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-md);
+  position: sticky;
+  top: 20px;
+  color: black;
+}
+.sidebarImage {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-top-left-radius: var(--border-radius-md);
+  border-top-right-radius: var(--border-radius-md);
+}
+.sidebarContent {
+  padding: var(--spacing-3);
+}
+.enrollButton, .enrolledButton {
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 14px;
+  margin-bottom: var(--spacing-2);
+}
+.enrolledButton {
+  background-color: var(--color-success);
+  color: white;
+  border: none;
+  cursor: not-allowed;
+}
+.includesTitle {
+  font-weight: 700;
+  margin-bottom: var(--spacing-2);
+}
+.includesList {
+  list-style: none;
+}
+.includesList li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+/* nội dung khóa học */
+.accordionContainer {
+    border: 1px solid var(--color-gray-200);
+}
+.accordionItem:not(:last-child) {
+    border-bottom: 1px solid var(--color-gray-200);
+}
+.accordionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-gray-50);
+    padding: var(--spacing-2);
+    cursor: pointer;
+    font-weight: 700;
+}
+.accordionHeader:hover {
+    background-color: var(--color-gray-100);
+}
+.accordionTitle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.accordionIcon {
+    transition: transform 0.2s ease-in-out;
+}
+.accordionIcon.open {
+    transform: rotate(180deg);
+}
+.moduleMeta {
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: var(--color-gray-600);
+}
+.lessonItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px var(--spacing-3);
+    text-decoration: none;
+    color: var(--color-gray-800);
+    transition: background-color 0.2s;
+    border-top: 1px solid var(--color-gray-100);
+}
+.lessonItem:hover {
+    background-color: var(--color-gray-50);
+}
+.lessonTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.lessonDuration {
+    font-size: 0.9rem;
+    color: var(--color-gray-500);
+}
