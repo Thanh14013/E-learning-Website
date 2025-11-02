@@ -1,16 +1,430 @@
+
+/* 1. Google Fonts Import
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+
+/* 2. CSS Custom Properties (Design Tokens)
+   ========================================================================== */
+:root {
+  /* 🎨 Colors */
+  /* Base Palette */
+  --color-white: #ffffff;
+  --color-black: #111827;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Student Theme (Indigo) */
+  --color-student-primary: #4f46e5;
+  --color-student-primary-hover: #4338ca;
+  --color-student-primary-light: #e0e7ff;
+
+  /* Teacher Theme (Purple) */
+  --color-teacher-primary: #7c3aed;
+  --color-teacher-primary-hover: #6d28d9;
+  --color-teacher-primary-light: #ede9fe;
+
+  /* Admin Theme (Red) */
+  --color-admin-primary: #dc2626;
+  --color-admin-primary-hover: #b91c1c;
+  --color-admin-primary-light: #fee2e2;
+
+  /* Semantic Colors */
+  --color-success: #10b981;       /* Emerald */
+  --color-success-hover: #059669;
+  --color-success-light: #d1fae5;
+  --color-error: #dc2626;         /* Red */
+  --color-error-hover: #b91c1c;
+  --color-error-light: #fee2e2;
+  --color-warning: #f59e0b;       /* Amber */
+  --color-warning-hover: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-info: #3b82f6;          /* Blue */
+  --color-info-hover: #2563eb;
+  --color-info-light: #dbeafe;
+
+  /* ✒️ Typography */
+  --font-body: 'Inter', sans-serif;
+  --font-code: 'Fira Code', monospace;
+  --font-size-base: 16px;
+  --line-height-base: 1.6;
+
+  /* 📏 Spacing (8px grid system) */
+  --spacing-1: 0.5rem;  /* 8px */
+  --spacing-2: 1rem;    /* 16px */
+  --spacing-3: 1.5rem;  /* 24px */
+  --spacing-4: 2rem;    /* 32px */
+  --spacing-5: 3rem;    /* 48px */
+  --spacing-6: 4rem;    /* 64px */
+
+  /* 🔲 Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-full: 9999px;
+
+  /* 🌟 Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+
+  /* ⏱️ Transitions */
+  --transition-base: all 0.2s ease-in-out;
+}
+
+/* 3. CSS Reset & Base Styles
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: var(--font-size-base);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  line-height: var(--line-height-base);
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-800);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* 4. Dark Mode Theme
+   ========================================================================== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Adjust base colors for dark mode */
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  }
+
+  body {
+    background-color: var(--color-gray-900);
+    color: var(--color-gray-200);
+  }
+
+  .card, .modal-content, .table {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+
+  .form-input, .form-select {
+    background-color: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+    color: var(--color-white);
+  }
+
+  .form-input:focus, .form-select:focus {
+    border-color: var(--color-info);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* 5. Typography Styles
+   ========================================================================== */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: var(--spacing-2);
+}
+
+h1 { font-size: 2.25rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.125rem; }
+p { margin-bottom: var(--spacing-2); 
+  color: #1f2937;}
+a {
+  color: var(--color-student-primary);
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+a:hover { text-decoration: underline; }
+
+code {
+  font-family: var(--font-code);
+  background-color: var(--color-gray-100);
+  padding: 0.2em 0.4em;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.9em;
+}
+pre {
+  font-family: var(--font-code);
+  background-color: var(--color-gray-800);
+  color: var(--color-gray-100);
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius-md);
+  overflow-x: auto;
+}
+
+/* 6. Layout & Container
+   ========================================================================== */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--spacing-3);
+  padding-right: var(--spacing-3);
+}
+
+/* 7. Component Base Styles
+   ========================================================================== */
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-1) var(--spacing-2);
+  border: 1px solid transparent;
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-base);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn:focus {
+  outline: 2px solid var(--color-info);
+  outline-offset: 2px;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary-student {
+  background-color: var(--color-student-primary);
+  color: var(--color-white);
+}
+.btn-primary-student:hover {
+  background-color: var(--color-student-primary-hover);
+}
+
+.btn-primary-teacher {
+  background-color: var(--color-teacher-primary);
+  color: var(--color-white);
+}
+.btn-primary-teacher:hover {
+  background-color: var(--color-teacher-primary-hover);
+}
+
+.btn-primary-admin {
+  background-color: var(--color-admin-primary);
+  color: var(--color-white);
+}
+.btn-primary-admin:hover {
+  background-color: var(--color-admin-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-800);
+}
+.btn-secondary:hover {
+  background-color: var(--color-gray-300);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border-color: var(--color-gray-300);
+  color: var(--color-gray-700);
+}
+.btn-outline:hover {
+  background-color: var(--color-gray-100);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-gray-700);
+}
+.btn-ghost:hover {
+  background-color: var(--color-gray-100);
+}
+
+
+/* Forms */
+.form-group {
+  margin-bottom: var(--spacing-2);
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: var(--spacing-1);
+}
+
+.form-input, .form-select {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-1) var(--spacing-2);
+  font-family: inherit;
+  font-size: 1rem;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-base);
+}
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--color-info);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.form-checkbox {
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-gray-400);
+}
+
+/* Cards */
+.card {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: var(--transition-base);
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.card-body {
+  padding: var(--spacing-3);
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-full);
+}
+.badge-success { background-color: var(--color-success-light); color: var(--color-success-hover); }
+.badge-error { background-color: var(--color-error-light); color: var(--color-error-hover); }
+.badge-warning { background-color: var(--color-warning-light); color: var(--color-warning-hover); }
+.badge-info { background-color: var(--color-info-light); color: var(--color-info-hover); }
+.badge-primary-student { background-color: var(--color-student-primary-light); color: var(--color-student-primary); }
+.badge-primary-teacher { background-color: var(--color-teacher-primary-light); color: var(--color-teacher-primary); }
+.badge-primary-admin { background-color: var(--color-admin-primary-light); color: var(--color-admin-primary); }
+
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-content {
+  background-color: var(--color-white);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-lg);
+  max-width: 500px;
+  width: 90%;
+}
+
+
+/* 8. Utility Classes
+   ========================================================================== */
+.text-center { text-align: center; }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+.d-flex { display: flex; }
+.align-items-center { align-items: center; }
+.justify-content-between { justify-content: space-between; }
+.space-y-4 > * + * { margin-top: 1rem; }
+.space-x-4 > * + * { margin-left: 1rem; }
+
+/* 9. Specific Fixes (Webkit Autocomplete)
+   ========================================================================== */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0px 1000px #e2eaff inset !important; /* 💡 chỉnh màu tại đây */
-  box-shadow: 0 0 0px 1000px #e2eaff inset !important;
-  -webkit-text-fill-color: #000 !important;
-  caret-color: #000 !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--color-info-light) inset !important;
+  box-shadow: 0 0 0px 1000px var(--color-info-light) inset !important;
+  -webkit-text-fill-color: var(--color-black) !important;
+  caret-color: var(--color-black) !important;
   transition: background-color 5000s ease-in-out 0s !important;
 }
 
 input:-webkit-autofill::first-line {
   font-family: inherit !important;
   font-size: 16px !important;
-  color: #000 !important;
+  color: var(--color-black) !important;
+}
+
+/* 10. Prose / Rich Content Styling
+   ========================================================================== */
+.prose-content {
+  line-height: 1.7;
+}
+
+.prose-content h1,
+.prose-content h2,
+.prose-content h3 {
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+}
+
+.prose-content p {
+  margin-bottom: 1.2em;
+}
+
+.prose-content ul,
+.prose-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 1.2em;
+}
+
+.prose-content li > p {
+  margin-bottom: 0.5em;
+}
+
+.prose-content blockquote {
+  border-left: 4px solid var(--color-gray-300);
+  padding-left: 1em;
+  margin-left: 0;
+  font-style: italic;
+  color: var(--color-gray-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  .prose-content blockquote {
+    border-left-color: var(--color-gray-600);
+    color: var(--color-gray-400);
+  }
+  .prose-content a {
+    color: var(--color-info);
+  }
 }
