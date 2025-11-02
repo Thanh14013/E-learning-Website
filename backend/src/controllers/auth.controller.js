@@ -7,7 +7,7 @@ import {
   verifyRefreshToken,
   generateAccessToken,
 } from "../config/jwt.config.js";
-import { sendEmail } from "../config/sendGrid.config.js";
+import sendEmail from "../config/sendGrid.config.js";
 
 /**
  * POST /api/auth/register
@@ -284,7 +284,9 @@ export const resetPassword = async (req, res) => {
     } catch (error) {
         console.error("Reset password error:", error);
         res.status(500).json({ message: "Server error while resetting password." });
- * POST /api/auth/logout
+    }
+  };
+ /* POST /api/auth/logout
  */
 export const logout = async (req, res) => {
     try {
@@ -325,7 +327,7 @@ export const logout = async (req, res) => {
         res.status(500).json({ message: 'Server error during log out.' });
     }
 };
- * POST /api/auth/forgot-password
+ /* POST /api/auth/forgot-password
  * Generate password reset token and send reset link to user's email
  */
 export const forgotPassword = async (req, res) => {
