@@ -3,10 +3,11 @@ import Layout from "../components/layout/Layout.jsx";
 import HomePage from "../pages/homepage/Home.jsx";
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
-// import Courses from "../pages/courses/Courses.jsx";
+import Courses from "../pages/courses/Course.jsx";
 // import Discussion from "../pages/discussion/Discussion.jsx";
 // import NotFound from "../pages/notFound/NotFound.jsx";
-// import Dashboard from "../pages/dashboard/Dashboard.jsx";
+import CourseDetailPage from "../pages/courses/CourseDetail.jsx";
+import Dashboard from "../pages/dashboard/DashboardOverview.jsx";
 import Profile from "../pages/profile/Profile.jsx";
 import QuizDemo from "../pages/quizz/QuizDemo.jsx";
 import QuizzList from "../components/quizz/QuizzList.jsx";
@@ -28,7 +29,8 @@ const router = createBrowserRouter([
       { path: "register", element: <Register /> },
 
       // Course & Lesson routes
-      // { path: "courses", element: <Courses /> },
+      { path: "courses", element: <Courses /> },
+      // { path: "courses/:courseId", element: <CourseDetailPage /> },
       { path: "courses/:courseId/lessons/:lessonId", element: <LessonPlayer /> },
 
       // Quiz routes
@@ -43,7 +45,7 @@ const router = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
-          // { path: "dashboard", element: <Dashboard /> },
+          { path: "dashboard", element: <Dashboard /> },
           { path: "profile", element: <Profile /> },
         ],
       },

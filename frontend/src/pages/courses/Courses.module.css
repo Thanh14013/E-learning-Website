@@ -1,0 +1,210 @@
+.pageContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-4); /* 32px */
+}
+
+.pageTitle {
+  font-size: 2.25rem; /* 36px */
+  font-weight: 800;
+  margin-bottom: var(--spacing-1);
+  color: var(--color-gray-1200);
+  margin: 20px 0;
+}
+
+.pageSubtitle {
+  font-size: 1.125rem;
+  color: var(--color-gray-500);
+  margin-top: 0;
+  margin-bottom: var(--spacing-4);
+}
+
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-3); /* 24px */
+}
+
+.courseCard {
+  background-color: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--color-gray-200);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease-in-out;
+}
+
+.courseCard:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+}
+
+.cardImage {
+  height: 140px;
+}
+
+.cardContent {
+  padding: var(--spacing-3);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.cardContent h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  flex-grow: 1;
+  color: black;
+}
+
+.teacherName {
+  font-size: 0.9rem;
+  color: var(--color-gray-500);
+  margin-bottom: 16px;
+}
+
+.btn {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.btnEnroll {
+  background-color: var(--color-student-primary);
+  color: white;
+}
+.btnEnroll:hover {
+  background-color: var(--color-student-primary-hover);
+}
+
+.btnUnenroll {
+  background-color: var(--color-success-light);
+  color: var(--color-success-hover);
+  cursor: not-allowed;
+}
+
+.tag {
+  background-color: var(--color-teacher-primary-light);
+  color: var(--color-teacher-primary);
+  padding: 12px;
+  border-radius: var(--border-radius-md);
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.loadingText, .noCoursesText {
+  font-size: 1.2rem;
+  color: var(--color-gray-500);
+  text-align: center;
+  padding: var(--spacing-6);
+}
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bestsellerTag {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning-hover);
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  border-radius: var(--border-radius-sm);
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.ratingAverage {
+  font-weight: 700;
+  color: #b4690e;
+}
+
+.rating svg {
+  color: #f59e0b;
+}
+
+.ratingCount {
+  color: var(--color-gray-500);
+}
+
+/* Container cho card và tooltip */
+.courseCardContainer {
+  position: relative;
+}
+
+.tooltipContainer {
+  position: absolute;
+  top: 20px;
+  left: calc(100% + 8px);
+  width: 320px;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-3);
+  z-index: 10;
+  
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(-10px);
+  transition: all 0.2s ease-in-out;
+  pointer-events: none;
+}
+
+/* Khi hover vào container, hiển thị tooltip */
+.courseCardContainer:hover .tooltipContainer {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+
+}
+
+.tooltipContainer h4 {
+  font-size: 15px;
+  margin-bottom: 8px;
+  color: black;
+}
+
+.tooltipMeta {
+  font-size: 13px;
+  color: black;
+  margin-bottom: 12px;
+}
+
+.tooltipSummary {
+  font-size: 13px;
+  color: black;
+  margin-bottom: 14px;
+}
+
+.tooltipChecklist {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  color: rgb(85, 85, 85);
+}
+.tooltipChecklist li {
+  margin-bottom: 8px;
+}
+.cardLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
