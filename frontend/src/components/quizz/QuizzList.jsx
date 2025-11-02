@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './QuizzList.css';
 
 const QuizzList = ({ courseId }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -207,23 +209,23 @@ const QuizzList = ({ courseId }) => {
   };
 
   const handleStartQuiz = (quizId) => {
-    console.log('Starting quiz:', quizId);
-    // TODO: Navigate to quiz page
+    // Navigate to quiz detail page to start quiz
+    navigate(`/quiz/${quizId}`);
   };
 
   const handleContinueQuiz = (quizId) => {
-    console.log('Continuing quiz:', quizId);
-    // TODO: Navigate to quiz page with resume functionality
+    // Navigate to quiz detail page (will show continue option)
+    navigate(`/quiz/${quizId}`);
   };
 
   const handleRetakeQuiz = (quizId) => {
-    console.log('Retaking quiz:', quizId);
-    // TODO: Navigate to quiz page
+    // Navigate to quiz detail page to retake
+    navigate(`/quiz/${quizId}`);
   };
 
   const handleViewDetails = (quizId) => {
-    console.log('Viewing quiz details:', quizId);
-    // TODO: Navigate to quiz details page
+    // Navigate to quiz detail page
+    navigate(`/quiz/${quizId}`);
   };
 
   const formatDuration = (minutes) => {

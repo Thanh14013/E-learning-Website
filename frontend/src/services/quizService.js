@@ -1,0 +1,172 @@
+import api from './api';
+
+/**
+ * Quiz Service - API calls for quiz-related operations
+ */
+
+const quizService = {
+  /**
+   * Get quiz result detail
+   * @param {string} quizId - Quiz ID
+   * @param {string} attemptId - Attempt ID
+   * @returns {Promise} Quiz result with answers and explanations
+   */
+  getQuizResult: async (quizId, attemptId) => {
+    // TODO: Replace with actual API call
+    // const response = await api.get(`/quizzes/${quizId}/results/${attemptId}`);
+    // return response.data;
+    
+    // Mock data for development
+    return {
+      attemptId,
+      quizId,
+      attemptNumber: 1,
+      score: 17,
+      totalPoints: 20,
+      percentage: 85,
+      isPassed: true,
+      submittedAt: new Date().toISOString(),
+      timeUsed: 28,
+      answers: [
+        {
+          questionId: 'q1',
+          answer: 'b',
+          isCorrect: true,
+          pointsEarned: 1
+        },
+        {
+          questionId: 'q2',
+          answer: 'true',
+          isCorrect: true,
+          pointsEarned: 1
+        },
+        {
+          questionId: 'q3',
+          answer: 'React hooks are functions...',
+          isCorrect: null, // Essay - manual grading
+          pointsEarned: 4
+        },
+        {
+          questionId: 'q4',
+          answer: ['JavaScript', 'user'],
+          isCorrect: true,
+          pointsEarned: 2
+        },
+        {
+          questionId: 'q5',
+          answer: 'd',
+          isCorrect: true,
+          pointsEarned: 1
+        }
+      ]
+    };
+  },
+
+  /**
+   * Get quiz attempts history
+   * @param {string} quizId - Quiz ID
+   * @returns {Promise} List of attempts
+   */
+  getQuizAttempts: async (quizId) => {
+    // TODO: Replace with actual API call
+    // const response = await api.get(`/quizzes/${quizId}/attempts`);
+    // return response.data;
+    
+    // Mock data for development
+    return [
+      {
+        id: 'attempt-1',
+        attemptNumber: 1,
+        percentage: 85,
+        isPassed: true,
+        submittedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        timeUsed: 28
+      },
+      {
+        id: 'attempt-2',
+        attemptNumber: 2,
+        percentage: 92,
+        isPassed: true,
+        submittedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+        timeUsed: 25
+      }
+    ];
+  },
+
+  /**
+   * Get quiz detail
+   * @param {string} quizId - Quiz ID
+   * @returns {Promise} Quiz details
+   */
+  getQuizDetail: async (quizId) => {
+    // TODO: Replace with actual API call
+    // const response = await api.get(`/quizzes/${quizId}`);
+    // return response.data;
+    
+    // Mock data for development
+    return {
+      id: quizId,
+      title: "JavaScript Fundamentals Quiz",
+      description: "Test your knowledge of basic JavaScript concepts",
+      duration: 30,
+      passingScore: 70,
+      attemptsAllowed: 3,
+      questions: [
+        {
+          id: 'q1',
+          type: 'multiple_choice',
+          question: 'What is the capital of France?',
+          options: [
+            { id: 'a', text: 'London', isCorrect: false },
+            { id: 'b', text: 'Paris', isCorrect: true },
+            { id: 'c', text: 'Berlin', isCorrect: false },
+            { id: 'd', text: 'Madrid', isCorrect: false }
+          ],
+          points: 1,
+          explanation: 'Paris is the capital and largest city of France.'
+        },
+        {
+          id: 'q2',
+          type: 'true_false',
+          question: 'React is a JavaScript library for building user interfaces.',
+          correctAnswer: 'true',
+          points: 1,
+          explanation: 'React is indeed a JavaScript library developed by Facebook for building user interfaces.'
+        },
+        {
+          id: 'q3',
+          type: 'essay',
+          question: 'Explain the concept of React hooks and provide examples.',
+          points: 5,
+          explanation: 'React hooks are functions that let you use state and other React features in functional components. Examples include useState, useEffect, useContext, etc.'
+        },
+        {
+          id: 'q4',
+          type: 'fill_blank',
+          question: 'Fill in the blanks to complete the sentence.',
+          text: 'React is a _ library for building _ interfaces.',
+          blanks: ['JavaScript', 'user'],
+          correctAnswers: ['JavaScript', 'user'],
+          points: 2,
+          explanation: 'React is a JavaScript library for building user interfaces.'
+        },
+        {
+          id: 'q5',
+          type: 'multiple_choice',
+          question: 'Which of the following is NOT a JavaScript framework?',
+          options: [
+            { id: 'a', text: 'React', isCorrect: false },
+            { id: 'b', text: 'Vue', isCorrect: false },
+            { id: 'c', text: 'Angular', isCorrect: false },
+            { id: 'd', text: 'Python', isCorrect: true }
+          ],
+          points: 1,
+          explanation: 'Python is a programming language, not a JavaScript framework.'
+        }
+      ]
+    };
+  }
+};
+
+export default quizService;
+
