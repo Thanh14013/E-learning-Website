@@ -1,0 +1,123 @@
+.save-status-indicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.save-status-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-status-icon {
+  font-size: 16px;
+  animation: pulse 2s infinite;
+}
+
+.save-status-text {
+  font-weight: 500;
+}
+
+.save-status-time {
+  font-size: 12px;
+  color: #6B7280;
+  margin-left: 4px;
+}
+
+.save-status-warning {
+  font-size: 12px;
+  color: #EF4444;
+  margin-left: 8px;
+  font-style: italic;
+}
+
+/* Status-specific styles */
+.status-saving {
+  border-left: 3px solid #F59E0B;
+}
+
+.status-saving .save-status-icon {
+  animation: spin 1s linear infinite;
+}
+
+.status-saved {
+  border-left: 3px solid #10B981;
+}
+
+.status-error {
+  border-left: 3px solid #EF4444;
+  background: #FEF2F2;
+}
+
+.status-syncing {
+  border-left: 3px solid #3B82F6;
+}
+
+.status-syncing .save-status-icon {
+  animation: spin 1s linear infinite;
+}
+
+.status-idle {
+  display: none;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .save-status-indicator {
+    bottom: 10px;
+    right: 10px;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+
+  .save-status-content {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .save-status-warning {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 4px;
+  }
+}
+
