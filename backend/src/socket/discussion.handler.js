@@ -191,4 +191,87 @@ export const initializeDiscussionNamespace = (io) => {
   return discussionNamespace;
 };
 
+/**
+ * Helper function to emit new discussion created event to course room
+ * Can be called from controllers/services
+ * @param {Object} io - Socket.IO server instance
+ * @param {string} courseId - Course ID
+ * @param {Object} discussion - Discussion data
+ */
+export const emitDiscussionCreated = (io, courseId, discussion) => {
+  const discussionNamespace = io.of('/discussion');
+  const courseRoom = `course:${courseId}`;
+
+  discussionNamespace.to(courseRoom).emit('discussion:created', {
+    discussion,
+    timestamp: new Date().toISOString(),
+  });
+
+  console.log(`📢 Discussion created event emitted to course ${courseId}`);
+};
+
+/**
+ * Helper function to emit new comment created event to course room
+ * @param {Object} io - Socket.IO server instance
+ * @param {string} courseId - Course ID
+ * @param {Object} comment - Comment data
+ * @param {string} discussionId - Discussion ID
+ */
+export const emitCommentCreated = (io, courseId, comment, discussionId) => {
+  const discussionNamespace = io.of('/discussion');
+  const courseRoom = `course:${courseId}`;
+
+  discussionNamespace.to(courseRoom).emit('comment:created', {
+    comment,
+    discussionId,
+    timestamp: new Date().toISOString(),
+  });
+
+  console.log(`📢 Comment created event emitted to course ${courseId}`);
+};
+
+/**
+ * Helper function to emit discussion liked event to course room
+ * @param {Object} io - Socket.IO server instance
+ * @param {string} courseId - Course ID
+ * @param {string} discussionId - Discussion ID
+ * @param {string} userId - User ID who liked
+ * @param {number} likesCount - Updated likes count
+ */
+export const emitDiscussionLiked = (io, courseId, discussionId, userId, likesCount) => {
+  const discussionNamespace = io.of('/discussion');
+  const courseRoom = `course:${courseId}`;
+
+  discussionNamespace.to(courseRoom).emit('discussion:liked', {
+    discussionId,
+    userId,
+    likesCount,
+    timestamp: new Date().toISOString(),
+  });
+
+  console.log(`👍 Discussion ${discussionId} liked event emitted to course ${courseId}`);
+};
+
+/**
+ * Helper function to emit comment liked event to course room
+ * @param {Object} io - Socket.IO server instance
+ * @param {string} courseId - Course ID
+ * @param {string} commentId - Comment ID
+ * @param {string} userId - User ID who liked
+ * @param {number} likesCount - Updated likes count
+ */
+export const emitCommentLiked = (io, courseId, commentId, userId, likesCount) => {
+  const discussionNamespace = io.of('/discussion');
+  const courseRoom = `course:${courseId}`;
+
+  discussionNamespace.to(courseRoom).emit('comment:liked', {
+    commentId,
+    userId,
+    likesCount,
+    timestamp: new Date().toISOString(),
+  });
+
+  console.log(`👍 Comment ${commentId} liked event emitted to course ${courseId}`);
+};
+
 export default initializeDiscussionNamespace;
