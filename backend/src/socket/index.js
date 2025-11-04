@@ -3,7 +3,13 @@
  * Exports all namespace handlers and helper functions
  */
 
-import { initializeDiscussionNamespace } from './discussion.handler.js';
+import {
+  initializeDiscussionNamespace,
+  emitDiscussionCreated,
+  emitCommentCreated,
+  emitDiscussionLiked,
+  emitCommentLiked,
+} from './discussion.handler.js';
 import { initializeSessionNamespace } from './session.handler.js';
 import {
   initializeNotificationNamespace,
@@ -55,6 +61,10 @@ export {
   broadcastNotification,
   emitProgressUpdate,
   emitCourseCompletion,
+  emitDiscussionCreated,
+  emitCommentCreated,
+  emitDiscussionLiked,
+  emitCommentLiked,
 };
 
 export default {
@@ -68,4 +78,8 @@ export default {
   broadcastNotification,
   emitProgressUpdate,
   emitCourseCompletion,
+  emitDiscussionCreated,
+  emitCommentCreated,
+  emitDiscussionLiked,
+  emitCommentLiked,
 };

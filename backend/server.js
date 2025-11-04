@@ -9,6 +9,7 @@ import { connectCloudinary } from "./src/config/cloudinary.config.js";
 import { initializeSocketIO, setSocketIOInstance } from "./src/config/socket.config.js";
 import { initializeAllNamespaces } from "./src/socket/index.js";
 import authRoutes from "./src/routes/auth.routes.js";
+import discussionRoutes from "./src/routes/discussion.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import { errorHandler, notFoundHandler } from "./src/middleware/errorHandler.js";
 
@@ -76,6 +77,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/discussions', discussionRoutes);
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
