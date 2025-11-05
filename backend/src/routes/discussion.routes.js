@@ -8,6 +8,7 @@ import {
   likeDiscussion,
   pinDiscussion,
 } from '../controllers/discussion.controller.js';
+import { createComment } from '../controllers/comment.controller.js';
 import { authenticate, optionalAuthenticate } from '../middleware/auth.js';
 import { isStudentOrTeacher, isTeacherOrAdmin } from '../middleware/authorize.js';
 
@@ -96,6 +97,18 @@ router.put(
   authenticate,
   isTeacherOrAdmin,
   pinDiscussion
+);
+
+/**
+ * POST /api/discussions/:id/comment
+ * Create a comment on a discussion
+ * @access Protected - Authenticated users
+ * @body { content, parentId? }
+ */
+router.post(
+  '/:id/comment',
+  authenticate,
+  createComment
 );
 
 export default router;
