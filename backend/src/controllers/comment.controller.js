@@ -1,8 +1,11 @@
-import Comment from '../models/comment.model.js';
-import Discussion from '../models/discussion.model.js';
-import { getSocketIOInstance } from '../config/socket.config.js';
-import { emitCommentCreated, emitCommentLiked } from '../socket/index.js';
-import { notifyCommentCreated, notifyCommentReply } from '../services/notification.service.js';
+import Comment from "../models/comment.model.js";
+import Discussion from "../models/discussion.model.js";
+import { getSocketIOInstance } from "../config/socket.config.js";
+import { emitCommentCreated, emitCommentLiked } from "../socket/index.js";
+import {
+  notifyCommentCreated,
+  notifyCommentReply,
+} from "../services/notification.service.js";
 
 /**
  * Comment Controller
@@ -26,7 +29,7 @@ export const createComment = async (req, res) => {
     if (!content) {
       return res.status(400).json({
         success: false,
-        message: 'Comment content is required.',
+        message: "Comment content is required.",
       });
     }
 
@@ -34,17 +37,20 @@ export const createComment = async (req, res) => {
     if (content.length < 1 || content.length > 2000) {
       return res.status(400).json({
         success: false,
-        message: 'Content must be between 1 and 2000 characters.',
+        message: "Content must be between 1 and 2000 characters.",
       });
     }
 
     // Check if discussion exists
-    const discussion = await Discussion.findById(discussionId).populate('userId', 'fullName email');
+    const discussion = await Discussion.findById(discussionId).populate(
+      "userId",
+      "fullName email"
+    );
 
     if (!discussion) {
       return res.status(404).json({
         success: false,
-        message: 'Discussion not found.',
+        message: "Discussion not found.",
       });
     }
 
@@ -74,12 +80,15 @@ export const createComment = async (req, res) => {
     // If parentId is provided, verify parent comment exists
     let parentComment = null;
     if (parentId) {
-      parentComment = await Comment.findById(parentId).populate('userId', 'fullName');
+      parentComment = await Comment.findById(parentId).populate(
+        "userId",
+        "fullName"
+      );
 
       if (!parentComment) {
         return res.status(404).json({
           success: false,
-          message: 'Parent comment not found.',
+          message: "Parent comment not found.",
         });
       }
 
@@ -87,7 +96,7 @@ export const createComment = async (req, res) => {
       if (parentComment.discussionId.toString() !== discussionId.toString()) {
         return res.status(400).json({
           success: false,
-          message: 'Parent comment does not belong to this discussion.',
+          message: "Parent comment does not belong to this discussion.",
         });
       }
     }
@@ -102,7 +111,7 @@ export const createComment = async (req, res) => {
     });
 
     // Populate user information
-    await comment.populate('userId', 'fullName email avatar role');
+    await comment.populate("userId", "fullName email avatar role");
 
     // Get commenter information for notifications
     const commenter = {
@@ -113,18 +122,23 @@ export const createComment = async (req, res) => {
     // Emit Socket.IO event for real-time update
     try {
       const io = getSocketIOInstance();
-      emitCommentCreated(io, discussion.courseId.toString(), {
-        _id: comment._id,
-        discussionId: comment.discussionId,
-        userId: comment.userId,
-        content: comment.content,
-        parentId: comment.parentId,
-        likesCount: comment.likesCount,
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-      }, discussionId);
+      emitCommentCreated(
+        io,
+        discussion.courseId.toString(),
+        {
+          _id: comment._id,
+          discussionId: comment.discussionId,
+          userId: comment.userId,
+          content: comment.content,
+          parentId: comment.parentId,
+          likesCount: comment.likesCount,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+        },
+        discussionId
+      );
     } catch (socketError) {
-      console.error('Socket.IO error:', socketError.message);
+      console.error("Socket.IO error:", socketError.message);
     }
 
     // Send notifications
@@ -149,12 +163,12 @@ export const createComment = async (req, res) => {
         );
       }
     } catch (notificationError) {
-      console.error('Notification error:', notificationError.message);
+      console.error("Notification error:", notificationError.message);
     }
 
     return res.status(201).json({
       success: true,
-      message: 'Comment created successfully.',
+      message: "Comment created successfully.",
       data: {
         comment: {
           _id: comment._id,
@@ -169,29 +183,29 @@ export const createComment = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Create comment error:', error);
+    console.error("Create comment error:", error);
 
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({
         success: false,
-        message: 'Validation failed.',
+        message: "Validation failed.",
         errors: messages,
       });
     }
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid ID format.',
+        message: "Invalid ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to create comment. Please try again later.',
+      message: "Failed to create comment. Please try again later.",
     });
   }
 };
@@ -212,14 +226,14 @@ export const updateComment = async (req, res) => {
     if (!content) {
       return res.status(400).json({
         success: false,
-        message: 'Comment content is required.',
+        message: "Comment content is required.",
       });
     }
 
     if (content.length < 1 || content.length > 2000) {
       return res.status(400).json({
         success: false,
-        message: 'Content must be between 1 and 2000 characters.',
+        message: "Content must be between 1 and 2000 characters.",
       });
     }
 
@@ -229,7 +243,7 @@ export const updateComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({
         success: false,
-        message: 'Comment not found.',
+        message: "Comment not found.",
       });
     }
 
@@ -237,7 +251,7 @@ export const updateComment = async (req, res) => {
     if (comment.userId.toString() !== userId.toString()) {
       return res.status(403).json({
         success: false,
-        message: 'You do not have permission to update this comment.',
+        message: "You do not have permission to update this comment.",
       });
     }
 
@@ -246,11 +260,11 @@ export const updateComment = async (req, res) => {
     await comment.save();
 
     // Populate user info
-    await comment.populate('userId', 'fullName email avatar role');
+    await comment.populate("userId", "fullName email avatar role");
 
     return res.status(200).json({
       success: true,
-      message: 'Comment updated successfully.',
+      message: "Comment updated successfully.",
       data: {
         comment: {
           _id: comment._id,
@@ -265,29 +279,29 @@ export const updateComment = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Update comment error:', error);
+    console.error("Update comment error:", error);
 
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({
         success: false,
-        message: 'Validation failed.',
+        message: "Validation failed.",
         errors: messages,
       });
     }
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid comment ID format.',
+        message: "Invalid comment ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to update comment. Please try again later.',
+      message: "Failed to update comment. Please try again later.",
     });
   }
 };
@@ -309,19 +323,19 @@ export const deleteComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({
         success: false,
-        message: 'Comment not found.',
+        message: "Comment not found.",
       });
     }
 
     // Check ownership (owner or teacher or admin)
     const isOwner = comment.userId.toString() === userId.toString();
-    const isTeacher = req.user.role === 'teacher';
-    const isAdmin = req.user.role === 'admin';
+    const isTeacher = req.user.role === "teacher";
+    const isAdmin = req.user.role === "admin";
 
     if (!isOwner && !isTeacher && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: 'You do not have permission to delete this comment.',
+        message: "You do not have permission to delete this comment.",
       });
     }
 
@@ -338,22 +352,22 @@ export const deleteComment = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Comment deleted successfully.',
+      message: "Comment deleted successfully.",
     });
   } catch (error) {
-    console.error('Delete comment error:', error);
+    console.error("Delete comment error:", error);
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid comment ID format.',
+        message: "Invalid comment ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to delete comment. Please try again later.',
+      message: "Failed to delete comment. Please try again later.",
     });
   }
 };
@@ -391,7 +405,7 @@ export const likeComment = async (req, res) => {
     if (!comment) {
       return res.status(404).json({
         success: false,
-        message: 'Comment not found.',
+        message: "Comment not found.",
       });
     }
 
@@ -432,32 +446,34 @@ export const likeComment = async (req, res) => {
           likesCount
         );
       } catch (socketError) {
-        console.error('Socket.IO error:', socketError.message);
+        console.error("Socket.IO error:", socketError.message);
       }
     }
 
     return res.status(200).json({
       success: true,
-      message: isLiked ? 'Comment liked successfully.' : 'Comment unliked successfully.',
+      message: isLiked
+        ? "Comment liked successfully."
+        : "Comment unliked successfully.",
       data: {
         isLiked,
         likesCount,
       },
     });
   } catch (error) {
-    console.error('Like comment error:', error);
+    console.error("Like comment error:", error);
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid comment ID format.',
+        message: "Invalid comment ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to like comment. Please try again later.',
+      message: "Failed to like comment. Please try again later.",
     });
   }
 };
