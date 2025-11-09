@@ -14,6 +14,7 @@ import { initializeAllNamespaces } from "./src/socket/index.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import discussionRoutes from "./src/routes/discussion.routes.js";
 import commentRoutes from "./src/routes/comment.routes.js";
+import userRoutes from "./src/routes/user.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import {
   errorHandler,
@@ -90,6 +91,7 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/discussions", discussionRoutes);
 app.use("/api/comments", commentRoutes);
+app.use("/api/users", userRoutes);
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
