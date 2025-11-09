@@ -17,6 +17,7 @@ import {
   validateToken,
   validateRefreshToken,
 } from "../middleware/validator.js";
+import {authenticate} from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -36,11 +37,13 @@ router.post("/refresh-token", validateRefreshToken, refreshAccessToken);
 
 // PUT /api/auth/reset-password/:token - Reset user password using valid token
 router.put("/reset-password/:token", resetPassword)
-// POST /api/auth/logout
+
+// POST /api/auth/login
 router.post('/login', login);
 
 // POST /api/auth/logout
-router.post("/logout", logout);
+router.post("/logout", authenticate, logout);
+
 // POST /api/auth/forgot-password - Generate password reset token
 router.post("forgot-password", forgotPassword);
 
