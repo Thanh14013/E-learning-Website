@@ -1,0 +1,280 @@
+import {uploadFile} from "../config/cloudinary.config.js";
+import User from "../models/user.model.js";
+import UserProfile from "../models/userProfile.model.js";
+import path from "path";
+import fs from "fs";
+import mongoose from "mongoose";
+
+/**
+ * GET /api/users/profile
+ * @desc Get the full profile of the currently authenticated user
+ * @access Private
+ */
+export const getUserProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const user = await User.findById(userId).select("-password -refreshToken");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        const profile = await UserProfile.findOne({ userId })
+            .populate("enrolledCourses", "title description thumbnail")
+            .populate("teachingCourses", "title description thumbnail");
+
+        return res.status(200).json({
+            message: "User profile fetched successfully.",
+            user,
+            profile: profile || null,
+        });
+    } catch (error) {
+        console.error("Get user profile error:", error);
+        res.status(500).json({ message: "Server error while fetching user profile." });
+    }
+};
+
+/**
+ * PUT /api/users/profile
+ * @desc Update the authenticated user's basic info and profile details
+ * @access Private
+ *
+ * @body {string} [fullName] - User's full name
+ * @body {string} [email] - User's email address
+ * @body {string} [phone] - User's phone number
+ * @body {string} [address] - User's address
+ * @body {string} [bio] - Short bio
+ * @body {Date} [dateOfBirth] - User's date of birth
+ * @body {object} [socialLinks] - Object containing social links { facebook, twitter, linkedin }
+ */
+export const updateUserProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const {
+            fullName,
+            email,
+            phone,
+            address,
+            bio,
+            dateOfBirth,
+            socialLinks,
+        } = req.body;
+
+        // Validate input fields
+        if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+            return res.status(400).json({ message: "Invalid email format." });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // update name, email
+        if (fullName) {
+            user.fullName = fullName.trim();
+        }
+
+        if (email) {
+            user.email = email.toLowerCase().trim();
+        }
+
+        await user.save({ validateBeforeSave: false });
+
+        let profile = await UserProfile.findOne({ userId });
+        if (!profile) {
+            profile = new UserProfile({ userId });
+        }
+
+        // Update user profile
+        if (phone) {
+            profile.phone = phone.trim();
+        }
+
+        if (address) {
+            profile.address = address.trim();
+        }
+
+        if (bio) {
+            profile.bio = bio.trim();
+        }
+
+        if (dateOfBirth) {
+            profile.dateOfBirth = new Date(dateOfBirth);
+        }
+
+        if (socialLinks && typeof socialLinks === "object") {
+            profile.socialLinks = {
+                facebook: socialLinks.facebook || profile.socialLinks.facebook,
+                twitter: socialLinks.twitter || profile.socialLinks.twitter,
+                linkedin: socialLinks.linkedin || profile.socialLinks.linkedin,
+            };
+        }
+
+        await profile.save();
+
+        return res.status(200).json({
+            message: "Profile updated successfully.",
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                role: user.role,
+                avatar: user.avatar,
+            },
+            profile,
+        });
+    } catch (error) {
+        console.error("Update user profile error:", error);
+        res.status(500).json({ message: "Server error while updating profile." });
+    }
+};
+
+/**
+ * POST /api/users/avatar
+ * @desc Upload or update the authenticated user's avatar image
+ * @access Private
+ *
+ * @file {File} file - Image file (multipart/form-data)
+ */
+export const uploadAvatar = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded." });
+        }
+
+        // ✅ Upload to Cloudinary
+        const filePath = path.resolve(req.file.path);
+        const imageUrl = await uploadFile(filePath, {
+            folder: "avatars",
+            resource_type: "image",
+            transformation: [{ width: 400, height: 400, crop: "fill" }],
+        });
+
+        // Xóa file tạm sau khi upload
+        fs.unlinkSync(filePath);
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Delete old avatar if exists
+        if (user.avatar && user.avatar.includes("cloudinary.com")) {
+            try {
+                // Extract publicId (.../avatars/xxxx.jpg)
+                const parts = user.avatar.split("/");
+                const filename = parts[parts.length - 1];
+                const publicId = `avatars/${filename.split(".")[0]}`;
+                const { v2: cloudinary } = await import("cloudinary");
+                await cloudinary.uploader.destroy(publicId);
+            } catch (err) {
+                console.warn("Warning: Failed to delete old avatar ->", err.message);
+            }
+        }
+
+        user.avatar = imageUrl;
+        await user.save({ validateBeforeSave: false });
+
+        return res.status(200).json({
+            message: "Avatar uploaded successfully.",
+            avatarUrl: imageUrl,
+        });
+    } catch (error) {
+        console.error("Upload avatar error:", error);
+        res.status(500).json({ message: "Server error while uploading avatar." });
+    }
+};
+
+/**
+ * GET /api/users/list
+ * @desc Get paginated, filtered, and sorted user list (admin only)
+ * @access Admin
+ *
+ * @query {string} [role] - Filter users by role (student | teacher | admin)
+ * @query {boolean} [isVerified] - Filter users by verification status
+ * @query {number} [page=1] - Page number
+ * @query {number} [limit=10] - Number of users per page
+ * @query {string} [sort=createdAt] - Field to sort by (e.g., "email", "-createdAt")
+ */
+export const getUserList = async (req, res) => {
+    try {
+        const {
+            role,
+            isVerified,
+            page = 1,
+            limit = 10,
+            sort = "createdAt"
+        } = req.query;
+
+        const query = {};
+        if (role) query.role = role;
+        if (isVerified !== undefined) query.isVerified = isVerified === "true";
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const totalUsers = await User.countDocuments(query);
+        const users = await User.find(query)
+            .sort(sort)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .select("-password -refreshToken -verificationToken -resetPasswordToken -resetPasswordExpire");
+
+        return res.status(200).json({
+            total: totalUsers,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: Math.ceil(totalUsers / limit),
+            users,
+        });
+    } catch (error) {
+        console.error("Get user list error:", error);
+        res.status(500).json({ message: "Server error while fetching users." });
+    }
+};
+
+/**
+ * DELETE /api/users/:id
+ * @desc Delete a user and related data (admin only)
+ * @access Admin
+ *
+ * @params {string} id - ID of the user to delete
+ */
+export const deleteUser = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: "Invalid user ID format." });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Delete user profile if exists
+        await UserProfile.findOneAndDelete({ userId });
+
+        // Delete courses if user is a teacher
+        // if (user.role === "teacher") {
+        //     await Course.deleteMany({ teacher: userId });
+        // }
+
+        // Delete progress if user is a student
+        // if (user.role === "student") {
+        //     await Progress.deleteMany({ user: userId });
+        // }
+
+        // Delete user itself
+        await user.deleteOne();
+
+        return res.status(200).json({ message: "User and related data deleted successfully." });
+    } catch (error) {
+        console.error("Delete user error:", error);
+        res.status(500).json({ message: "Server error while deleting user." });
+    }
+};

@@ -11,6 +11,12 @@ import sendEmail from "../config/sendGrid.config.js";
 
 /**
  * POST /api/auth/register
+ * @desc Register a new user and send verification email
+ * @access Public
+ *
+ * @body {string} fullName - Full name of the user
+ * @body {string} email - Email address of the user
+ * @body {string} password - Plain text password
  */
 export const register = async (req, res) => {
   try {
@@ -78,6 +84,10 @@ export const register = async (req, res) => {
 
 /**
  * POST /api/auth/verify-email/:token
+ * @desc Verify user's email address using token
+ * @access Public
+ *
+ * @params {string} token - Email verification token
  */
 export const verifyEmail = async (req, res) => {
   try {
@@ -111,7 +121,10 @@ export const verifyEmail = async (req, res) => {
 
 /**
  * POST /api/auth/refresh-token
- * Generate a new access token using a valid refresh token
+ * @desc Generate a new access token using a valid refresh token
+ * @access Public
+ *
+ * @body {string} refreshToken - User's refresh token
  */
 export const refreshAccessToken = async (req, res) => {
   try {
@@ -158,6 +171,11 @@ export const refreshAccessToken = async (req, res) => {
 
 /**
  * POST /api/auth/login
+ * @desc Log in user and return access & refresh tokens
+ * @access Public
+ *
+ * @body {string} email - User's email address
+ * @body {string} password - User's password
  */
 export const login = async (req, res) => {
     try {
@@ -236,7 +254,11 @@ export const login = async (req, res) => {
 
 /**
  * PUT /api/auth/reset-password/:token
- * Reset user password using valid token
+ * @desc Reset user password using a valid reset token
+ * @access Public
+ *
+ * @params {string} token - Password reset token
+ * @body {string} password - New password
  */
 export const resetPassword = async (req, res) => {
     try {
@@ -286,7 +308,13 @@ export const resetPassword = async (req, res) => {
         res.status(500).json({ message: "Server error while resetting password." });
     }
   };
- /* POST /api/auth/logout
+
+/**
+́́ * POST /api/auth/logout
+ * @desc Log out user and invalidate refresh token
+ * @access Private
+ *
+ * @body {string} refreshToken - Refresh token to invalidate
  */
 export const logout = async (req, res) => {
     try {
@@ -327,8 +355,13 @@ export const logout = async (req, res) => {
         res.status(500).json({ message: 'Server error during log out.' });
     }
 };
- /* POST /api/auth/forgot-password
- * Generate password reset token and send reset link to user's email
+
+/**
+ * POST /api/auth/forgot-password
+ * @desc Send a password reset link to user's email
+ * @access Public
+ *
+ * @body {string} email - Registered email address of the user
  */
 export const forgotPassword = async (req, res) => {
     let user;
