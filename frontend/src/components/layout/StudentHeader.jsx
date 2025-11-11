@@ -1,12 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNotifications } from "../../contexts/NotificationContext.jsx";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./StudentHeader.module.css";
 import avatarDefault from "../../assets/default-avatar.png";
 
 export default function StudentHeader() {
   const { user, logout } = useAuth();
+  const {
+    notifications,
+    unreadCount,
+    markRead,
+    deleteNotification,
+    refresh,
+  } = useNotifications() || {};
   const navigate = useNavigate();
 
   const [searchValue, setSearchValue] = useState("");
@@ -29,6 +37,27 @@ export default function StudentHeader() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const typeIcon = (type) => {
+    switch (type) {
+      case "quiz_assigned":
+        return "📝";
+      case "quiz_due":
+        return "⏰";
+      case "quiz_submitted":
+        return "📤";
+      case "quiz_graded":
+        return "✅";
+      case "discussion":
+        return "💬";
+      case "session":
+        return "🎥";
+      case "course":
+        return "📚";
+      default:
+        return "🔔";
+    }
+  };
 
   return (
     <nav className={styles.StudentHeader}>
@@ -57,7 +86,9 @@ export default function StudentHeader() {
               onClick={() => setNotifOpen((prev) => !prev)}
             >
               🔔
-              <span className={styles.bellDot}></span>
+              {unreadCount > 0 && (
+                <span className={styles.bellDot}>{unreadCount}</span>
+              )}
             </button>
 
             <AnimatePresence>
@@ -69,17 +100,78 @@ export default function StudentHeader() {
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <p className={styles.notifTitle}>Notifications</p>
+                  <div className={styles.notifHeader}>
+                    <p className={styles.notifTitle}>Notifications</p>
+                    <button
+                      className={styles.refreshBtn}
+                      onClick={() => refresh && refresh()}
+                      title="Refresh"
+                    >
+                      ⟳
+                    </button>
+                  </div>
                   <div className={styles.notifList}>
-                    <div className={styles.notifItem}>
-                      🗓️ New IELTS Speaking class available!
-                    </div>
-                    <div className={styles.notifItem}>
-                      📝 Your Writing Task 2 feedback is ready.
-                    </div>
-                    <div className={styles.notifItem}>
-                      🎯 You completed Lesson 3: Writing Cohesion.
-                    </div>
+                    {(notifications || []).length === 0 ? (
+                      <div className={styles.notifEmpty}>Không có thông báo</div>
+                    ) : (
+                      (notifications || [])
+                        .slice(0, 8)
+                        .map((n) => (
+                          <div
+                            key={n._id}
+                            className={`${styles.notifItem} ${!n.isRead ? styles.unread : ""}`}
+                          >
+                            <div
+                              className={styles.notifMain}
+                              onClick={() => {
+                                if (!n.isRead && markRead) {
+                                  markRead(n._id);
+                                }
+                                if (n.link) {
+                                  navigate(n.link);
+                                  setNotifOpen(false);
+                                }
+                              }}
+                            >
+                              <span className={styles.notifIcon}>{typeIcon(n.type)}</span>
+                              <div className={styles.notifContent}>
+                                <div className={styles.notifTitleText}>
+                                  {n.title || "Notification"}
+                                </div>
+                                {n.content && (
+                                  <div className={styles.notifDesc}>
+                                    {n.content}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className={styles.notifActions}>
+                              {!n.isRead && (
+                                <button
+                                  className={styles.actionBtn}
+                                  title="Đánh dấu đã đọc"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markRead && markRead(n._id);
+                                  }}
+                                >
+                                  ✓
+                                </button>
+                              )}
+                              <button
+                                className={styles.actionBtn}
+                                title="Xóa"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification && deleteNotification(n._id);
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                    )}
                   </div>
                   <button
                     className={styles.viewAllBtn}
