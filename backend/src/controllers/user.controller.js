@@ -4,6 +4,8 @@ import UserProfile from "../models/userProfile.model.js";
 import path from "path";
 import fs from "fs";
 import mongoose from "mongoose";
+import Course from "../models/course.model.js";
+import Progress from "../models/progress.model.js";
 
 /**
  * GET /api/users/profile
@@ -260,14 +262,14 @@ export const deleteUser = async (req, res) => {
         await UserProfile.findOneAndDelete({ userId });
 
         // Delete courses if user is a teacher
-        // if (user.role === "teacher") {
-        //     await Course.deleteMany({ teacher: userId });
-        // }
+        if (user.role === "teacher") {
+            await Course.deleteMany({ teacher: userId });
+        }
 
         // Delete progress if user is a student
-        // if (user.role === "student") {
-        //     await Progress.deleteMany({ user: userId });
-        // }
+        if (user.role === "student") {
+            await Progress.deleteMany({ user: userId });
+        }
 
         // Delete user itself
         await user.deleteOne();
