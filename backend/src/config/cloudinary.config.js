@@ -15,6 +15,14 @@ const uploadFile = async (filePath, options = { resource_type: "auto" }) => {
   }
 };
 
+const deleteFile = async (publicId, options = {}) => {
+    try {
+        await cloudinary.uploader.destroy(publicId, options);
+    } catch (error) {
+        console.warn("Cloudinary delete failed:", error.message);
+    }
+};
+
 // Function to connect and configure Cloudinary
 // This will configure the SDK and make a lightweight API call to verify credentials.
 const connectCloudinary = async () => {
@@ -39,4 +47,4 @@ const connectCloudinary = async () => {
   }
 };
 
-export { uploadFile, connectCloudinary };
+export { uploadFile, connectCloudinary, deleteFile };

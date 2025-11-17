@@ -236,6 +236,36 @@ export const validateCourseCreation = [
 ];
 
 /**
+ * Course Update Validation Rules
+ * Allows partial updates
+ */
+export const validateCourseUpdate = [
+    body('title')
+        .optional()
+        .trim()
+        .isLength({ min: 3, max: 200 })
+        .withMessage('Title must be between 3 and 200 characters'),
+
+    body('description')
+        .optional()
+        .trim()
+        .isLength({ min: 10, max: 2000 })
+        .withMessage('Description must be between 10 and 2000 characters'),
+
+    body('category')
+        .optional()
+        .isIn(['Programming', 'Design', 'Business', 'Marketing', 'Photography', 'Music', 'Other'])
+        .withMessage('Invalid category'),
+
+    body('level')
+        .optional()
+        .isIn(['Beginner', 'Intermediate', 'Advanced'])
+        .withMessage('Invalid level'),
+
+    validate,
+];
+
+/**
  * Refresh Token Validation Rules
  * Validates refresh token in request body
  */
@@ -284,6 +314,7 @@ export default {
   validatePagination,
   validateProfileUpdate,
   validateCourseCreation,
+  validateCourseUpdate,
   validateRefreshToken,
   validateSearch,
 };
