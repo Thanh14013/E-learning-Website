@@ -1,4 +1,4 @@
-import { body, param, query, validationResult } from 'express-validator';
+import { body, param, query, validationResult } from "express-validator";
 
 /**
  * Validation Result Handler
@@ -18,7 +18,7 @@ export const validate = (req, res, next) => {
 
     return res.status(400).json({
       success: false,
-      message: 'Validation failed',
+      message: "Validation failed",
       errors: formattedErrors,
     });
   }
@@ -31,30 +31,32 @@ export const validate = (req, res, next) => {
  * Validates fullName, email, and password fields
  */
 export const validateRegister = [
-  body('fullName')
+  body("fullName")
     .trim()
     .notEmpty()
-    .withMessage('Full name is required')
+    .withMessage("Full name is required")
     .isLength({ min: 2, max: 100 })
-    .withMessage('Full name must be between 2 and 100 characters')
+    .withMessage("Full name must be between 2 and 100 characters")
     .matches(/^[a-zA-Z\s]+$/)
-    .withMessage('Full name can only contain letters and spaces'),
+    .withMessage("Full name can only contain letters and spaces"),
 
-  body('email')
+  body("email")
     .trim()
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage("Email is required")
     .isEmail()
-    .withMessage('Please provide a valid email address')
+    .withMessage("Please provide a valid email address")
     .normalizeEmail(),
 
-  body('password')
+  body("password")
     .notEmpty()
-    .withMessage('Password is required')
+    .withMessage("Password is required")
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
+    .withMessage("Password must be at least 8 characters long")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage(
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
 
   validate,
 ];
@@ -64,17 +66,15 @@ export const validateRegister = [
  * Validates email and password fields
  */
 export const validateLogin = [
-  body('email')
+  body("email")
     .trim()
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage("Email is required")
     .isEmail()
-    .withMessage('Please provide a valid email address')
+    .withMessage("Please provide a valid email address")
     .normalizeEmail(),
 
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required'),
+  body("password").notEmpty().withMessage("Password is required"),
 
   validate,
 ];
@@ -84,12 +84,12 @@ export const validateLogin = [
  * Validates single email field
  */
 export const validateEmail = [
-  body('email')
+  body("email")
     .trim()
     .notEmpty()
-    .withMessage('Email is required')
+    .withMessage("Email is required")
     .isEmail()
-    .withMessage('Please provide a valid email address')
+    .withMessage("Please provide a valid email address")
     .normalizeEmail(),
 
   validate,
@@ -100,19 +100,21 @@ export const validateEmail = [
  * Validates new password and confirm password
  */
 export const validatePasswordReset = [
-  body('password')
+  body("password")
     .notEmpty()
-    .withMessage('Password is required')
+    .withMessage("Password is required")
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
+    .withMessage("Password must be at least 8 characters long")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage(
+      "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+    ),
 
-  body('confirmPassword')
+  body("confirmPassword")
     .notEmpty()
-    .withMessage('Password confirmation is required')
+    .withMessage("Password confirmation is required")
     .custom((value, { req }) => value === req.body.password)
-    .withMessage('Passwords do not match'),
+    .withMessage("Passwords do not match"),
 
   validate,
 ];
@@ -122,11 +124,11 @@ export const validatePasswordReset = [
  * Validates token parameter in URL
  */
 export const validateToken = [
-  param('token')
+  param("token")
     .notEmpty()
-    .withMessage('Token is required')
+    .withMessage("Token is required")
     .isLength({ min: 32 })
-    .withMessage('Invalid token format'),
+    .withMessage("Invalid token format"),
 
   validate,
 ];
@@ -136,11 +138,11 @@ export const validateToken = [
  * Validates ID parameter in URL
  */
 export const validateObjectId = [
-  param('id')
+  param("id")
     .notEmpty()
-    .withMessage('ID is required')
+    .withMessage("ID is required")
     .isMongoId()
-    .withMessage('Invalid ID format'),
+    .withMessage("Invalid ID format"),
 
   validate,
 ];
@@ -150,16 +152,16 @@ export const validateObjectId = [
  * Validates page and limit query parameters
  */
 export const validatePagination = [
-  query('page')
+  query("page")
     .optional()
     .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer')
+    .withMessage("Page must be a positive integer")
     .toInt(),
 
-  query('limit')
+  query("limit")
     .optional()
     .isInt({ min: 1, max: 100 })
-    .withMessage('Limit must be between 1 and 100')
+    .withMessage("Limit must be between 1 and 100")
     .toInt(),
 
   validate,
@@ -170,31 +172,31 @@ export const validatePagination = [
  * Validates profile fields (fullName, phone, address, bio)
  */
 export const validateProfileUpdate = [
-  body('fullName')
+  body("fullName")
     .optional()
     .trim()
     .isLength({ min: 2, max: 100 })
-    .withMessage('Full name must be between 2 and 100 characters')
+    .withMessage("Full name must be between 2 and 100 characters")
     .matches(/^[a-zA-Z\s]+$/)
-    .withMessage('Full name can only contain letters and spaces'),
+    .withMessage("Full name can only contain letters and spaces"),
 
-  body('phone')
+  body("phone")
     .optional()
     .trim()
     .matches(/^[0-9]{10,15}$/)
-    .withMessage('Phone number must be 10-15 digits'),
+    .withMessage("Phone number must be 10-15 digits"),
 
-  body('address')
+  body("address")
     .optional()
     .trim()
     .isLength({ max: 200 })
-    .withMessage('Address must not exceed 200 characters'),
+    .withMessage("Address must not exceed 200 characters"),
 
-  body('bio')
+  body("bio")
     .optional()
     .trim()
     .isLength({ max: 500 })
-    .withMessage('Bio must not exceed 500 characters'),
+    .withMessage("Bio must not exceed 500 characters"),
 
   validate,
 ];
@@ -204,33 +206,41 @@ export const validateProfileUpdate = [
  * Validates course fields (title, description, category, level)
  */
 export const validateCourseCreation = [
-  body('title')
+  body("title")
     .trim()
     .notEmpty()
-    .withMessage('Course title is required')
+    .withMessage("Course title is required")
     .isLength({ min: 3, max: 200 })
-    .withMessage('Title must be between 3 and 200 characters'),
+    .withMessage("Title must be between 3 and 200 characters"),
 
-  body('description')
+  body("description")
     .trim()
     .notEmpty()
-    .withMessage('Course description is required')
+    .withMessage("Course description is required")
     .isLength({ min: 10, max: 2000 })
-    .withMessage('Description must be between 10 and 2000 characters'),
+    .withMessage("Description must be between 10 and 2000 characters"),
 
-  body('category')
+  body("category")
     .trim()
     .notEmpty()
-    .withMessage('Course category is required')
-    .isIn(['Programming', 'Design', 'Business', 'Marketing', 'Photography', 'Music', 'Other'])
-    .withMessage('Invalid category'),
+    .withMessage("Course category is required")
+    .isIn([
+      "Programming",
+      "Design",
+      "Business",
+      "Marketing",
+      "Photography",
+      "Music",
+      "Other",
+    ])
+    .withMessage("Invalid category"),
 
-  body('level')
+  body("level")
     .trim()
     .notEmpty()
-    .withMessage('Course level is required')
-    .isIn(['Beginner', 'Intermediate', 'Advanced'])
-    .withMessage('Invalid level'),
+    .withMessage("Course level is required")
+    .isIn(["Beginner", "Intermediate", "Advanced"])
+    .withMessage("Invalid level"),
 
   validate,
 ];
@@ -240,29 +250,37 @@ export const validateCourseCreation = [
  * Allows partial updates
  */
 export const validateCourseUpdate = [
-    body('title')
-        .optional()
-        .trim()
-        .isLength({ min: 3, max: 200 })
-        .withMessage('Title must be between 3 and 200 characters'),
+  body("title")
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters"),
 
-    body('description')
-        .optional()
-        .trim()
-        .isLength({ min: 10, max: 2000 })
-        .withMessage('Description must be between 10 and 2000 characters'),
+  body("description")
+    .optional()
+    .trim()
+    .isLength({ min: 10, max: 2000 })
+    .withMessage("Description must be between 10 and 2000 characters"),
 
-    body('category')
-        .optional()
-        .isIn(['Programming', 'Design', 'Business', 'Marketing', 'Photography', 'Music', 'Other'])
-        .withMessage('Invalid category'),
+  body("category")
+    .optional()
+    .isIn([
+      "Programming",
+      "Design",
+      "Business",
+      "Marketing",
+      "Photography",
+      "Music",
+      "Other",
+    ])
+    .withMessage("Invalid category"),
 
-    body('level')
-        .optional()
-        .isIn(['Beginner', 'Intermediate', 'Advanced'])
-        .withMessage('Invalid level'),
+  body("level")
+    .optional()
+    .isIn(["Beginner", "Intermediate", "Advanced"])
+    .withMessage("Invalid level"),
 
-    validate,
+  validate,
 ];
 
 /**
@@ -270,11 +288,11 @@ export const validateCourseUpdate = [
  * Validates refresh token in request body
  */
 export const validateRefreshToken = [
-  body('refreshToken')
+  body("refreshToken")
     .notEmpty()
-    .withMessage('Refresh token is required')
+    .withMessage("Refresh token is required")
     .isString()
-    .withMessage('Refresh token must be a string'),
+    .withMessage("Refresh token must be a string"),
 
   validate,
 ];
@@ -284,21 +302,102 @@ export const validateRefreshToken = [
  * Validates search query parameter
  */
 export const validateSearch = [
-  query('q')
+  query("q")
     .optional()
     .trim()
     .isLength({ min: 1, max: 100 })
-    .withMessage('Search query must be between 1 and 100 characters'),
+    .withMessage("Search query must be between 1 and 100 characters"),
 
-  query('category')
+  query("category")
     .optional()
-    .isIn(['Programming', 'Design', 'Business', 'Marketing', 'Photography', 'Music', 'Other'])
-    .withMessage('Invalid category'),
+    .isIn([
+      "Programming",
+      "Design",
+      "Business",
+      "Marketing",
+      "Photography",
+      "Music",
+      "Other",
+    ])
+    .withMessage("Invalid category"),
 
-  query('level')
+  query("level")
     .optional()
-    .isIn(['Beginner', 'Intermediate', 'Advanced'])
-    .withMessage('Invalid level'),
+    .isIn(["Beginner", "Intermediate", "Advanced"])
+    .withMessage("Invalid level"),
+
+  validate,
+];
+
+/**
+ * Live Session Creation Validation Rules
+ * Validates session fields (courseId, title, description, scheduledAt)
+ */
+export const validateSessionCreation = [
+  body("courseId")
+    .trim()
+    .notEmpty()
+    .withMessage("Course ID is required")
+    .isMongoId()
+    .withMessage("Invalid course ID format"),
+
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("Session title is required")
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters"),
+
+  body("description")
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage("Description must not exceed 1000 characters"),
+
+  body("scheduledAt")
+    .notEmpty()
+    .withMessage("Scheduled time is required")
+    .isISO8601()
+    .withMessage("Invalid date format. Use ISO 8601 format")
+    .custom((value) => {
+      const scheduledDate = new Date(value);
+      if (scheduledDate <= new Date()) {
+        throw new Error("Scheduled time must be in the future");
+      }
+      return true;
+    }),
+
+  validate,
+];
+
+/**
+ * Live Session Update Validation Rules
+ * Validates session update fields
+ */
+export const validateSessionUpdate = [
+  body("title")
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters"),
+
+  body("description")
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage("Description must not exceed 1000 characters"),
+
+  body("scheduledAt")
+    .optional()
+    .isISO8601()
+    .withMessage("Invalid date format. Use ISO 8601 format")
+    .custom((value) => {
+      const scheduledDate = new Date(value);
+      if (scheduledDate <= new Date()) {
+        throw new Error("Scheduled time must be in the future");
+      }
+      return true;
+    }),
 
   validate,
 ];
@@ -317,4 +416,6 @@ export default {
   validateCourseUpdate,
   validateRefreshToken,
   validateSearch,
+  validateSessionCreation,
+  validateSessionUpdate,
 };

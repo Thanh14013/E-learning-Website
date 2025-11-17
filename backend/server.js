@@ -15,6 +15,8 @@ import authRoutes from "./src/routes/auth.routes.js";
 import discussionRoutes from "./src/routes/discussion.routes.js";
 import commentRoutes from "./src/routes/comment.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
+import courseRoutes from "./src/routes/course.routes.js";
+import sessionRoutes from "./src/routes/session.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import {
   errorHandler,
@@ -76,6 +78,12 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" })); // Parse URL-enc
 // Rate limiting middleware - Apply to all API routes
 app.use("/api", generalLimiter);
 
+// Middleware to attach Socket.IO instance to requests
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 // Health check endpoint - Check if server is running
 app.get("/health", (req, res) => {
   res.status(200).json({
@@ -92,6 +100,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/discussions", discussionRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/courses", courseRoutes);
+app.use("/api/sessions", sessionRoutes);
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);

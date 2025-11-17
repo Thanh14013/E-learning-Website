@@ -1,0 +1,558 @@
+import LiveSession from "../models/liveSession.model.js";
+import Course from "../models/course.model.js";
+import User from "../models/user.model.js";
+import { sendNotificationToCourse } from "../socket/index.js";
+
+/**
+ * @route   POST /api/sessions
+ * @desc    Create new live session (teacher only)
+ * @access  Private (Teacher/Admin)
+ */
+export const createSession = async (req, res) => {
+  try {
+    const { courseId, title, description, scheduledAt } = req.body;
+    const hostId = req.user.id;
+
+    // Validate course ownership
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Check if user is the course teacher or admin
+    if (course.teacherId.toString() !== hostId && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You do not own this course.",
+      });
+    }
+
+    // Validate scheduled time is in the future
+    const scheduledDate = new Date(scheduledAt);
+    if (scheduledDate <= new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Scheduled time must be in the future",
+      });
+    }
+
+    // Create session
+    const newSession = await LiveSession.create({
+      courseId,
+      hostId,
+      title,
+      description,
+      scheduledAt: scheduledDate,
+      status: "scheduled",
+    });
+
+    // Populate course and host info
+    await newSession.populate([
+      { path: "courseId", select: "title enrolledStudents" },
+      { path: "hostId", select: "fullName email" },
+    ]);
+
+    // Send notifications to enrolled students
+    if (req.io) {
+      sendNotificationToCourse(req.io, courseId, {
+        type: "session_scheduled",
+        title: "New Live Session Scheduled",
+        content: `A new live session "${title}" has been scheduled for ${scheduledDate.toLocaleString()}`,
+        link: `/sessions/${newSession._id}`,
+        sessionId: newSession._id,
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Live session created successfully",
+      data: newSession,
+    });
+  } catch (error) {
+    console.error("Create session error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while creating session",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * @route   GET /api/sessions/course/:courseId
+ * @desc    Get all sessions for a course
+ * @access  Public
+ */
+export const getCourseSessions = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { status } = req.query;
+
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Build filter
+    const filter = { courseId };
+    if (
+      status &&
+      ["scheduled", "live", "ended", "cancelled"].includes(status)
+    ) {
+      filter.status = status;
+    }
+
+    // Query sessions
+    const [sessions, total] = await Promise.all([
+      LiveSession.find(filter)
+        .populate("hostId", "fullName email avatar")
+        .sort({ scheduledAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      LiveSession.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Sessions fetched successfully",
+      metadata: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      data: sessions,
+    });
+  } catch (error) {
+    console.error("Get course sessions error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching sessions",
+    });
+  }
+};
+
+/**
+ * @route   GET /api/sessions/:id
+ * @desc    Get session detail
+ * @access  Public
+ */
+export const getSessionDetail = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const session = await LiveSession.findById(id)
+      .populate("courseId", "title description thumbnail")
+      .populate("hostId", "fullName email avatar")
+      .populate("participants.userId", "fullName email avatar")
+      .lean();
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
+
+    // Filter out participants who have left
+    const activeParticipants = session.participants.filter(
+      (p) => !p.leftAt || p.leftAt === null
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Session detail fetched successfully",
+      data: {
+        ...session,
+        activeParticipants,
+        totalParticipants: activeParticipants.length,
+      },
+    });
+  } catch (error) {
+    console.error("Get session detail error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching session detail",
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/sessions/:id
+ * @desc    Update session
+ * @access  Private (Teacher/Admin - Owner only)
+ */
+export const updateSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const { title, description, scheduledAt } = req.body;
+
+    const session = await LiveSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
+
+    // Validate ownership
+    if (session.hostId.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You are not the host of this session.",
+      });
+    }
+
+    // Cannot update live or ended sessions
+    if (session.status === "live" || session.status === "ended") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot update ${session.status} session`,
+      });
+    }
+
+    // Update fields
+    if (title) session.title = title;
+    if (description) session.description = description;
+    if (scheduledAt) {
+      const scheduledDate = new Date(scheduledAt);
+      if (scheduledDate <= new Date()) {
+        return res.status(400).json({
+          success: false,
+          message: "Scheduled time must be in the future",
+        });
+      }
+      session.scheduledAt = scheduledDate;
+    }
+
+    await session.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Session updated successfully",
+      data: session,
+    });
+  } catch (error) {
+    console.error("Update session error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating session",
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/sessions/:id/start
+ * @desc    Start live session
+ * @access  Private (Teacher/Admin - Owner only)
+ */
+export const startSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const session = await LiveSession.findById(id).populate(
+      "courseId",
+      "title enrolledStudents"
+    );
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
+
+    // Validate ownership
+    if (session.hostId.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You are not the host of this session.",
+      });
+    }
+
+    // Check if session is scheduled
+    if (session.status !== "scheduled") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot start session with status: ${session.status}`,
+      });
+    }
+
+    // Update status to live
+    session.status = "live";
+    session.startedAt = new Date();
+    await session.save();
+
+    // Broadcast session live notification via Socket.IO
+    if (req.io) {
+      sendNotificationToCourse(req.io, session.courseId._id, {
+        type: "session_live",
+        title: "Live Session Started",
+        content: `The session "${session.title}" is now live! Join now.`,
+        link: `/sessions/${session._id}`,
+        sessionId: session._id,
+      });
+
+      // Also emit to session namespace
+      const sessionNamespace = req.io.of("/session");
+      sessionNamespace.emit("session:live", {
+        sessionId: session._id,
+        session: session,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Session started successfully",
+      data: session,
+    });
+  } catch (error) {
+    console.error("Start session error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while starting session",
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/sessions/:id/end
+ * @desc    End live session
+ * @access  Private (Teacher/Admin - Owner only)
+ */
+export const endSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const session = await LiveSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
+
+    // Validate ownership
+    if (session.hostId.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You are not the host of this session.",
+      });
+    }
+
+    // Check if session is live
+    if (session.status !== "live") {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot end session with status: ${session.status}`,
+      });
+    }
+
+    // Update status to ended
+    session.status = "ended";
+    session.endedAt = new Date();
+
+    // Calculate duration in minutes
+    if (session.startedAt) {
+      const durationMs = session.endedAt - session.startedAt;
+      session.duration = Math.round(durationMs / 60000); // Convert to minutes
+    }
+
+    await session.save();
+
+    // Broadcast session ended event via Socket.IO
+    if (req.io) {
+      const sessionNamespace = req.io.of("/session");
+      const roomId = `session:${session._id}`;
+
+      sessionNamespace.to(roomId).emit("session:ended", {
+        sessionId: session._id,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Session ended successfully",
+      data: session,
+    });
+  } catch (error) {
+    console.error("End session error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while ending session",
+    });
+  }
+};
+
+/**
+ * @route   POST /api/sessions/:id/join
+ * @desc    Join live session (student)
+ * @access  Private
+ */
+export const joinSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const session = await LiveSession.findById(id).populate(
+      "courseId",
+      "enrolledStudents"
+    );
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
+
+    // Check if session is live
+    if (session.status !== "live") {
+      return res.status(400).json({
+        success: false,
+        message: "Session is not live",
+        status: session.status,
+      });
+    }
+
+    // Check if user is enrolled in the course
+    const isEnrolled = session.courseId.enrolledStudents.some(
+      (studentId) => studentId.toString() === userId
+    );
+
+    const isHost = session.hostId.toString() === userId;
+
+    if (!isEnrolled && !isHost && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "You must be enrolled in the course to join this session",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "You can join the session",
+      data: {
+        sessionId: session._id,
+        title: session.title,
+        hostId: session.hostId,
+        status: session.status,
+      },
+    });
+  } catch (error) {
+    console.error("Join session error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while joining session",
+    });
+  }
+};
+
+/**
+ * @route   DELETE /api/sessions/:id
+ * @desc    Delete session
+ * @access  Private (Teacher/Admin - Owner only)
+ */
+export const deleteSession = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const session = await LiveSession.findById(id);
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found",
+      });
+    }
+
+    // Validate ownership
+    if (session.hostId.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You are not the host of this session.",
+      });
+    }
+
+    // Cannot delete live sessions
+    if (session.status === "live") {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete live session. End it first.",
+      });
+    }
+
+    // Delete recording from Cloudinary if exists
+    if (session.recordingUrl) {
+      // TODO: Implement Cloudinary deletion
+      // const fileName = session.recordingUrl.split("/").pop().split(".")[0];
+      // await deleteFile(`recordings/${fileName}`, { resource_type: "video" });
+    }
+
+    await LiveSession.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Session deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete session error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting session",
+    });
+  }
+};
+
+/**
+ * @route   GET /api/sessions/my-sessions
+ * @desc    Get sessions hosted by current teacher
+ * @access  Private (Teacher/Admin)
+ */
+export const getMySessions = async (req, res) => {
+  try {
+    const hostId = req.user.id;
+
+    // Pagination
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [sessions, total] = await Promise.all([
+      LiveSession.find({ hostId })
+        .populate("courseId", "title thumbnail")
+        .sort({ scheduledAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      LiveSession.countDocuments({ hostId }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Your sessions fetched successfully",
+      metadata: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+      data: sessions,
+    });
+  } catch (error) {
+    console.error("Get my sessions error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching sessions",
+    });
+  }
+};
