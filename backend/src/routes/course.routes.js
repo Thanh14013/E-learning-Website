@@ -15,6 +15,11 @@ import {
   updateCourse,
   togglePublishCourse,
   deleteCourse,
+  enrollCourse,
+  unenrollCourse,
+  getEnrolledCourses,
+  getMyCourses,
+  getCourseStudents,
 } from "../controllers/course.controller.js";
 import { authenticate, optionalAuthenticate } from "../middleware/auth.js";
 import { isTeacherOrAdmin } from "../middleware/authorize.js";
@@ -43,8 +48,23 @@ router.post(
 // GET /api/courses  → Public list with filters/pagination
 router.get("/", validatePagination, validateSearch, getAllCourses);
 
+// GET /api/courses/enrolled  → Get enrolled courses for current user (Student)
+router.get("/enrolled", authenticate, getEnrolledCourses);
+
+// GET /api/courses/my-courses  → Get courses created by current teacher
+router.get("/my-courses", authenticate, isTeacherOrAdmin, getMyCourses);
+
 // GET /api/courses/:id  → Public detail (with optional auth)
 router.get("/:id", validateObjectId, optionalAuthenticate, getCourseDetail);
+
+// GET /api/courses/:id/students  → Get enrolled students (Teacher/Admin)
+router.get(
+  "/:id/students",
+  authenticate,
+  isTeacherOrAdmin,
+  validateObjectId,
+  getCourseStudents
+);
 
 // PUT /api/courses/:id  → Update course
 router.put(
@@ -73,5 +93,11 @@ router.delete(
   validateObjectId,
   deleteCourse
 );
+
+// POST /api/courses/:id/enroll  → Enroll in a course (Student)
+router.post("/:id/enroll", authenticate, validateObjectId, enrollCourse);
+
+// DELETE /api/courses/:id/unenroll  → Unenroll from a course (Student)
+router.delete("/:id/unenroll", authenticate, validateObjectId, unenrollCourse);
 
 export default router;
