@@ -17,6 +17,7 @@ import commentRoutes from "./src/routes/comment.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
 import courseRoutes from "./src/routes/course.routes.js";
 import sessionRoutes from "./src/routes/session.routes.js";
+import notificationRoutes from "./src/routes/notification.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import {
   errorHandler,
@@ -102,6 +103,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/sessions", sessionRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
