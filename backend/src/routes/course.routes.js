@@ -7,20 +7,7 @@ import {
   validatePagination,
   validateSearch,
 } from "../middleware/validator.js";
-import {
-  createCourse,
-  uploadCourseThumbnail,
-  getAllCourses,
-  getCourseDetail,
-  updateCourse,
-  togglePublishCourse,
-  deleteCourse,
-  enrollCourse,
-  unenrollCourse,
-  getEnrolledCourses,
-  getMyCourses,
-  getCourseStudents,
-} from "../controllers/course.controller.js";
+import { createCourse, uploadCourseThumbnail, getAllCourses, getCourseDetail, updateCourse, togglePublishCourse, deleteCourse, enrollCourse, unenrollCourse, getEnrolledCourses, getMyCourses, getCourseStudents, reviewCourse } from "../controllers/course.controller.js";
 import { authenticate, optionalAuthenticate } from "../middleware/auth.js";
 import { isTeacherOrAdmin } from "../middleware/authorize.js";
 
@@ -99,5 +86,15 @@ router.post("/:id/enroll", authenticate, validateObjectId, enrollCourse);
 
 // DELETE /api/courses/:id/unenroll  → Unenroll from a course (Student)
 router.delete("/:id/unenroll", authenticate, validateObjectId, unenrollCourse);
+
+// POST /api/courses/:id/review -> Review course (Student)
+router.post(
+    "/:id/review",
+    authenticate,
+    isStudent,
+    validateObjectId,
+    validateReview,
+    reviewCourse
+);
 
 export default router;

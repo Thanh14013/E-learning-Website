@@ -284,6 +284,71 @@ export const validateCourseUpdate = [
 ];
 
 /**
+ * Review Validation Rules
+ * Validate student's review for course
+ */
+export const validateReview = [
+    body("rating")
+        .notEmpty().withMessage("Rating is required")
+        .isInt({ min: 1, max: 5 }).withMessage("Rating must be between 1 and 5"),
+
+    body("comment")
+        .optional()
+        .isLength({ max: 500 }).withMessage("Comment cannot exceed 500 characters"),
+
+    validate
+];
+
+/**
+ * Chapter Creation Validation Rules
+ * Validate title and courseId for creating chapter
+ */
+export const validateCreateChapter = [
+    body("courseId")
+        .notEmpty()
+        .withMessage("Course ID is required")
+        .isMongoId()
+        .withMessage("Invalid Course ID format"),
+
+    body("title")
+        .trim()
+        .notEmpty()
+        .withMessage("Chapter title is required")
+        .isLength({ min: 3, max: 200 })
+        .withMessage("Title must be between 3 and 200 characters"),
+
+    validate,
+];
+
+/**
+ * Chapter Update Validation Rules
+ * Validate chapter title update request
+ */
+export const validateUpdateChapter = [
+    body("title")
+        .trim()
+        .notEmpty()
+        .withMessage("Chapter title is required")
+        .isLength({ min: 3, max: 200 })
+        .withMessage("Title must be between 3 and 200 characters"),
+    validate,
+];
+
+/**
+ * Reorder Chapters Validation Rules
+ * Validate array of chapter IDs for reorder
+ */
+export const validateReorderChapters = [
+    body("chapters")
+        .isArray({ min: 1 })
+        .withMessage("Chapters must be an array of chapter IDs"),
+    body("chapters.*")
+        .isMongoId()
+        .withMessage("Invalid chapter ID format"),
+    validate,
+];
+
+/**
  * Refresh Token Validation Rules
  * Validates refresh token in request body
  */

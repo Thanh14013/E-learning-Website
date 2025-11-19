@@ -46,9 +46,17 @@ const courseSchema = new mongoose.Schema(
         rating: {
             type: Number,
             min: 0,
-            max: 10,
+            max: 5,
             default: 0,
         },
+        reviews: [
+            {
+                userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                rating: { type: Number, min: 1, max: 5 },
+                comment: { type: String, maxlength: 500 },
+                createdAt: { type: Date, default: Date.now },
+            }
+        ],
         totalReviews: {
             type: Number,
             default: 0,
