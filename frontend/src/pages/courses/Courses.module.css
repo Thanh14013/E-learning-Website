@@ -1,15 +1,13 @@
 .pageContainer {
   max-width: 1400px;
   margin: 0 auto;
-  padding: var(--spacing-4); /* 32px */
+  padding: var(--spacing-4);
 }
 
 .pageTitle {
-  font-size: 2.25rem; /* 36px */
+  font-size: 2.25rem;
   font-weight: 800;
-  margin-bottom: var(--spacing-1);
-  color: var(--color-gray-1200);
-  margin: 20px 0;
+  margin-bottom: var(--spacing-3);
 }
 
 .pageSubtitle {
@@ -19,50 +17,98 @@
   margin-bottom: var(--spacing-4);
 }
 
+/* --- THANH LỌC --- */
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+}
+.filterBar .form-group {
+  margin-bottom: 0;
+  min-width: 220px;
+  flex-grow: 1;
+}
+.filterBar .form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-gray-500);
+  margin-bottom: 4px;
+}
+
 .courseGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--spacing-3); /* 24px */
+  gap: var(--spacing-3);
+  align-items: stretch;
+}
+
+.cardLink {
+  text-decoration: none;
+  color: inherit;
 }
 
 .courseCard {
+  width: 100%;
   background-color: var(--color-white);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-gray-200);
-  overflow: hidden;
+  transition: all 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
-  transition: all 0.2s ease-in-out;
 }
-
 .courseCard:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-md);
-  cursor: pointer;
 }
 
 .cardImage {
-  height: 140px;
+  height: 150px;
+  flex-shrink: 0;
+  border-top-left-radius: var(--border-radius-lg);
+  border-top-right-radius: var(--border-radius-lg);
 }
 
 .cardContent {
-  padding: var(--spacing-3);
+  padding: var(--spacing-2);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
 
 .cardContent h4 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  flex-grow: 1;
-  color: black;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  line-height: 1.4;
+  margin: 0;
+  height: calc(1.4 * 1.1rem * 2);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardMeta {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.bestsellerTag {
+  background-color: #f3ca8c;
+  color: #3d2d0b;
+  font-weight: 700;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  border-radius: var(--border-radius-sm);
 }
 
 .teacherName {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--color-gray-500);
   margin-bottom: 16px;
 }
@@ -76,6 +122,8 @@
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.95rem;
+  text-align: center;
+  margin-top: auto; 
 }
 
 .btnEnroll {
@@ -108,42 +156,8 @@
   text-align: center;
   padding: var(--spacing-6);
 }
-.cardMeta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
 
-.bestsellerTag {
-  background-color: var(--color-warning-light);
-  color: var(--color-warning-hover);
-  padding: 4px 10px;
-  font-size: 0.8rem;
-  border-radius: var(--border-radius-sm);
-}
-
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.9rem;
-}
-
-.ratingAverage {
-  font-weight: 700;
-  color: #b4690e;
-}
-
-.rating svg {
-  color: #f59e0b;
-}
-
-.ratingCount {
-  color: var(--color-gray-500);
-}
-
-/* Container cho card và tooltip */
+/* --- TOOLTIP --- */
 .courseCardContainer {
   position: relative;
 }
@@ -159,7 +173,6 @@
   border-radius: var(--border-radius-md);
   padding: var(--spacing-3);
   z-index: 10;
-  
   opacity: 0;
   visibility: hidden;
   transform: translateX(-10px);
@@ -167,29 +180,27 @@
   pointer-events: none;
 }
 
-/* Khi hover vào container, hiển thị tooltip */
 .courseCardContainer:hover .tooltipContainer {
   opacity: 1;
   visibility: visible;
   transform: translateX(0);
-
 }
 
 .tooltipContainer h4 {
-  font-size: 15px;
+  font-size: 1rem;
   margin-bottom: 8px;
-  color: black;
+  color: var(--color-gray-900);
 }
 
 .tooltipMeta {
-  font-size: 13px;
-  color: black;
+  font-size: 0.9rem;
+  color: var(--color-gray-600);
   margin-bottom: 12px;
 }
 
 .tooltipSummary {
-  font-size: 13px;
-  color: black;
+  font-size: 0.9rem;
+  color: var(--color-gray-800);
   margin-bottom: 14px;
 }
 
@@ -197,14 +208,28 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 12px;
-  color: rgb(85, 85, 85);
+  font-size: 0.9rem;
+  color: var(--color-gray-700);
 }
 .tooltipChecklist li {
   margin-bottom: 8px;
 }
-.cardLink {
-  text-decoration: none;
-  color: inherit;
-  display: block;
+
+select,
+.form-select {
+  color: #000 !important;
+  background-color: #fff !important;
+  appearance: auto;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+}
+
+option {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+select::-ms-expand {
+  color: #000;
+  background: #fff;
 }
