@@ -5,6 +5,8 @@ import router from './routes/Router.jsx';
 import { AuthProvider } from './contexts/AuthContext';
 import { CourseProvider } from './contexts/CoursesContext';
 import { ToastProvider } from './contexts/ToastContext.jsx';
+import { NotificationProvider } from './contexts/NotificationContext.jsx';
+import SocketManager from './components/common/SocketManager.jsx';
 import './index.css';
 import './global.css';
 
@@ -13,7 +15,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <AuthProvider>
       <CourseProvider>
         <ToastProvider>
-          <RouterProvider router={router} />
+          <NotificationProvider>
+            <SocketManager />
+            <RouterProvider router={router} />
+          </NotificationProvider>
         </ToastProvider>
       </CourseProvider>
     </AuthProvider>
