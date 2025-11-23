@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from './AuthContext.jsx';
-import socket from '../services/socketService.js';
+import socketService from '../services/socketService.js';
 import notificationService from '../services/notificationService.js';
 import toastService from '../services/toastService.js';
 
@@ -119,10 +119,7 @@ export const NotificationProvider = ({ children }) => {
       debug('Socket notification:new', notification);
       setNotifications((prev) => [notification, ...prev]);
       setUnreadCount((c) => c + 1);
-      // Optional toast
-      if (notification?.title) {
-        toastService.info(notification.title);
-      }
+      // Toast is already handled by socketService, but we can add additional logic here
     };
 
     // Real-time unread count update
@@ -132,12 +129,13 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(count);
     };
 
-    socket.on('notification:new', handleNew);
-    socket.on('notification:count', handleCount);
+    // Register callbacks with socketService
+    socketService.registerContextCallback('notification:new', handleNew);
+    socketService.registerContextCallback('notification:count', handleCount);
 
     return () => {
-      socket.off('notification:new', handleNew);
-      socket.off('notification:count', handleCount);
+      socketService.unregisterContextCallback('notification:new', handleNew);
+      socketService.unregisterContextCallback('notification:count', handleCount);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
