@@ -1,12 +1,12 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import api from "../../services/api";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import styles from "./register.module.css";
 
-const Register = () => {
+export function Register() {
+  const { register, login } = useAuth();
   const navigate = useNavigate();
-  const { login } = useAuth();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,60 +15,44 @@ const Register = () => {
     day: "",
     month: "",
     year: "",
+    role: "student",
   });
-  const [loading, setLoading] = useState(false);
+
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-    // Ghép lại thành ISO (backend dễ hiểu)
-    const dob = `${formData.year}-${formData.month.padStart(2, "0")}-${formData.day.padStart(2, "0")}`;
+  if (formData.password !== formData.confirmPassword) {
+    setError("Mật khẩu đã nhập không khớp");
+    return;
+  }
 
-    try {
-      setLoading(true);
-      // Gửi formData kèm ngày sinh
-      const payload = { ...formData, dob };
-      delete payload.day;
-      delete payload.month;
-      delete payload.year;
+const res = await register({
+  name: formData.name,
+  email: formData.email,
+  password: formData.password,
+  role: formData.role,
+});
 
-
-      // 🚀 Giả lập gọi API backend
-      // const res = await api.post("/auth/register", formData);
-      // const { user, token } = res.data;
-
-      const user = { name: formData.name, email: formData.email, dob};
-      const token = "fakeToken123";
-
-      login(user, token);
-      navigate("/dashboard");
-    } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Registration failed.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (res.success) {
+    navigate("/");
+  } else {
+    setError(res.message);
+  }
+};
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Create Your Account</h1>
-
       {error && <p className={styles.error}>{error}</p>}
 
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -79,7 +63,7 @@ const Register = () => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className={styles.input } 
+            className={styles.input}
             required
           />
         </div>
@@ -96,9 +80,23 @@ const Register = () => {
           />
         </div>
 
-        {/* ✅ Ngày/tháng/năm sinh */}
+        {/* Phân Role gv và hs */}
         <div className={styles.formGroup}>
-          <label className={styles.label}>Date of Birth</label>
+          <label className={styles.label}>Role</label>
+          <select
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className={styles.input}
+          >
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+          </select>
+        </div>
+
+        {/* Ngày sinh */}
+        <div className={styles.formGroup}>
+          <label className={styles.label}>Ngày sinh</label>
           <div className={styles.dobGroup}>
             <input
               type="number"
@@ -136,7 +134,7 @@ const Register = () => {
           </div>
         </div>
 
-        {/* 🔐 Password */}
+        {/* Password */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Password</label>
           <div className={styles.passwordWrapper}>
@@ -158,7 +156,7 @@ const Register = () => {
           </div>
         </div>
 
-        {/* 🔐 Confirm Password */}
+        {/* Confirm Password */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Confirm Password</label>
           <div className={styles.passwordWrapper}>
@@ -186,13 +184,13 @@ const Register = () => {
       </form>
 
       <p className={styles.switchText}>
-        Already have an account?{" "}
+       Đã có tài khoản?{" "}
         <a href="/login" className={styles.link}>
-          Login
+          Đăng nhập ngay!
         </a>
       </p>
     </div>
   );
-};
+}
 
 export default Register;
