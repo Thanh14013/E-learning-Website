@@ -60,6 +60,7 @@ const quizService = {
         }
       ]
     };
+    /*
    * Start a quiz attempt
    * @param {string} quizId - Quiz ID
    * @returns {Promise} Quiz questions and attempt ID
@@ -221,4 +222,3 @@ const quizService = {
 };
 
 export default quizService;
-

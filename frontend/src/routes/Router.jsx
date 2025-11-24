@@ -28,7 +28,8 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
-
+      { path: "forgot-password", element: <ForgotPasswordPage /> },
+      { path: "reset-password/:token", element: <ResetPasswordPage /> },
       // Course & Lesson routes
       { path: "courses", element: <Courses /> },
       // { path: "courses/:courseId", element: <CourseDetailPage /> },
