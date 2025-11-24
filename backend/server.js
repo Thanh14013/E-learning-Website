@@ -19,7 +19,9 @@ import courseRoutes from "./src/routes/course.routes.js";
 import chapterRoutes from "./src/routes/chapter.routes.js";
 import sessionRoutes from "./src/routes/session.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
+import analyticsRoutes from "./src/routes/analytics.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
+import { setupAnalyticsCronJobs } from "./src/services/cron.service.js";
 import {
   errorHandler,
   notFoundHandler,
@@ -40,6 +42,9 @@ setSocketIOInstance(io);
 
 // Initialize all Socket.IO namespaces (/discussion, /session, /notification, /progress)
 initializeAllNamespaces(io);
+
+// Setup cron jobs for analytics
+setupAnalyticsCronJobs();
 
 // Security middleware - Helmet sets various HTTP headers for security
 app.use(
@@ -103,9 +108,10 @@ app.use("/api/discussions", discussionRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
-app.use("/api/chapter", chapterRoutes)
+app.use("/api/chapter", chapterRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
