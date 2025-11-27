@@ -118,6 +118,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     register,
     isAuthenticated: !!user,
+    setUser, // Add setUser to context value
   };
 
   // Không render khi đang kiểm tra trạng thái đăng nhập
