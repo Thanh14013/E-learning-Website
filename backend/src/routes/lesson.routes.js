@@ -1,12 +1,8 @@
 import express from "express";
-import {authenticate} from "../middleware/auth.js";
-import {isTeacher} from "../middleware/authorize.js";
-import {
-    createLesson,
-    updateLesson,
-    deleteLesson, deleteLessonResource, uploadLessonResource, uploadLessonVideo,
-} from "../controllers/lesson.controller.js";
-import {uploadResource, uploadVideo} from "../middleware/upload.js";
+import { authenticate, optionalAuthenticate } from "../middleware/auth.js";
+import { isTeacher } from "../middleware/authorize.js";
+import { createLesson, updateLesson, deleteLesson, deleteLessonResource, uploadLessonResource, uploadLessonVideo, getLessonDetail, } from "../controllers/lesson.controller.js";
+import { uploadResource, uploadVideo } from "../middleware/upload.js";
 
 const router = express.Router();
 
@@ -31,7 +27,7 @@ router.put("/:id", authenticate, isTeacher, updateLesson);
  */
 router.delete("/:id", authenticate, isTeacher, deleteLesson);
 
-// UPLOAD VIDEO
+// upload video
 router.post(
     "/:id/video",
     authenticate,
@@ -40,7 +36,7 @@ router.post(
     uploadLessonVideo
 );
 
-// UPLOAD RESOURCES
+// upload resources
 router.post(
     "/:id/resource",
     authenticate,
@@ -49,7 +45,7 @@ router.post(
     uploadLessonResource
 );
 
-// DELETE RESOURCE
+// delete resources
 router.delete(
     "/:id/resource/:resId",
     authenticate,
@@ -57,5 +53,11 @@ router.delete(
     deleteLessonResource
 );
 
+/**
+ * @route   GET /api/lessons/:id
+ * @desc    Get lesson detail (public)
+ * @access  Public
+ */
+router.get("/:id", optionalAuthenticate, getLessonDetail);
 
 export default router;
