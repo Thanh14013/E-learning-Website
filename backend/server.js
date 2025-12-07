@@ -18,6 +18,7 @@ import sessionRoutes from "./src/routes/session.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
 import analyticsRoutes from "./src/routes/analytics.routes.js";
 import lessonRoutes from "./src/routes/lesson.routes.js";
+import progressRoutes from "./src/routes/progress.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import { setupAnalyticsCronJobs } from "./src/services/cron.service.js";
 import { errorHandler, notFoundHandler } from "./src/middleware/errorHandler.js";
@@ -108,6 +109,7 @@ app.use("/api/sessions", sessionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/lessons", lessonRoutes)
+app.use("/api/progress", progressRoutes)
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
