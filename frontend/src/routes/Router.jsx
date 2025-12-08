@@ -18,6 +18,7 @@ import ProtectedRoute from "../components/ProtectedRoutes.jsx";
 import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
 import NotificationSettings from "../pages/settings/NotificationSettings.jsx";
 import CourseManagement from "../pages/courses/CourseManagement.jsx";
+import CourseEditor from "../pages/courses/CourseEditor.jsx";
 
 
 const router = createBrowserRouter([
@@ -56,6 +57,7 @@ const router = createBrowserRouter([
           { path: "settings/notifications", element: <NotificationSettings /> },
           { path: "teacher/courses", element: <CourseManagement /> },
           { path: "courses/create", element: <CreateCourse /> },
+          { path: "courses/:courseId/edit", element: <CourseEditor /> },
         ],
       },
     ],
