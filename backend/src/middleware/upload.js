@@ -33,4 +33,36 @@ const upload = multer({
     },
 });
 
+export const uploadVideo = multer({
+    storage,
+    limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
+    fileFilter: (req, file, cb) => {
+        const allowed = ["video/mp4", "video/avi", "video/quicktime"]; // mov = quicktime
+        if (!allowed.includes(file.mimetype)) {
+            return cb(new Error("Only MP4, AVI, MOV videos are allowed."));
+        }
+        cb(null, true);
+    },
+});
+
+export const uploadResource = multer({
+    storage,
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+    fileFilter: (req, file, cb) => {
+        const allowed = [
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ];
+
+        if (!allowed.includes(file.mimetype)) {
+            return cb(new Error("Invalid file type for resource."));
+        }
+
+        cb(null, true);
+    },
+});
+
 export default upload;
