@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCourses } from '../../contexts/CoursesContext';
@@ -37,7 +37,7 @@ const StatusBadge = ({ status }) => {
 };
 
 // Course Card Component
-const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview }) => {
+const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview, isSelected, onSelect }) => {
   const studentCount = course.enrolledStudents?.length || 0;
   const status = course.isPublished ? 'published' : 'draft';
 
@@ -58,7 +58,19 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
   };
 
   return (
-    <div className={styles.courseCard}>
+    <div className={`${styles.courseCard} ${isSelected ? styles.courseCardSelected : ''}`}>
+      {/* Selection Checkbox */}
+      {onSelect && (
+        <div className={styles.cardCheckbox}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onSelect(course._id || course.id)}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* Course Image */}
       <div 
         className={styles.cardImage}
@@ -190,19 +202,8 @@ const CourseManagement = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('updated');
   const [loading, setLoading] = useState(false);
-
-  // Check if user is a teacher
-  useEffect(() => {
-    if (user && user.role !== 'teacher') {
-      toastService.error('Chỉ giáo viên mới có thể truy cập trang này');
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
-
-  // Early return if not a teacher
-  if (user && user.role !== 'teacher') {
-    return null;
-  }
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
 
   // Filter and sort courses
   const filteredCourses = useMemo(() => {
@@ -243,14 +244,16 @@ const CourseManagement = () => {
           return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
         case 'created':
           return new Date(b.createdAt) - new Date(a.createdAt);
-        case 'students':
+        case 'students': {
           const aCount = a.enrolledStudents?.length || 0;
           const bCount = b.enrolledStudents?.length || 0;
           return bCount - aCount;
-        case 'rating':
+        }
+        case 'rating': {
           const aRating = a.rating?.average || 0;
           const bRating = b.rating?.average || 0;
           return bRating - aRating;
+        }
         case 'title':
           return (a.title || a.name || '').localeCompare(b.title || b.name || '');
         default:
@@ -284,11 +287,90 @@ const CourseManagement = () => {
     window.open(`/courses/${course._id || course.id}`, '_blank');
   };
 
-  const handleDelete = (courseId) => {
+  const handleDelete = () => {
     // Course will be removed from context automatically
     // Force refresh if needed
     window.location.reload();
   };
+
+  // Handle course selection
+  const handleSelectCourse = (courseId) => {
+    setSelectedCourses((prev) => {
+      if (prev.includes(courseId)) {
+        return prev.filter((id) => id !== courseId);
+      }
+      return [...prev, courseId];
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedCourses.length === filteredCourses.length) {
+      setSelectedCourses([]);
+    } else {
+      setSelectedCourses(filteredCourses.map((c) => c._id || c.id));
+    }
+  };
+
+  // Bulk actions
+  const handleBulkPublish = async () => {
+    if (selectedCourses.length === 0) return;
+    
+    setLoading(true);
+    try {
+      await Promise.all(
+        selectedCourses.map((id) => api.put(`/courses/${id}/publish`))
+      );
+      toastService.success(`Đã xuất bản ${selectedCourses.length} khóa học`);
+      setSelectedCourses([]);
+      setShowBulkActions(false);
+      window.location.reload();
+    } catch {
+      toastService.error('Có lỗi xảy ra khi xuất bản khóa học');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedCourses.length === 0) return;
+    
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedCourses.length} khóa học?`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await Promise.all(
+        selectedCourses.map((id) => api.delete(`/courses/${id}`))
+      );
+      toastService.success(`Đã xóa ${selectedCourses.length} khóa học`);
+      setSelectedCourses([]);
+      setShowBulkActions(false);
+      window.location.reload();
+    } catch {
+      toastService.error('Có lỗi xảy ra khi xóa khóa học');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update showBulkActions when selection changes
+  useEffect(() => {
+    setShowBulkActions(selectedCourses.length > 0);
+  }, [selectedCourses]);
+
+  // Check if user is a teacher
+  useEffect(() => {
+    if (user && user.role !== 'teacher' && user.role !== 'admin') {
+      toastService.error('Chỉ giáo viên mới có thể truy cập trang này');
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
+  // Early return if not a teacher
+  if (user && user.role !== 'teacher' && user.role !== 'admin') {
+    return null;
+  }
 
   const handleCreateCourse = () => {
     navigate('/courses/create');
@@ -341,6 +423,45 @@ const CourseManagement = () => {
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {showBulkActions && (
+        <div className={styles.bulkActionsBar}>
+          <div className={styles.bulkActionsInfo}>
+            <span className={styles.bulkActionsCount}>
+              Đã chọn {selectedCourses.length} khóa học
+            </span>
+            <button
+              className={styles.bulkActionsClear}
+              onClick={() => setSelectedCourses([])}
+            >
+              Bỏ chọn tất cả
+            </button>
+          </div>
+          <div className={styles.bulkActionsButtons}>
+            <button
+              className={styles.bulkActionBtn}
+              onClick={handleBulkPublish}
+              disabled={loading}
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Xuất bản
+            </button>
+            <button
+              className={`${styles.bulkActionBtn} ${styles.bulkActionBtnDanger}`}
+              onClick={handleBulkDelete}
+              disabled={loading}
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Xóa
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Filters & Search */}
       <div className={styles.filtersBar}>
         <div className={styles.searchWrapper}>
@@ -354,6 +475,18 @@ const CourseManagement = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+
+        <div className={styles.selectAllWrapper}>
+          <label className={styles.selectAllLabel}>
+            <input
+              type="checkbox"
+              checked={selectedCourses.length === filteredCourses.length && filteredCourses.length > 0}
+              onChange={handleSelectAll}
+              className={styles.selectAllCheckbox}
+            />
+            <span>Chọn tất cả</span>
+          </label>
         </div>
 
         <div className={styles.filtersGroup}>
@@ -462,6 +595,8 @@ const CourseManagement = () => {
               onDelete={handleDelete}
               onAnalytics={handleAnalytics}
               onPreview={handlePreview}
+              isSelected={selectedCourses.includes(course._id || course.id)}
+              onSelect={handleSelectCourse}
             />
           ))}
         </div>

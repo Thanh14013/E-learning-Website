@@ -7,6 +7,7 @@ import Courses from "../pages/courses/Course.jsx";
 // import Discussion from "../pages/discussion/Discussion.jsx";
 // import NotFound from "../pages/notFound/NotFound.jsx";
 import CourseDetailPage from "../pages/courses/CourseDetail.jsx";
+import CreateCourse from "../pages/courses/CreateCourse.jsx";
 import Dashboard from "../pages/dashboard/DashboardOverview.jsx";
 import Profile from "../pages/profile/Profile.jsx";
 import QuizDemo from "../pages/quizz/QuizDemo.jsx";
@@ -54,6 +55,7 @@ const router = createBrowserRouter([
           { path: "profile", element: <Profile /> },
           { path: "settings/notifications", element: <NotificationSettings /> },
           { path: "teacher/courses", element: <CourseManagement /> },
+          { path: "courses/create", element: <CreateCourse /> },
         ],
       },
     ],
