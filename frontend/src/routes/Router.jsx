@@ -16,6 +16,7 @@ import QuizDetail from "../components/quizz/QuizDetail.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
 import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
 import NotificationSettings from "../pages/settings/NotificationSettings.jsx";
+import CourseManagement from "../pages/courses/CourseManagement.jsx";
 
 
 const router = createBrowserRouter([
@@ -52,6 +53,7 @@ const router = createBrowserRouter([
           { path: "dashboard", element: <Dashboard /> },
           { path: "profile", element: <Profile /> },
           { path: "settings/notifications", element: <NotificationSettings /> },
+          { path: "teacher/courses", element: <CourseManagement /> },
         ],
       },
     ],
