@@ -7,6 +7,7 @@ import Courses from "../pages/courses/Course.jsx";
 // import Discussion from "../pages/discussion/Discussion.jsx";
 // import NotFound from "../pages/notFound/NotFound.jsx";
 import CourseDetailPage from "../pages/courses/CourseDetail.jsx";
+import CreateCourse from "../pages/courses/CreateCourse.jsx";
 import Dashboard from "../pages/dashboard/DashboardOverview.jsx";
 import Profile from "../pages/profile/Profile.jsx";
 import QuizDemo from "../pages/quizz/QuizDemo.jsx";
@@ -16,6 +17,7 @@ import QuizDetail from "../components/quizz/QuizDetail.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
 import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
 import NotificationSettings from "../pages/settings/NotificationSettings.jsx";
+import CourseManagement from "../pages/courses/CourseManagement.jsx";
 
 
 const router = createBrowserRouter([
@@ -52,6 +54,8 @@ const router = createBrowserRouter([
           { path: "dashboard", element: <Dashboard /> },
           { path: "profile", element: <Profile /> },
           { path: "settings/notifications", element: <NotificationSettings /> },
+          { path: "teacher/courses", element: <CourseManagement /> },
+          { path: "courses/create", element: <CreateCourse /> },
         ],
       },
     ],
