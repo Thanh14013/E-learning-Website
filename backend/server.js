@@ -20,6 +20,8 @@ import chapterRoutes from "./src/routes/chapter.routes.js";
 import sessionRoutes from "./src/routes/session.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
 import analyticsRoutes from "./src/routes/analytics.routes.js";
+import quizRoutes from "./src/routes/quiz.routes.js";
+import questionRoutes from "./src/routes/question.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import { setupAnalyticsCronJobs } from "./src/services/cron.service.js";
 import {
@@ -112,6 +114,8 @@ app.use("/api/chapter", chapterRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/questions", questionRoutes);
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
