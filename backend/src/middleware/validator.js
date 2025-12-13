@@ -28,22 +28,22 @@ export const validate = (req, res, next) => {
 };
 
 export const validateLessonOwnership = async (lessonId, userId) => {
-    const lesson = await Lesson.findById(lessonId).populate({
-        path: "chapterId",
-        populate: { path: "courseId" },
-    });
+  const lesson = await Lesson.findById(lessonId).populate({
+    path: "chapterId",
+    populate: { path: "courseId" },
+  });
 
-    if (!lesson) {
-        return { error: "Lesson not found" };
-    }
+  if (!lesson) {
+    return { error: "Lesson not found" };
+  }
 
-    const teacherId = lesson.chapterId.courseId.teacherId.toString();
+  const teacherId = lesson.chapterId.courseId.teacherId.toString();
 
-    if (teacherId !== userId.toString()) {
-        return { error: "Not authorized to modify this lesson" };
-    }
+  if (teacherId !== userId.toString()) {
+    return { error: "Not authorized to modify this lesson" };
+  }
 
-    return { lesson };
+  return { lesson };
 };
 
 /**
@@ -308,15 +308,18 @@ export const validateCourseUpdate = [
  * Validate student's review for course
  */
 export const validateReview = [
-    body("rating")
-        .notEmpty().withMessage("Rating is required")
-        .isInt({ min: 1, max: 5 }).withMessage("Rating must be between 1 and 5"),
+  body("rating")
+    .notEmpty()
+    .withMessage("Rating is required")
+    .isInt({ min: 1, max: 5 })
+    .withMessage("Rating must be between 1 and 5"),
 
-    body("comment")
-        .optional()
-        .isLength({ max: 500 }).withMessage("Comment cannot exceed 500 characters"),
+  body("comment")
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage("Comment cannot exceed 500 characters"),
 
-    validate
+  validate,
 ];
 
 /**
@@ -324,20 +327,20 @@ export const validateReview = [
  * Validate title and courseId for creating chapter
  */
 export const validateCreateChapter = [
-    body("courseId")
-        .notEmpty()
-        .withMessage("Course ID is required")
-        .isMongoId()
-        .withMessage("Invalid Course ID format"),
+  body("courseId")
+    .notEmpty()
+    .withMessage("Course ID is required")
+    .isMongoId()
+    .withMessage("Invalid Course ID format"),
 
-    body("title")
-        .trim()
-        .notEmpty()
-        .withMessage("Chapter title is required")
-        .isLength({ min: 3, max: 200 })
-        .withMessage("Title must be between 3 and 200 characters"),
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("Chapter title is required")
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters"),
 
-    validate,
+  validate,
 ];
 
 /**
@@ -345,13 +348,13 @@ export const validateCreateChapter = [
  * Validate chapter title update request
  */
 export const validateUpdateChapter = [
-    body("title")
-        .trim()
-        .notEmpty()
-        .withMessage("Chapter title is required")
-        .isLength({ min: 3, max: 200 })
-        .withMessage("Title must be between 3 and 200 characters"),
-    validate,
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("Chapter title is required")
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters"),
+  validate,
 ];
 
 /**
@@ -359,13 +362,11 @@ export const validateUpdateChapter = [
  * Validate array of chapter IDs for reorder
  */
 export const validateReorderChapters = [
-    body("chapters")
-        .isArray({ min: 1 })
-        .withMessage("Chapters must be an array of chapter IDs"),
-    body("chapters.*")
-        .isMongoId()
-        .withMessage("Invalid chapter ID format"),
-    validate,
+  body("chapters")
+    .isArray({ min: 1 })
+    .withMessage("Chapters must be an array of chapter IDs"),
+  body("chapters.*").isMongoId().withMessage("Invalid chapter ID format"),
+  validate,
 ];
 
 /**
@@ -487,18 +488,128 @@ export const validateSessionUpdate = [
   validate,
 ];
 
+/**
+ * Quiz Creation Validation Rules
+ * Validates quiz fields (courseId, lessonId, title, duration, passingScore, attemptsAllowed)
+ */
+export const validateQuizCreation = [
+  body("courseId")
+    .notEmpty()
+    .withMessage("Course ID is required")
+    .isMongoId()
+    .withMessage("Invalid course ID format"),
+
+  body("lessonId")
+    .optional()
+    .isMongoId()
+    .withMessage("Invalid lesson ID format"),
+
+  body("title")
+    .trim()
+    .notEmpty()
+    .withMessage("Quiz title is required")
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters"),
+
+  body("duration")
+    .optional()
+    .isInt({ min: 1, max: 600 })
+    .withMessage("Duration must be between 1 and 600 minutes")
+    .toInt(),
+
+  body("passingScore")
+    .optional()
+    .isInt({ min: 0, max: 100 })
+    .withMessage("Passing score must be between 0 and 100")
+    .toInt(),
+
+  body("attemptsAllowed")
+    .optional()
+    .isInt({ min: 1, max: 10 })
+    .withMessage("Attempts allowed must be between 1 and 10")
+    .toInt(),
+
+  body("isPublished")
+    .optional()
+    .isBoolean()
+    .withMessage("isPublished must be a boolean")
+    .toBoolean(),
+
+  validate,
+];
+
+/**
+ * Quiz Update Validation Rules
+ * Allows partial updates to quiz
+ */
+export const validateQuizUpdate = [
+  body("title")
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 200 })
+    .withMessage("Title must be between 3 and 200 characters"),
+
+  body("duration")
+    .optional()
+    .isInt({ min: 1, max: 600 })
+    .withMessage("Duration must be between 1 and 600 minutes")
+    .toInt(),
+
+  body("passingScore")
+    .optional()
+    .isInt({ min: 0, max: 100 })
+    .withMessage("Passing score must be between 0 and 100")
+    .toInt(),
+
+  body("attemptsAllowed")
+    .optional()
+    .isInt({ min: 1, max: 10 })
+    .withMessage("Attempts allowed must be between 1 and 10")
+    .toInt(),
+
+  body("isPublished")
+    .optional()
+    .isBoolean()
+    .withMessage("isPublished must be a boolean")
+    .toBoolean(),
+
+  validate,
+];
+
+/**
+ * Quiz Submission Validation Rules
+ * Validates quiz answers submission
+ */
+export const validateQuizSubmission = [
+  body("answers")
+    .isArray({ min: 1 })
+    .withMessage("Answers must be a non-empty array"),
+
+  body("answers.*.questionId")
+    .notEmpty()
+    .withMessage("Question ID is required for each answer")
+    .isMongoId()
+    .withMessage("Invalid question ID format"),
+
+  body("answers.*.answer")
+    .notEmpty()
+    .withMessage("Answer is required for each question"),
+
+  validate,
+];
+
 export const validateQuizOwnership = async (quizId, teacherId) => {
-    const quiz = await Quiz.findById(quizId).populate("courseId");
+  const quiz = await Quiz.findById(quizId).populate("courseId");
 
-    if (!quiz) {
-        return { error: "Quiz not found" };
-    }
+  if (!quiz) {
+    return { error: "Quiz not found" };
+  }
 
-    if (String(quiz.courseId.teacherId) !== teacherId) {
-        return { error: "Not authorized to modify this quiz" };
-    }
+  if (String(quiz.courseId.teacherId) !== teacherId) {
+    return { error: "Not authorized to modify this quiz" };
+  }
 
-    return { quiz };
+  return { quiz };
 };
 
 export default {
@@ -517,4 +628,7 @@ export default {
   validateSearch,
   validateSessionCreation,
   validateSessionUpdate,
+  validateQuizCreation,
+  validateQuizUpdate,
+  validateQuizSubmission,
 };
