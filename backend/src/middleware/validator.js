@@ -487,6 +487,20 @@ export const validateSessionUpdate = [
   validate,
 ];
 
+export const validateQuizOwnership = async (quizId, teacherId) => {
+    const quiz = await Quiz.findById(quizId).populate("courseId");
+
+    if (!quiz) {
+        return { error: "Quiz not found" };
+    }
+
+    if (String(quiz.courseId.teacherId) !== teacherId) {
+        return { error: "Not authorized to modify this quiz" };
+    }
+
+    return { quiz };
+};
+
 export default {
   validate,
   validateRegister,
