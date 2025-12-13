@@ -5,6 +5,7 @@ import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
 import Courses from "../pages/courses/Course.jsx";
 import CourseDetailPage from "../pages/courses/CourseDetail.jsx";
+import CreateCourse from "../pages/courses/CreateCourse.jsx";
 import Dashboard from "../pages/dashboard/DashboardOverview.jsx";
 import ForgotPasswordPage from "../pages/auth/ForgotPassword.jsx";
 import ResetPasswordPage from "../pages/auth/ResetPassword.jsx";
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
         children: [
           { path: "dashboard", element: <Dashboard /> },
           { path: "profile", element: <Profile /> },
+          { path: "settings/notifications", element: <NotificationSettings /> },
+          { path: "teacher/courses", element: <CourseManagement /> },
+          { path: "courses/create", element: <CreateCourse /> },
+          { path: "courses/:courseId/edit", element: <CourseEditor /> },
         ],
       },
     ],

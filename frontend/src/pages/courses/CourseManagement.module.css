@@ -1,0 +1,861 @@
+
+.pageContainer {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--spacing-4);
+  min-height: 100vh;
+}
+
+/* Loading State */
+.loadingWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: var(--spacing-2);
+  color: var(--color-gray-500);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-gray-200);
+  border-top-color: var(--color-teacher-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Header */
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.headerContent {
+  flex: 1;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  margin: 0 0 var(--spacing-1) 0;
+}
+
+.pageSubtitle {
+  font-size: 1rem;
+  color: var(--color-gray-500);
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.createBtn,
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+  border: none;
+}
+
+.createBtn {
+  background: linear-gradient(135deg, var(--color-teacher-primary) 0%, var(--color-teacher-primary-hover) 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.createBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+.exportBtn {
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  color: var(--color-gray-700);
+}
+
+.exportBtn:hover {
+  background: var(--color-gray-50);
+  border-color: var(--color-gray-400);
+}
+
+/* Bulk Actions Bar - 新增的 CSS 类 1 */
+.bulkActionsBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-3);
+  padding: var(--spacing-3) var(--spacing-4);
+  background: linear-gradient(135deg, var(--color-teacher-primary-light) 0%, rgba(124, 58, 237, 0.1) 100%);
+  border: 2px solid var(--color-teacher-primary);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bulkActionsInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.bulkActionsCount {
+  font-weight: 600;
+  color: var(--color-teacher-primary);
+  font-size: 0.95rem;
+}
+
+.bulkActionsClear {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  background: transparent;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.bulkActionsClear:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-400);
+}
+
+.bulkActionsButtons {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.bulkActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+  background: var(--color-teacher-primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.bulkActionBtn:hover:not(:disabled) {
+  background: var(--color-teacher-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.bulkActionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bulkActionBtnDanger {
+  background: var(--color-error);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.bulkActionBtnDanger:hover:not(:disabled) {
+  background: var(--color-error-hover);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+/* Filters Bar */
+.filtersBar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-4);
+  padding: var(--spacing-3);
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+}
+
+.searchWrapper {
+  position: relative;
+  flex: 1;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-gray-400);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  font-size: 0.95rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-base);
+  background: var(--color-white);
+  color: var(--color-gray-900);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-teacher-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.filtersGroup {
+  display: flex;
+  gap: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.filterSelect {
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  background: var(--color-white);
+  color: var(--color-gray-900);
+  cursor: pointer;
+  transition: var(--transition-base);
+  min-width: 160px;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--color-teacher-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.selectAllWrapper {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-2) 0;
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.selectAllLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  cursor: pointer;
+  user-select: none;
+}
+
+.selectAllCheckbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--color-teacher-primary);
+}
+
+/* Stats Summary */
+.statsSummary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.statCard {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-base);
+}
+
+.statCard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-teacher-primary);
+}
+
+.statIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.statContent {
+  flex: 1;
+}
+
+.statValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-gray-900);
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+  margin-top: 2px;
+}
+
+/* Course Grid */
+.courseGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--spacing-4);
+}
+
+/* Course Card */
+.courseCard {
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-gray-200);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: var(--transition-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.courseCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-teacher-primary);
+}
+
+.courseCardSelected {
+  border: 2px solid var(--color-teacher-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.cardCheckbox {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 4px;
+  padding: 4px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cardCheckbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--color-teacher-primary);
+}
+
+.cardImage {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, var(--color-teacher-primary-light) 0%, var(--color-info-light) 100%);
+  overflow: hidden;
+}
+
+.cardImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardOverlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+}
+
+/* Status Badge */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--border-radius-full);
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.statusIcon {
+  font-size: 0.875rem;
+}
+
+.statusPublished {
+  color: var(--color-success-hover);
+}
+
+.statusDraft {
+  color: var(--color-warning-hover);
+}
+
+.statusUnpublished {
+  color: var(--color-gray-500);
+}
+
+/* Card Content */
+.cardContent {
+  padding: var(--spacing-3);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 var(--spacing-1) 0;
+  line-height: 1.4;
+}
+
+.cardTitle a {
+  color: var(--color-gray-900);
+  text-decoration: none;
+  transition: var(--transition-base);
+}
+
+.cardTitle a:hover {
+  color: var(--color-teacher-primary);
+}
+
+.cardDescription {
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  margin: 0 0 var(--spacing-2) 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* Card Stats */
+.cardStats {
+  display: flex;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-2);
+  padding: var(--spacing-2) 0;
+  border-top: 1px solid var(--color-gray-100);
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.statItem .statIcon {
+  font-size: 1.25rem;
+}
+
+.statItem .statValue {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gray-700);
+}
+
+.statItem .statLabel {
+  font-size: 0.7rem;
+  color: var(--color-gray-500);
+  text-align: center;
+}
+
+/* Card Meta */
+.cardMeta {
+  display: flex;
+  gap: var(--spacing-1);
+  margin-bottom: var(--spacing-2);
+  flex-wrap: wrap;
+}
+
+.metaTag {
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+  border-radius: var(--border-radius-full);
+}
+
+/* Card Actions */
+.cardActions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-1);
+  margin-top: auto;
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+  text-decoration: none;
+}
+
+.actionBtn svg {
+  flex-shrink: 0;
+}
+
+.previewBtn {
+  background: var(--color-info-light);
+  color: var(--color-info-hover);
+}
+
+.previewBtn:hover {
+  background: var(--color-info);
+  color: white;
+}
+
+.editBtn {
+  background: var(--color-teacher-primary-light);
+  color: var(--color-teacher-primary);
+}
+
+.editBtn:hover {
+  background: var(--color-teacher-primary);
+  color: white;
+}
+
+.analyticsBtn {
+  background: var(--color-success-light);
+  color: var(--color-success-hover);
+}
+
+.analyticsBtn:hover {
+  background: var(--color-success);
+  color: white;
+}
+
+.deleteBtn {
+  background: var(--color-error-light);
+  color: var(--color-error-hover);
+}
+
+.deleteBtn:hover {
+  background: var(--color-error);
+  color: white;
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-6);
+  text-align: center;
+  background: var(--color-white);
+  border-radius: var(--border-radius-lg);
+  border: 2px dashed var(--color-gray-300);
+}
+
+.emptyIcon {
+  font-size: 4rem;
+  margin-bottom: var(--spacing-2);
+  opacity: 0.5;
+}
+
+.emptyTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin: 0 0 var(--spacing-1) 0;
+}
+
+.emptyDescription {
+  font-size: 1rem;
+  color: var(--color-gray-500);
+  margin: 0 0 var(--spacing-4) 0;
+  max-width: 500px;
+}
+
+.emptyActionBtn {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--color-teacher-primary) 0%, var(--color-teacher-primary-hover) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition: var(--transition-base);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+}
+
+.emptyActionBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.4);
+}
+
+/* Responsive Design */
+@media (min-width: 768px) {
+  .header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .filtersBar {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .filtersGroup {
+    flex-wrap: nowrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .pageContainer {
+    padding: var(--spacing-2);
+  }
+
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+
+  .courseGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .cardActions {
+    grid-template-columns: 1fr;
+  }
+
+  .statsSummary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filtersGroup {
+    width: 100%;
+  }
+
+  .filterSelect {
+    width: 100%;
+  }
+}
+
+/* Quick Actions Menu - 新增的 CSS 类 2 */
+.quickActionsMenu {
+  position: relative;
+  display: inline-block;
+}
+
+.quickActionsTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  color: var(--color-gray-700);
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.quickActionsTrigger:hover {
+  background: var(--color-gray-50);
+  border-color: var(--color-gray-400);
+}
+
+.quickActionsDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 200px;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeInUp 0.2s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quickActionsItem {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: var(--color-gray-700);
+  cursor: pointer;
+  transition: var(--transition-base);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.quickActionsItem:hover {
+  background: var(--color-gray-50);
+  color: var(--color-teacher-primary);
+}
+
+.quickActionsItem:not(:last-child) {
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.quickActionsItemIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .filtersBar,
+  .statCard,
+  .courseCard,
+  .emptyState {
+    background: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+
+  .bulkActionsBar {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%);
+    border-color: var(--color-teacher-primary);
+  }
+
+  .bulkActionsCount {
+    color: var(--color-teacher-primary-light);
+  }
+
+  .bulkActionsClear {
+    color: var(--color-gray-300);
+    border-color: var(--color-gray-600);
+  }
+
+  .bulkActionsClear:hover {
+    background: var(--color-gray-700);
+    border-color: var(--color-gray-500);
+  }
+
+  .selectAllLabel {
+    color: var(--color-gray-300);
+  }
+
+  .quickActionsTrigger {
+    background: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+    color: var(--color-gray-200);
+  }
+
+  .quickActionsTrigger:hover {
+    background: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+  }
+
+  .quickActionsDropdown {
+    background: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+
+  .quickActionsItem {
+    color: var(--color-gray-200);
+  }
+
+  .quickActionsItem:hover {
+    background: var(--color-gray-700);
+    color: var(--color-teacher-primary-light);
+  }
+
+  .quickActionsItem:not(:last-child) {
+    border-bottom-color: var(--color-gray-700);
+  }
+
+  .searchInput,
+  .filterSelect {
+    background: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+    color: var(--color-gray-100);
+  }
+
+  .cardTitle a {
+    color: var(--color-gray-100);
+  }
+
+  .cardDescription {
+    color: var(--color-gray-400);
+  }
+
+  .emptyTitle {
+    color: var(--color-gray-100);
+  }
+
+  .emptyDescription {
+    color: var(--color-gray-400);
+  }
+}
+

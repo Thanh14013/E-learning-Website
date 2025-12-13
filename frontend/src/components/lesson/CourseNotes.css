@@ -1,0 +1,200 @@
+.course-notes {
+  margin-top: var(--spacing-3);
+}
+
+.notes-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-3);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.notes-textarea {
+  width: 100%;
+  padding: var(--spacing-2);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  resize: vertical;
+  transition: var(--transition-base);
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: var(--color-info);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.notes-add-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.notes-timestamp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-info-light);
+  color: var(--color-info-hover);
+  border-radius: var(--border-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Notes List */
+.notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.notes-empty {
+  text-align: center;
+  color: var(--color-gray-500);
+  padding: var(--spacing-4) 0;
+  font-style: italic;
+}
+
+.note-item {
+  padding: var(--spacing-2);
+  background-color: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--color-gray-200);
+  transition: var(--transition-base);
+}
+
+.note-item:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-1);
+  gap: var(--spacing-2);
+}
+
+.note-timestamp {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-student-primary);
+  color: var(--color-white);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.note-timestamp:hover {
+  background-color: var(--color-student-primary-hover);
+}
+
+.note-date {
+  font-size: 0.75rem;
+  color: var(--color-gray-500);
+}
+
+.note-content {
+  margin: var(--spacing-1) 0;
+  color: var(--color-gray-800);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note-actions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.note-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--color-gray-600);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-base);
+}
+
+.note-action-btn:hover {
+  background-color: var(--color-gray-200);
+  color: var(--color-gray-800);
+}
+
+.note-action-btn--delete:hover {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+/* Edit Form */
+.note-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.note-edit-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.btn--small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .notes-add-form {
+    border-bottom-color: var(--color-gray-700);
+  }
+
+  .notes-textarea {
+    background-color: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+    color: var(--color-white);
+  }
+
+  .note-item {
+    background-color: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+  }
+
+  .note-item:hover {
+    border-color: var(--color-gray-500);
+  }
+
+  .note-content {
+    color: var(--color-gray-200);
+  }
+
+  .note-date {
+    color: var(--color-gray-500);
+  }
+
+  .note-action-btn {
+    color: var(--color-gray-400);
+  }
+
+  .note-action-btn:hover {
+    background-color: var(--color-gray-600);
+    color: var(--color-gray-200);
+  }
+
+  .notes-empty {
+    color: var(--color-gray-600);
+  }
+}

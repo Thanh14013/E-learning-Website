@@ -1,4 +1,5 @@
 import { body, param, query, validationResult } from "express-validator";
+import Lesson from "../models/lesson.model.js";
 
 /**
  * Validation Result Handler
@@ -24,6 +25,25 @@ export const validate = (req, res, next) => {
   }
 
   next();
+};
+
+export const validateLessonOwnership = async (lessonId, userId) => {
+    const lesson = await Lesson.findById(lessonId).populate({
+        path: "chapterId",
+        populate: { path: "courseId" },
+    });
+
+    if (!lesson) {
+        return { error: "Lesson not found" };
+    }
+
+    const teacherId = lesson.chapterId.courseId.teacherId.toString();
+
+    if (teacherId !== userId.toString()) {
+        return { error: "Not authorized to modify this lesson" };
+    }
+
+    return { lesson };
 };
 
 /**
@@ -466,6 +486,20 @@ export const validateSessionUpdate = [
 
   validate,
 ];
+
+export const validateQuizOwnership = async (quizId, teacherId) => {
+    const quiz = await Quiz.findById(quizId).populate("courseId");
+
+    if (!quiz) {
+        return { error: "Quiz not found" };
+    }
+
+    if (String(quiz.courseId.teacherId) !== teacherId) {
+        return { error: "Not authorized to modify this quiz" };
+    }
+
+    return { quiz };
+};
 
 export default {
   validate,

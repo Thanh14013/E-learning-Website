@@ -47,6 +47,23 @@ const notificationService = {
     const res = await api.delete(`/notifications/${id}`);
     return res.data;
   },
+
+  /**
+   * Get notification preferences
+   */
+  getPreferences: async () => {
+    const res = await api.get('/notifications/preferences');
+    return res.data;
+  },
+
+  /**
+   * Update notification preferences
+   * @param {Object} preferences - Notification preferences object
+   */
+  updatePreferences: async (preferences) => {
+    const res = await api.put('/notifications/preferences', preferences);
+    return res.data;
+  },
 };
 
 export default notificationService;

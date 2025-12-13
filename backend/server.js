@@ -6,10 +6,7 @@ import morgan from "morgan";
 import "dotenv/config";
 import connectDB from "./src/config/mongodb.config.js";
 import { connectCloudinary } from "./src/config/cloudinary.config.js";
-import {
-  initializeSocketIO,
-  setSocketIOInstance,
-} from "./src/config/socket.config.js";
+import { initializeSocketIO, setSocketIOInstance } from "./src/config/socket.config.js";
 import { initializeAllNamespaces } from "./src/socket/index.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import discussionRoutes from "./src/routes/discussion.routes.js";
@@ -19,11 +16,14 @@ import courseRoutes from "./src/routes/course.routes.js";
 import chapterRoutes from "./src/routes/chapter.routes.js";
 import sessionRoutes from "./src/routes/session.routes.js";
 import notificationRoutes from "./src/routes/notification.routes.js";
+import analyticsRoutes from "./src/routes/analytics.routes.js";
+import lessonRoutes from "./src/routes/lesson.routes.js";
+import progressRoutes from "./src/routes/progress.routes.js";
+import quizRoutes from "./src/routes/quiz.routes.js";
+import questionRoutes from "./src/routes/question.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
-import {
-  errorHandler,
-  notFoundHandler,
-} from "./src/middleware/errorHandler.js";
+import { setupAnalyticsCronJobs } from "./src/services/cron.service.js";
+import { errorHandler, notFoundHandler } from "./src/middleware/errorHandler.js";
 
 // App config
 const app = express();
@@ -40,6 +40,9 @@ setSocketIOInstance(io);
 
 // Initialize all Socket.IO namespaces (/discussion, /session, /notification, /progress)
 initializeAllNamespaces(io);
+
+// Setup cron jobs for analytics
+setupAnalyticsCronJobs();
 
 // Security middleware - Helmet sets various HTTP headers for security
 app.use(
@@ -103,9 +106,14 @@ app.use("/api/discussions", discussionRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
-app.use("/api/chapter", chapterRoutes)
+app.use("/api/chapter", chapterRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/lessons", lessonRoutes)
+app.use("/api/progress", progressRoutes)
+app.use("/api/quizzes", quizRoutes);
+app.use("/api/questions", questionRoutes);
 
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);

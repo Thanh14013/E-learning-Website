@@ -1,0 +1,132 @@
+.avatar-upload {
+  position: relative;
+  min-height: 300px;
+}
+
+.avatar-dropzone {
+  border: 2px dashed var(--color-gray-300);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-5);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-base);
+  background-color: var(--color-gray-50);
+}
+
+.avatar-dropzone:hover {
+  border-color: var(--color-student-primary);
+  background-color: var(--color-student-primary-light);
+}
+
+.avatar-dropzone--dragging {
+  border-color: var(--color-student-primary);
+  background-color: var(--color-student-primary-light);
+  border-width: 3px;
+}
+
+.avatar-dropzone-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-2);
+}
+
+.avatar-dropzone-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  margin-bottom: var(--spacing-1);
+}
+
+.avatar-dropzone-hint {
+  font-size: 0.875rem;
+  color: var(--color-gray-500);
+  margin: 0;
+}
+
+.avatar-preview-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--spacing-3);
+}
+
+.avatar-preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.avatar-remove-button {
+  position: absolute;
+  top: var(--spacing-2);
+  right: var(--spacing-2);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: var(--color-error);
+  color: var(--color-white);
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-base);
+}
+
+.avatar-remove-button:hover {
+  background-color: var(--color-error-hover);
+  transform: scale(1.1);
+}
+
+.avatar-remove-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.avatar-file-input {
+  display: none;
+}
+
+.avatar-uploading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-lg);
+}
+
+@media (prefers-color-scheme: dark) {
+  .avatar-dropzone {
+    border-color: var(--color-gray-600);
+    background-color: var(--color-gray-800);
+  }
+
+  .avatar-dropzone:hover {
+    border-color: var(--color-student-primary);
+    background-color: var(--color-gray-700);
+  }
+
+  .avatar-dropzone--dragging {
+    background-color: var(--color-gray-700);
+  }
+
+  .avatar-dropzone-text {
+    color: var(--color-gray-300);
+  }
+
+  .avatar-dropzone-hint {
+    color: var(--color-gray-500);
+  }
+
+  .avatar-uploading-overlay {
+    background-color: rgba(17, 24, 39, 0.95);
+  }
+}
