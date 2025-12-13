@@ -1,8 +1,12 @@
+import React from "react";
+import styles from "./Footer.module.css";
+
 export function Footer() {
   return (
-    <footer style={{ textAlign: "center", padding: "20px", background: "#eee" }}>
+    <footer className={styles.footer}>
       <p>© 2025 IELTS Learning Platform</p>
     </footer>
   );
 }
+
 export default Footer;

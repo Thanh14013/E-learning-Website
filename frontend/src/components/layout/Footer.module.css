@@ -1,0 +1,18 @@
+.footer {
+  text-align: center;
+  padding: var(--spacing-4);
+  
+  background-color: var(--bg-card); 
+  color: var(--text-secondary);
+  
+  border-top: 1px solid var(--color-gray-200);
+  
+  margin-top: auto; 
+  width: 100%;
+}
+
+@media (prefers-color-scheme: dark) {
+  .footer {
+    border-color: var(--color-gray-700);
+  }
+}

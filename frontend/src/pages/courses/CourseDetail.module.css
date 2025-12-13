@@ -1,7 +1,5 @@
-/* src/pages/courses/courseDetail.module.css */
-
 .pageWrapper {
-  background-color: var(--color-white);
+  background-color: var(--bg-body);
   padding-bottom: var(--spacing-5);
 }
 
@@ -34,6 +32,7 @@
   flex-wrap: wrap;
   gap: var(--spacing-2);
   font-size: 0.9rem;
+  color: var(--color-gray-300);
 }
 
 .ratingInfo {
@@ -69,20 +68,27 @@
   }
 }
 
-/* --- Các khối nội dung --- */
 .sectionBox {
   border: 1px solid var(--color-gray-200);
   padding: var(--spacing-3);
   margin-top: var(--spacing-4);
-  color: black;
+  color: var(--text-primary);
   font-size: 14px;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius-md);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sectionBox {
+    border-color: var(--color-gray-700);
+  }
 }
 
 .sectionBox h3 {
   font-size: 1.5rem;
   margin-top: 0;
   margin-bottom: var(--spacing-3);
-  color: rgb(37, 37, 37);
+  color: var(--text-primary);
 }
 
 .highlightsGrid {
@@ -100,13 +106,14 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  color: var(--text-primary);
 }
 .highlightsGrid li svg {
   flex-shrink: 0;
   margin-top: 4px;
 }
 
-/* --- Nội dung khóa học (Accordion) --- */
+/* --- Nội dung khóa học --- */
 .accordionHeader {
   display: flex;
   justify-content: space-between;
@@ -116,25 +123,55 @@
   border: 1px solid var(--color-gray-200);
   cursor: pointer;
   font-weight: 700;
+  color: var(--text-primary);
 }
+
+/* Dark mode cho accordion header */
+@media (prefers-color-scheme: dark) {
+  .accordionHeader {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+}
+
 .accordionContent {
   border: 1px solid var(--color-gray-200);
   border-top: none;
+  background-color: var(--bg-card);
 }
+
+@media (prefers-color-scheme: dark) {
+  .accordionContent {
+    border-color: var(--color-gray-700);
+  }
+}
+
 .lessonItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px var(--spacing-2);
   text-decoration: none;
-  color: var(--color-gray-800);
+  color: var(--text-primary); 
   transition: background-color 0.2s;
 }
 .lessonItem:hover {
   background-color: var(--color-gray-100);
 }
+/* Dark mode hover */
+@media (prefers-color-scheme: dark) {
+  .lessonItem:hover {
+    background-color: var(--color-gray-700);
+  }
+}
+
 .lessonItem:not(:last-child) {
   border-bottom: 1px solid var(--color-gray-100);
+}
+@media (prefers-color-scheme: dark) {
+  .lessonItem:not(:last-child) {
+    border-bottom-color: var(--color-gray-700);
+  }
 }
 
 /* --- Sidebar --- */
@@ -144,12 +181,19 @@
 .sidebarCard {
   border: 1px solid var(--color-gray-200);
   box-shadow: var(--shadow-lg);
-  background-color: var(--color-white);
+  background-color: var(--bg-card); 
   border-radius: var(--border-radius-md);
   position: sticky;
   top: 20px;
-  color: black;
+  color: var(--text-primary);
 }
+
+@media (prefers-color-scheme: dark) {
+  .sidebarCard {
+    border-color: var(--color-gray-700);
+  }
+}
+
 .sidebarImage {
   width: 100%;
   height: 180px;
@@ -186,62 +230,6 @@
   gap: 12px;
   margin-bottom: 12px;
   font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
-/* nội dung khóa học */
-.accordionContainer {
-    border: 1px solid var(--color-gray-200);
-}
-.accordionItem:not(:last-child) {
-    border-bottom: 1px solid var(--color-gray-200);
-}
-.accordionHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--color-gray-50);
-    padding: var(--spacing-2);
-    cursor: pointer;
-    font-weight: 700;
-}
-.accordionHeader:hover {
-    background-color: var(--color-gray-100);
-}
-.accordionTitle {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.accordionIcon {
-    transition: transform 0.2s ease-in-out;
-}
-.accordionIcon.open {
-    transform: rotate(180deg);
-}
-.moduleMeta {
-    font-weight: 400;
-    font-size: 0.9rem;
-    color: var(--color-gray-600);
-}
-.lessonItem {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px var(--spacing-3);
-    text-decoration: none;
-    color: var(--color-gray-800);
-    transition: background-color 0.2s;
-    border-top: 1px solid var(--color-gray-100);
-}
-.lessonItem:hover {
-    background-color: var(--color-gray-50);
-}
-.lessonTitle {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.lessonDuration {
-    font-size: 0.9rem;
-    color: var(--color-gray-500);
-}

@@ -15,7 +15,7 @@ const quizService = {
     // TODO: Replace with actual API call
     // const response = await api.get(`/quizzes/${quizId}/results/${attemptId}`);
     // return response.data;
-    
+
     // Mock data for development
     return {
       attemptId,
@@ -60,7 +60,9 @@ const quizService = {
         }
       ]
     };
-    /*
+  }, // <--- ĐÃ SỬA: Thêm đóng ngoặc nhọn và dấu phẩy ở đây
+
+  /**
    * Start a quiz attempt
    * @param {string} quizId - Quiz ID
    * @returns {Promise} Quiz questions and attempt ID
@@ -124,7 +126,7 @@ const quizService = {
     // TODO: Replace with actual API call
     // const response = await api.get(`/quizzes/${quizId}/attempts`);
     // return response.data;
-    
+
     // Mock data for development
     return [
       {
@@ -155,7 +157,7 @@ const quizService = {
     // TODO: Replace with actual API call
     // const response = await api.get(`/quizzes/${quizId}`);
     // return response.data;
-    
+
     // Mock data for development
     return {
       id: quizId,

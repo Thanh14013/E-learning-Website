@@ -8,11 +8,12 @@
   font-size: 2.25rem;
   font-weight: 800;
   margin-bottom: var(--spacing-3);
+  color: var(--text-primary);
 }
 
 .pageSubtitle {
   font-size: 1.125rem;
-  color: var(--color-gray-500);
+  color: var(--text-secondary);
   margin-top: 0;
   margin-bottom: var(--spacing-4);
 }
@@ -32,7 +33,7 @@
 .filterBar .form-label {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-gray-500);
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
@@ -50,7 +51,7 @@
 
 .courseCard {
   width: 100%;
-  background-color: var(--color-white);
+  background-color: var(--bg-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--color-gray-200);
@@ -58,6 +59,12 @@
   display: flex;
   flex-direction: column;
 }
+@media (prefers-color-scheme: dark) {
+  .courseCard {
+    border-color: var(--color-gray-700);
+  }
+}
+
 .courseCard:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-md);
@@ -80,7 +87,7 @@
 .cardContent h4 {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
   line-height: 1.4;
   margin: 0;
   height: calc(1.4 * 1.1rem * 2);
@@ -109,7 +116,7 @@
 
 .teacherName {
   font-size: 0.85rem;
-  color: var(--color-gray-500);
+  color: var(--text-secondary);
   margin-bottom: 16px;
 }
 
@@ -152,7 +159,7 @@
 
 .loadingText, .noCoursesText {
   font-size: 1.2rem;
-  color: var(--color-gray-500);
+  color: var(--text-secondary);
   text-align: center;
   padding: var(--spacing-6);
 }
@@ -167,7 +174,7 @@
   top: 20px;
   left: calc(100% + 8px);
   width: 320px;
-  background-color: var(--color-white);
+  background-color: var(--bg-card);
   border: 1px solid var(--color-gray-200);
   box-shadow: var(--shadow-lg);
   border-radius: var(--border-radius-md);
@@ -178,6 +185,13 @@
   transform: translateX(-10px);
   transition: all 0.2s ease-in-out;
   pointer-events: none;
+  color: var(--text-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .tooltipContainer {
+    border-color: var(--color-gray-700);
+  }
 }
 
 .courseCardContainer:hover .tooltipContainer {
@@ -189,18 +203,18 @@
 .tooltipContainer h4 {
   font-size: 1rem;
   margin-bottom: 8px;
-  color: var(--color-gray-900);
+  color: var(--text-primary);
 }
 
 .tooltipMeta {
   font-size: 0.9rem;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   margin-bottom: 12px;
 }
 
 .tooltipSummary {
   font-size: 0.9rem;
-  color: var(--color-gray-800);
+  color: var(--text-primary);
   margin-bottom: 14px;
 }
 
@@ -209,27 +223,8 @@
   padding: 0;
   margin: 0;
   font-size: 0.9rem;
-  color: var(--color-gray-700);
+  color: var(--text-secondary);
 }
 .tooltipChecklist li {
   margin-bottom: 8px;
-}
-
-select,
-.form-select {
-  color: #000 !important;
-  background-color: #fff !important;
-  appearance: auto;
-  -webkit-appearance: menulist;
-  -moz-appearance: menulist;
-}
-
-option {
-  color: #000 !important;
-  background-color: #fff !important;
-}
-
-select::-ms-expand {
-  color: #000;
-  background: #fff;
 }

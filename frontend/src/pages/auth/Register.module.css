@@ -3,14 +3,15 @@
   text-align: center;
   max-width: 450px;
   margin: 60px auto;
-  background-color:var(--color-bg-surface);
+  background-color: var(--bg-card);
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
 }
 
 .title {
   margin-bottom: 25px;
-  color: var(--color-text-base);
+  color: var(--text-primary);
 }
 
 .passwordWrapper {
@@ -30,50 +31,81 @@
   display: block;
   font-weight: 600;
   margin-bottom: 6px;
-  color: #555;
+  color: var(--text-primary);
 }
 
 .input {
   width: 100%;
-  padding: 10px 64px 10px 10px;
-  border: 1px solid var(--color-border);
+  padding: 12px;
+  padding-right: 64px !important;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
   border-radius: 6px;
   outline: none;
-  font-size: 16px;
-  box-sizing: border-box;
-  transition: border-color 0.2s ease;
-  background-color: white;
-  color: var(--color-text-base);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input:focus {
-  border-color: var(--color-primary);
+  border-color: var(--color-info);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.select {
+  width: 100%;
+  padding: 12px;
+  cursor: pointer;
+  
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border: 1px solid var(--input-border) !important;
+  
+  border-radius: 6px;
+  outline: none;
+  
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  
+  transition: border-color 0.2s, box-shadow 0.2s;
+  
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+}
+
+.select:focus {
+  border-color: var(--color-info) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
 .button {
   width: 100%;
   padding: 12px;
-  background-color:var(--color-primary);
+  background-color: var(--color-student-primary);
   color: white;
   font-weight: 600;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  margin-top: 10px;
 }
 
 .button:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--color-student-primary-hover);
 }
 
 .switchText {
   margin-top: 20px;
-  color: #555;
+  color: var(--text-secondary);
 }
 
 .link {
-  color: var(--color-primary);
+  color: var(--color-info);
   text-decoration: none;
+  font-weight: 500;
 }
 
 .link:hover {
@@ -88,53 +120,47 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--color-primary);
-  font-size: 15px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 8px;
   height: 100%;
+  z-index: 2;
 }
 
 .toggleBtn:hover {
-  color: #333436;
-}
-.toggleBtn:focus {
-  outline: none;
-  box-shadow: none;
+  color: var(--text-primary);
 }
 
+/* Nhóm ngày sinh */
 .dobGroup {
   display: flex;
   gap: 10px;
   justify-content: space-between;
 }
 
+/* Cập nhật Input ngày sinh */
 .dobInput {
   width: 32%;
-  padding: 8px;
-  font-size: 1rem;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
   text-align: center;
+  padding: 12px;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
   outline: none;
-  transition: 0.2s;
-  background-color: white;
-  color: var(--color-text-base);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .dobInput:focus {
-  border-color:  var(--color-primary);
-  background-color: #eaf3ff;
+  border-color: var(--color-info);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
-.dobInput::-webkit-outer-spin-button,
-.dobInput::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
+/* Responsive */
 @media (max-width: 600px) {
   .container {
     width: 90%;

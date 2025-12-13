@@ -1,58 +1,54 @@
-/* ==========================================================================
-   1. BỐ CỤC DASHBOARD CHÍNH (3 CỘT)
-   ========================================================================== */
+
 .dashboardLayout {
   display: grid;
-  grid-template-columns: 280px 1fr 300px; /* Tăng nhẹ kích thước sidebar */
+  grid-template-columns: 280px 1fr 300px;
   grid-template-areas: "nav main calendar";
-  gap: 32px; /* Tăng khoảng cách */
+  gap: 32px;
   padding: 32px;
   max-width: 100%;
   margin: 0 auto;
-  align-items: start; /* Căn các cột theo đỉnh */
+  align-items: start;
 }
 
-/* Gán các khu vực */
 .navSidebar { grid-area: nav; }
 .mainContent { grid-area: main; }
 .calendarSidebar { grid-area: calendar; }
 
-/* ==========================================================================
-   2. TIÊU ĐỀ CHÍNH
-   ========================================================================== */
+/* tiêu đề*/
 .mainTitle {
-  font-size: 1.75rem; /* ~28px */
+  font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 8px;
-  color: var(--color-gray-1000);  
+  color: var(--text-primary);  
 }
 .mainSubtitle {
   font-size: 1rem;
-  color: var(--color-gray-1200);
+  color: var(--text-secondary);
   margin-top: 0;
   margin-bottom: 32px;
 }
 
-/* ==========================================================================
-   3. SIDEBAR TRÁI (NAVIGATION) - NÂNG CẤP
-   ========================================================================== */
+   /*3. SIDEBAR TRÁI*/
 .block {
-  background-color: var(--color-white);
+  background-color: var(--bg-card);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-3);
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--color-gray-200); 
   box-shadow: var(--shadow-sm);
   margin-bottom: var(--spacing-3);
+  transition: background-color 0.3s;
 }
+
 .block h3 {
   font-size: 1rem;
   font-weight: 600;
   margin-top: 0;
   margin-bottom: var(--spacing-3);
-  color: var(--color-gray-700);
+  color: var(--text-primary);
   padding-bottom: var(--spacing-2);
   border-bottom: 1px solid var(--color-gray-200);
 }
+
 .navList {
   list-style: none;
   padding: 0;
@@ -61,24 +57,34 @@
   flex-direction: column;
   gap: 4px;
 }
+
 .navLink {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* <-- THÊM MỚI: để đẩy icon ra xa */
+  justify-content: space-between;
   gap: 12px;
-  color: var(--color-gray-600);
+  color: var(--text-secondary);
   font-weight: 500;
   text-decoration: none;
   padding: 12px;
   border-radius: var(--border-radius-md);
   transition: all 0.2s ease-in-out;
-  cursor: pointer; /* <-- THÊM MỚI: Cho thấy có thể click */
+  cursor: pointer;
 }
 .navLink:hover, .navLinkActive {
   color: var(--color-student-primary);
+  background-color: var(--color-gray-100);
 }
 
-/* --- Style cho icon thu gọn --- */
+/* Dark mode hover fix */
+@media (prefers-color-scheme: dark) {
+    .block { border-color: var(--color-gray-700); }
+    .block h3 { border-bottom-color: var(--color-gray-700); }
+    .navLink:hover, .navLinkActive {
+        background-color: var(--color-gray-700);
+    }
+}
+
 .navIcon {
   transition: transform 0.3s ease;
   width: 16px;
@@ -88,32 +94,31 @@
   transform: rotate(90deg);
 }
 
-/* --- Style cho danh sách khóa học con --- */
 .courseSublist {
   list-style: none;
   padding-left: 28px;
-  margin: 0; /* <-- THAY ĐỔI: Bỏ margin-top mặc định */
-  overflow: hidden; /* <-- THÊM MỚI: Ẩn nội dung khi thu gọn */
-  max-height: 0; /* <-- THÊM MỚI: Trạng thái mặc định là đóng */
-  transition: max-height 0.3s ease-in-out, margin-top 0.3s ease-in-out; /* <-- THÊM MỚI: Hiệu ứng */
+  margin: 0;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease-in-out, margin-top 0.3s ease-in-out;
 }
 .courseSublist.expanded {
-  max-height: 300px; /* <-- THÊM MỚI: Chiều cao tối đa khi mở (điều chỉnh nếu cần) */
-  margin-top: 8px; /* <-- THÊM MỚI: Thêm khoảng cách khi mở */
+  max-height: 300px;
+  margin-top: 8px;
 }
 .courseSublist a {
   font-size: 0.9rem;
-  color: var(--color-gray-500);
+  color: var(--text-secondary);
   text-decoration: none;
   padding: 4px 0;
   display: block;
 }
 .courseSublist a:hover {
   text-decoration: underline;
+  color: var(--text-primary);
 }
-/* ==========================================================================
-   4. SIDEBAR PHẢI (CALENDAR & EVENTS) - NÂNG CẤP
-   ========================================================================== */
+
+/*sidebar phải */
 .calendarGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -126,11 +131,11 @@
 }
 .dayHeader {
   font-weight: 600;
-  color: var(--color-gray-500);
+  color: var(--text-secondary);
   font-size: 0.8rem !important;
 }
 .day {
-  color: var(--color-gray-700);
+  color: var(--text-primary);
 }
 .day.today {
   background-color: var(--color-admin-primary);
@@ -152,7 +157,7 @@
 }
 .eventItem p {
   font-size: 0.85rem;
-  color: var(--color-gray-500);
+  color: var(--text-secondary);
   margin: 4px 0 0 0;
 }
 .addEventButton {
