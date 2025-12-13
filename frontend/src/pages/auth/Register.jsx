@@ -1,10 +1,10 @@
 import { useAuth } from "../../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import styles from "./register.module.css";
+import styles from "./Register.module.css";
 
 export function Register() {
-  const { register, login } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -27,28 +27,43 @@ export function Register() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (formData.password !== formData.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp.");
+      return;
+    }
 
-  if (formData.password !== formData.confirmPassword) {
-    setError("Mật khẩu đã nhập không khớp");
-    return;
-  }
+    setLoading(true);
 
-const res = await register({
-  name: formData.name,
-  email: formData.email,
-  password: formData.password,
-  role: formData.role,
-});
+    const dobString = (formData.year && formData.month && formData.day) 
+      ? `${formData.year}-${formData.month.padStart(2, '0')}-${formData.day.padStart(2, '0')}`
+      : null;
 
-  if (res.success) {
-    navigate("/");
-  } else {
-    setError(res.message);
-  }
-};
+    try {
+      //Gọi API Register
+      const res = await register({
+        fullName: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        dateOfBirth: dobString,
+      });
+
+      if (res.success) {
+        //Đăng ký thành công -> Chuyển hướng sang trang Login
+        navigate("/login");
+      } else {
+        setError(res.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Lỗi kết nối server. Vui lòng kiểm tra lại mạng.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className={styles.container}>
@@ -64,6 +79,7 @@ const res = await register({
             value={formData.name}
             onChange={handleChange}
             className={styles.input}
+            placeholder="Nguyen Van A"
             required
           />
         </div>
@@ -76,6 +92,7 @@ const res = await register({
             value={formData.email}
             onChange={handleChange}
             className={styles.input}
+            placeholder="example@email.com"
             required
           />
         </div>
@@ -87,14 +104,13 @@ const res = await register({
             name="role"
             value={formData.role}
             onChange={handleChange}
-            className={styles.input}
+            className={styles.select}
           >
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
           </select>
         </div>
 
-        {/* Ngày sinh */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Ngày sinh</label>
           <div className={styles.dobGroup}>
@@ -134,7 +150,6 @@ const res = await register({
           </div>
         </div>
 
-        {/* Password */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Password</label>
           <div className={styles.passwordWrapper}>
@@ -156,7 +171,6 @@ const res = await register({
           </div>
         </div>
 
-        {/* Confirm Password */}
         <div className={styles.formGroup}>
           <label className={styles.label}>Confirm Password</label>
           <div className={styles.passwordWrapper}>
@@ -184,10 +198,10 @@ const res = await register({
       </form>
 
       <p className={styles.switchText}>
-       Đã có tài khoản?{" "}
-        <a href="/login" className={styles.link}>
+        Đã có tài khoản?{" "}
+        <Link to="/login" className={styles.link}>
           Đăng nhập ngay!
-        </a>
+        </Link>
       </p>
     </div>
   );

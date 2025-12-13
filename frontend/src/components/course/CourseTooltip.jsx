@@ -1,7 +1,6 @@
-import styles from '../../pages/courses/course.module.css';
+import styles from '../../pages/courses/Courses.module.css';
 
 const CourseTooltip = ({ course }) => {
-  // Kiểm tra an toàn: Đảm bảo highlights là một mảng trước khi map
   const hasHighlights = course.highlights && Array.isArray(course.highlights);
 
   return (
@@ -16,7 +15,7 @@ const CourseTooltip = ({ course }) => {
       <p className={styles.tooltipSummary}>{course.summary}</p>
       
       {}
-      {/* Dùng .map() để lặp qua mảng highlights và render từng mục */}
+      {}
       {hasHighlights && (
         <ul className={styles.tooltipChecklist}>
           {course.highlights.map((highlight, index) => (
