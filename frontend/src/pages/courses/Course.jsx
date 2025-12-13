@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCourses } from '../../contexts/CoursesContext';
-import styles from './course.module.css';
+import styles from './Courses.module.css';
 import CourseTooltip from '../../components/course/CourseTooltip.jsx';
 
 const CoursesPage = () => {
