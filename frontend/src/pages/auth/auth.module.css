@@ -1,9 +1,9 @@
 .container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: calc(100vh - 150px);
-    padding: var(--spacing-3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 150px);
+  padding: var(--spacing-3);
 }
 
 .formWrapper {
