@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import VideoPlayer from '../../components/lesson/VideoPlayer';
 import LessonSidebar from '../../components/lesson/LessonSidebar';
 import LessonResources from '../../components/lesson/LessonResources';
 import ProgressBar from '../../components/lesson/ProgressBar';
-import { mockLessonData, mockCourseStructure } from '../../mock/lessonMockData';
+import { CourseNotes } from '../../components/lesson/CourseNotes';
+import api from '../../services/api';
 import {
     calculateCourseProgress,
     updateCourseStructureWithProgress,
@@ -31,40 +32,48 @@ const LessonPlayer = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [loading, setLoading] = useState(true);
     const [courseProgress, setCourseProgress] = useState(null);
+    const [activeTab, setActiveTab] = useState('content'); // 'content' | 'notes'
+    const [currentVideoTime, setCurrentVideoTime] = useState(0);
+    const videoPlayerRef = useRef(null);
 
     /**
-     * Fetch lesson data from mock data (would be API call in production)
+     * Fetch lesson data from backend API
      */
     const loadLessonData = async () => {
         try {
             setLoading(true);
 
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Fetch lesson data from backend
+            const lessonRes = await api.get(`/lessons/${lessonId}`);
+            const lesson = lessonRes.data.data || lessonRes.data.lesson || lessonRes.data;
 
-            // Load mock data
-            const lesson = mockLessonData[lessonId] || mockLessonData['lesson-1'];
-            const structure = mockCourseStructure[courseId] || mockCourseStructure['course-1'];
+            // Fetch course structure (chapters and lessons)
+            const courseRes = await api.get(`/courses/${courseId}`);
+            const courseData = courseRes.data.data || courseRes.data;
 
-            // Update course structure with progress from localStorage
-            const updatedStructure = updateCourseStructureWithProgress(structure);
+            // Fetch user's progress for this course
+            const progressRes = await api.get(`/progress/course/${courseId}`);
+            const progressData = progressRes.data;
 
             setCurrentLesson(lesson);
-            setCourseStructure(updatedStructure);
+            setCourseStructure(courseData);
 
             // Calculate overall course progress
-            const progressStats = calculateCourseProgress(updatedStructure);
-            setCourseProgress(progressStats);
+            if (progressData) {
+                setCourseProgress({
+                    totalLessons: progressData.totalLessons || 0,
+                    completedLessons: progressData.completedLessons || 0,
+                    progressPercentage: progressData.progressPercentage || 0
+                });
+            }
 
-            // Load saved progress from localStorage
-            const savedProgress = localStorage.getItem(`lesson-progress-${lessonId}`);
-            if (savedProgress) {
-                const { progress: savedProg, watchedTime: savedTime, completed } = JSON.parse(savedProgress);
-                setProgress(savedProg);
-                setWatchedTime(savedTime);
-                setIsCompleted(completed);
+            // Load user's progress for this lesson
+            const lessonProgress = progressData?.lessonProgress?.find(lp => lp.lessonId === lessonId);
+            if (lessonProgress) {
+                setProgress(lessonProgress.progressPercentage || 0);
+                setWatchedTime(lessonProgress.lastWatchedAt || 0);
+                setIsCompleted(lessonProgress.completed || false);
             } else {
-                // Reset progress for new lesson
                 setProgress(0);
                 setWatchedTime(0);
                 setIsCompleted(false);
@@ -273,9 +282,36 @@ const LessonPlayer = () => {
                             />
                         </div>
 
-                        {/* Resources section */}
-                        {currentLesson.resources && currentLesson.resources.length > 0 && (
-                            <LessonResources resources={currentLesson.resources} />
+                        {/* Tabs for Content/Notes */}
+                        <div className={styles.tabsContainer}>
+                            <button
+                                className={`${styles.tab} ${activeTab === 'content' ? styles.tabActive : ''}`}
+                                onClick={() => setActiveTab('content')}
+                            >
+                                📄 Lesson Content
+                            </button>
+                            <button
+                                className={`${styles.tab} ${activeTab === 'notes' ? styles.tabActive : ''}`}
+                                onClick={() => setActiveTab('notes')}
+                            >
+                                📝 My Notes
+                            </button>
+                        </div>
+
+                        {/* Tab Content */}
+                        {activeTab === 'content' && (
+                            <>
+                                {/* Resources section */}
+                                {currentLesson.resources && currentLesson.resources.length > 0 && (
+                                    <LessonResources resources={currentLesson.resources} />
+                                )}
+                            </>
+                        )}
+
+                        {activeTab === 'notes' && (
+                            <div className={styles.notesSection}>
+                                <CourseNotes lessonId={lessonId} videoTimestamp={currentVideoTime} />
+                            </div>
                         )}
 
                         {/* Navigation buttons */}

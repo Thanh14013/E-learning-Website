@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import Testimonials from "../../components/homepage/Testimonials";
 import styles from "./home.module.css";
 
 export function Home() {
@@ -47,6 +48,9 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      {/* TESTIMONIALS SECTION */}
+      <Testimonials />
 
       {/* COURSES PREVIEW */}
       <section className={styles.courses}>

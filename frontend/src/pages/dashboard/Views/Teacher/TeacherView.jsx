@@ -26,8 +26,8 @@ const CourseCard = ({ course, analytics }) => {
 
   return (
     <div className={styles.courseCard}>
-      <div 
-        className={styles.courseCardImage} 
+      <div
+        className={styles.courseCardImage}
         style={{ backgroundColor: course.color || '#ddd6fe' }}
       >
         {course.thumbnail && (
@@ -58,13 +58,13 @@ const CourseCard = ({ course, analytics }) => {
           </div>
         </div>
         <div className={styles.courseActions}>
-          <Link 
+          <Link
             to={`/courses/${course._id || course.id}/manage`}
             className={styles.manageBtn}
           >
             Quản lý
           </Link>
-          <Link 
+          <Link
             to={`/courses/${course._id || course.id}/analytics`}
             className={styles.analyticsBtn}
           >
@@ -99,9 +99,9 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
     const el = scrollContainerRef.current;
     if (el) {
       const scrollAmount = (CARD_WIDTH_PX + GAP_PX) * SCROLL_PAGE_SIZE;
-      el.scrollBy({ 
-        left: direction === 'left' ? -scrollAmount : scrollAmount, 
-        behavior: 'smooth' 
+      el.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
       });
     }
   };
@@ -133,8 +133,8 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
     return (
       <div className={styles.courseList}>
         {courses.map(course => (
-          <CourseCard 
-            key={course._id || course.id} 
+          <CourseCard
+            key={course._id || course.id}
             course={course}
             analytics={analyticsMap?.[course._id || course.id]}
           />
@@ -145,9 +145,9 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
 
   return (
     <div className={styles.carouselContainer}>
-      <button 
-        className={`${styles.navButton} ${styles.left}`} 
-        onClick={() => handleScroll('left')} 
+      <button
+        className={`${styles.navButton} ${styles.left}`}
+        onClick={() => handleScroll('left')}
         disabled={!canScrollLeft}
         aria-label="Scroll left"
       >
@@ -158,17 +158,17 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
       <div className={styles.scrollWrapper} ref={scrollContainerRef}>
         <div className={styles.courseList}>
           {courses.map(course => (
-            <CourseCard 
-              key={course._id || course.id} 
+            <CourseCard
+              key={course._id || course.id}
               course={course}
               analytics={analyticsMap?.[course._id || course.id]}
             />
           ))}
         </div>
       </div>
-      <button 
-        className={`${styles.navButton} ${styles.right}`} 
-        onClick={() => handleScroll('right')} 
+      <button
+        className={`${styles.navButton} ${styles.right}`}
+        onClick={() => handleScroll('right')}
         disabled={!canScrollRight}
         aria-label="Scroll right"
       >
@@ -285,7 +285,7 @@ const PendingQuizzes = ({ quizzes }) => {
             </p>
           </div>
           <div className={styles.quizActions}>
-            <Link 
+            <Link
               to={`/quiz/${quiz.quizId}/grade/${quiz.attemptId}`}
               className={styles.gradeBtn}
             >
@@ -357,104 +357,54 @@ const TeacherView = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch all dashboard data in parallel
-      const [
-        statsRes,
-        analyticsRes,
-        activitiesRes,
-        quizzesRes,
-        discussionsRes,
-      ] = await Promise.allSettled([
-        api.get('/teachers/dashboard/stats'),
-        api.get('/teachers/dashboard/analytics'),
-        api.get('/teachers/dashboard/recent-activities'),
-        api.get('/teachers/dashboard/pending-quizzes'),
-        api.get('/teachers/dashboard/new-discussions'),
-      ]);
+      // Fetch dashboard data from backend
+      const dashboardRes = await api.get('/analytics/dashboard');
+      const dashboardData = dashboardRes.data;
 
-      // Process stats
-      if (statsRes.status === 'fulfilled') {
-        setStats(statsRes.value.data);
-      } else {
-        // Fallback: calculate from myCourses
-        setStats({
-          totalCourses: myCourses?.length || 0,
-          totalStudents: 0,
-          pendingQuizzes: 0,
-          newDiscussions: 0,
-        });
-      }
+      // Set stats from dashboard data
+      setStats({
+        totalCourses: dashboardData.totalCourses || myCourses?.length || 0,
+        totalStudents: dashboardData.totalStudents || 0,
+        pendingQuizzes: dashboardData.pendingQuizzes || 0,
+        newDiscussions: dashboardData.newDiscussions || 0,
+      });
 
-      // Process analytics
-      if (analyticsRes.status === 'fulfilled') {
-        const analytics = analyticsRes.value.data;
+      // Process analytics if available
+      if (dashboardData.courseAnalytics) {
         const map = {};
-        if (Array.isArray(analytics)) {
-          analytics.forEach(item => {
-            map[item.courseId] = item;
-          });
-        }
+        dashboardData.courseAnalytics.forEach(item => {
+          map[item.courseId] = item;
+        });
         setAnalyticsMap(map);
       }
 
-      // Process activities
-      if (activitiesRes.status === 'fulfilled') {
-        setRecentActivities(activitiesRes.value.data || []);
-      } else {
-        // Mock data for development
-        setRecentActivities([
-          {
-            type: 'quiz',
-            studentName: 'Nguyễn Văn A',
-            action: 'đã nộp bài kiểm tra',
-            courseName: 'Các hệ thống phân tán',
-            timestamp: '2 giờ trước',
-          },
-          {
-            type: 'lesson',
-            studentName: 'Trần Thị B',
-            action: 'đã hoàn thành bài học',
-            courseName: 'Advanced Algorithms',
-            timestamp: '5 giờ trước',
-          },
-        ]);
+      // Process activities if available
+      if (dashboardData.recentActivities) {
+        setRecentActivities(dashboardData.recentActivities.slice(0, 5));
       }
 
-      // Process pending quizzes
-      if (quizzesRes.status === 'fulfilled') {
-        setPendingQuizzes(quizzesRes.value.data || []);
-      } else {
-        // Mock data for development
-        setPendingQuizzes([
-          {
-            quizId: 'quiz-1',
-            attemptId: 'attempt-1',
-            quizTitle: 'Bài kiểm tra giữa kỳ',
-            courseName: 'Các hệ thống phân tán',
-            studentName: 'Nguyễn Văn A',
-            submittedAt: '2 giờ trước',
-          },
-        ]);
+      // Process pending quizzes if available
+      if (dashboardData.pendingQuizzes) {
+        setPendingQuizzes(dashboardData.pendingQuizzes);
       }
 
-      // Process new discussions
-      if (discussionsRes.status === 'fulfilled') {
-        setNewDiscussions(discussionsRes.value.data || []);
-      } else {
-        // Mock data for development
-        setNewDiscussions([
-          {
-            id: 'disc-1',
-            title: 'Câu hỏi về bài tập chương 2',
-            authorName: 'Lê Văn C',
-            courseName: 'Software Engineering',
-            timestamp: '1 ngày trước',
-            commentCount: 3,
-          },
-        ]);
+      // Process discussions if available
+      if (dashboardData.recentDiscussions) {
+        setNewDiscussions(dashboardData.recentDiscussions);
       }
+
     } catch (error) {
       console.error('[TeacherView] Error fetching dashboard data:', error);
+      // Set fallback data on error
+      setStats({
+        totalCourses: myCourses?.length || 0,
+        totalStudents: 0,
+        pendingQuizzes: 0,
+        newDiscussions: 0,
+      });
+      setRecentActivities([]);
+      setPendingQuizzes([]);
+      setNewDiscussions([]);
     } finally {
       setLoading(false);
     }
@@ -485,8 +435,8 @@ const TeacherView = () => {
             + Tạo khóa học mới
           </Link>
         </div>
-        <CourseCarousel 
-          courses={myCourses || []} 
+        <CourseCarousel
+          courses={myCourses || []}
           analyticsMap={analyticsMap}
         />
       </section>

@@ -44,7 +44,7 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
   const handleDelete = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (window.confirm(`Bạn có chắc chắn muốn xóa khóa học "${course.title || course.name}"?`)) {
       try {
         await api.delete(`/courses/${course._id || course.id}`);
@@ -72,7 +72,7 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
       )}
 
       {/* Course Image */}
-      <div 
+      <div
         className={styles.cardImage}
         style={{ backgroundColor: course.color || '#ddd6fe' }}
       >
@@ -196,7 +196,7 @@ const CourseManagement = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { myCourses, loading: coursesLoading } = useCourses();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -314,7 +314,7 @@ const CourseManagement = () => {
   // Bulk actions
   const handleBulkPublish = async () => {
     if (selectedCourses.length === 0) return;
-    
+
     setLoading(true);
     try {
       await Promise.all(
@@ -333,7 +333,7 @@ const CourseManagement = () => {
 
   const handleBulkDelete = async () => {
     if (selectedCourses.length === 0) return;
-    
+
     if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedCourses.length} khóa học?`)) {
       return;
     }
@@ -372,6 +372,76 @@ const CourseManagement = () => {
     return null;
   }
 
+  /**
+   * Export courses data to CSV file
+   * Includes: Title, Description, Status, Students, Category, Level, Created Date
+   */
+  const handleExportCourses = () => {
+    try {
+      // Prepare CSV data
+      const csvData = [];
+
+      // CSV Header
+      csvData.push([
+        'Tiêu đề',
+        'Mô tả',
+        'Trạng thái',
+        'Số học viên',
+        'Danh mục',
+        'Cấp độ',
+        'Ngày tạo'
+      ]);
+
+      // Course data rows
+      displayedCourses.forEach(course => {
+        const title = (course.title || course.name || '').replace(/"/g, '""'); // Escape quotes
+        const description = (course.description || '').replace(/"/g, '""').substring(0, 100); // Limit length
+        const status = course.isPublished ? 'Đã xuất bản' : 'Bản nháp';
+        const studentCount = course.enrolledStudents?.length || 0;
+        const category = course.category?.name || course.category || 'N/A';
+        const level = course.level || 'N/A';
+        const createdDate = course.createdAt
+          ? new Date(course.createdAt).toLocaleDateString('vi-VN')
+          : 'N/A';
+
+        csvData.push([
+          `"${title}"`,
+          `"${description}"`,
+          status,
+          studentCount,
+          category,
+          level,
+          createdDate
+        ]);
+      });
+
+      // Convert to CSV string
+      const csvContent = csvData.map(row => row.join(',')).join('\n');
+
+      // Add BOM for UTF-8 encoding (Excel compatibility)
+      const BOM = '\uFEFF';
+      const csvWithBOM = BOM + csvContent;
+
+      // Create blob and download
+      const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `courses_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toastService.success(`Đã xuất ${displayedCourses.length} khóa học thành công`);
+    } catch (error) {
+      console.error('[CourseManagement] Export error:', error);
+      toastService.error('Không thể xuất dữ liệu. Vui lòng thử lại.');
+    }
+  };
+
   const handleCreateCourse = () => {
     navigate('/courses/create');
   };
@@ -401,10 +471,7 @@ const CourseManagement = () => {
         <div className={styles.headerActions}>
           <button
             className={styles.exportBtn}
-            onClick={() => {
-              // TODO: Implement export functionality
-              toastService.info('Tính năng xuất dữ liệu đang được phát triển');
-            }}
+            onClick={handleExportCourses}
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
