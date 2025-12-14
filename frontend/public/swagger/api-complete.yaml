@@ -1,0 +1,2584 @@
+openapi: 3.0.3
+info:
+  title: E-Learning Platform API - Complete Documentation
+  description: |
+    **🎓 Complete E-Learning Platform API Documentation**
+
+    This is the unified Swagger documentation combining all API parts:
+    - Part 1: Authentication & User Management
+    - Part 2: Courses, Chapters & Lessons
+    - Part 3: Quizzes & Progress Tracking
+    - Part 4: Discussions & Comments
+    - Part 5: Live Sessions & Notifications
+
+    **📚 API Categories:**
+    - 🔐 Auth: Login, Register, Password Reset
+    - 👤 Users: Profile Management, Admin Operations
+    - 📖 Courses: Course CRUD, Enrollment
+    - 📝 Lessons: Content Management, Videos, Resources
+    - ❓ Quizzes: Assessment System
+    - 💬 Discussions: Forum & Comments
+    - 🎥 Live Sessions: Video Calls & WebRTC
+    - 🔔 Notifications: Real-time Updates
+    - 📊 Progress: Learning Analytics
+
+    **🔑 Authentication:**
+    - JWT Bearer Token required for protected routes
+    - Token expires in 24 hours
+    - Refresh token mechanism available
+
+    **👥 User Roles:**
+    - **Student**: Enroll, learn, take quizzes, join discussions
+    - **Teacher**: Create courses, manage content, host sessions
+    - **Admin**: Full system access, user management, moderation
+
+    **Base URL:** `http://localhost:3000/api`
+
+  version: 1.0.0
+  contact:
+    name: E-Learning Platform Support
+    email: support@elearning.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local Development Server
+  - url: https://api.elearning.com/api
+    description: Production Server
+
+tags:
+  - name: 🔐 Authentication
+    description: User authentication operations
+  - name: 👤 User Management
+    description: User profile and account management
+  - name: 👥 Admin - Users
+    description: Admin user management operations
+  - name: 📚 Courses
+    description: Course management and operations
+  - name: 📖 Chapters
+    description: Chapter organization within courses
+  - name: 📝 Lessons
+    description: Lesson content and media
+  - name: ❓ Quizzes
+    description: Quiz creation and management
+  - name: 📋 Questions
+    description: Quiz question management
+  - name: ✅ Quiz Attempts
+    description: Student quiz taking
+  - name: 💬 Discussions
+    description: Course discussion forums
+  - name: 💭 Comments
+    description: Comment operations
+  - name: 🎥 Live Sessions
+    description: Live video sessions
+  - name: 🔔 Notifications
+    description: User notifications
+  - name: 📊 Progress
+    description: Learning progress tracking
+  - name: 📈 Analytics
+    description: Course and student analytics
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from login/register endpoint.
+
+        **Usage:**
+        ```
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        ```
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Page number for pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    LimitParam:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+
+    CourseIdParam:
+      name: courseId
+      in: path
+      required: true
+      description: Course ID
+      schema:
+        type: string
+        example: "507f1f77bcf86cd799439011"
+
+  schemas:
+    # ============ USER SCHEMAS ============
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [student, teacher, admin]
+        avatar:
+          type: string
+          nullable: true
+        isEmailVerified:
+          type: boolean
+        isBanned:
+          type: boolean
+        phone:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    # ============ COURSE SCHEMAS ============
+    Course:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        thumbnail:
+          type: string
+        instructor:
+          type: object
+        category:
+          type: string
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        price:
+          type: number
+        isPublished:
+          type: boolean
+        enrollmentCount:
+          type: integer
+        averageRating:
+          type: number
+
+    # ============ DISCUSSION SCHEMAS ============
+    Discussion:
+      type: object
+      properties:
+        _id:
+          type: string
+        courseId:
+          type: string
+        author:
+          type: object
+        title:
+          type: string
+        content:
+          type: string
+        isPinned:
+          type: boolean
+        likeCount:
+          type: integer
+        commentCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    Comment:
+      type: object
+      properties:
+        _id:
+          type: string
+        discussionId:
+          type: string
+        author:
+          type: object
+        content:
+          type: string
+        parentId:
+          type: string
+          nullable: true
+        likeCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    # ============ SESSION SCHEMAS ============
+    LiveSession:
+      type: object
+      properties:
+        _id:
+          type: string
+        courseId:
+          type: string
+        hostId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        scheduledAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: "Duration in minutes"
+        status:
+          type: string
+          enum: [scheduled, live, ended, cancelled]
+        participants:
+          type: array
+          items:
+            type: string
+        recordingUrl:
+          type: string
+          nullable: true
+
+    # ============ NOTIFICATION SCHEMAS ============
+    Notification:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [course, quiz, discussion, session, system]
+        title:
+          type: string
+        message:
+          type: string
+        link:
+          type: string
+          nullable: true
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    # ============ COMMON SCHEMAS ============
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/register:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - role
+              properties:
+                name:
+                  type: string
+                  example: "Nguyễn Văn A"
+                email:
+                  type: string
+                  example: "student@example.com"
+                password:
+                  type: string
+                  example: "password123"
+                role:
+                  type: string
+                  enum: [student, teacher]
+                  example: "student"
+      responses:
+        "201":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error or email exists
+
+  /auth/login:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: "student@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: User logout
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Logout successful
+
+  /auth/forgot-password:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: Request password reset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  example: "user@example.com"
+      responses:
+        "200":
+          description: Reset email sent
+
+  /auth/reset-password/{token}:
+    put:
+      tags:
+        - 🔐 Authentication
+      summary: Reset password with token
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  example: "NewPassword123"
+      responses:
+        "200":
+          description: Password reset successful
+
+  /auth/verify-email:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: Verify email address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: Email verification token
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Invalid or expired token
+        "500":
+          description: Server error
+
+  /auth/resend-verification:
+    post:
+      tags:
+        - 🔐 Authentication
+      summary: Resend email verification
+      description: Resend verification email to authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Email already verified
+        "404":
+          description: User not found
+        "500":
+          description: Server error
+
+  # ==================== USER MANAGEMENT ====================
+  /users/profile:
+    get:
+      tags:
+        - 👤 User Management
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Profile retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: "#/components/schemas/User"
+
+    put:
+      tags:
+        - 👤 User Management
+      summary: Update user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                phone:
+                  type: string
+                address:
+                  type: string
+      responses:
+        "200":
+          description: Profile updated
+
+  /users/avatar:
+    post:
+      tags:
+        - 👤 User Management
+      summary: Upload avatar
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Avatar uploaded
+
+  # ==================== ADMIN USER MANAGEMENT ====================
+  /users/list:
+    get:
+      tags:
+        - 👥 Admin - Users
+      summary: Get all users (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [student, teacher, admin]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Users retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+
+  /users/{id}/role:
+    put:
+      tags:
+        - 👥 Admin - Users
+      summary: Update user role (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum: [student, teacher, admin]
+      responses:
+        "200":
+          description: Role updated
+
+  /users/{id}/ban:
+    put:
+      tags:
+        - 👥 Admin - Users
+      summary: Ban/unban user (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isBanned
+              properties:
+                isBanned:
+                  type: boolean
+      responses:
+        "200":
+          description: Ban status updated
+
+  # ==================== COURSES ====================
+  /courses:
+    get:
+      tags:
+        - 📚 Courses
+      summary: Get all courses (Public)
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, popular, rating, price-asc, price-desc]
+      responses:
+        "200":
+          description: Courses retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Course"
+                  metadata:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      totalPages:
+                        type: integer
+
+    post:
+      tags:
+        - 📚 Courses
+      summary: Create course (Teacher)
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - category
+                - level
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                category:
+                  type: string
+                level:
+                  type: string
+                price:
+                  type: number
+      responses:
+        "201":
+          description: Course created
+
+  /courses/{id}:
+    get:
+      tags:
+        - 📚 Courses
+      summary: Get course detail
+      parameters:
+        - $ref: "#/components/parameters/CourseIdParam"
+      responses:
+        "200":
+          description: Course retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  course:
+                    $ref: "#/components/schemas/Course"
+
+    put:
+      tags:
+        - 📚 Courses
+      summary: Update course (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+      responses:
+        "200":
+          description: Course updated
+
+    delete:
+      tags:
+        - 📚 Courses
+      summary: Delete course (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Course deleted
+
+  /courses/{id}/enroll:
+    post:
+      tags:
+        - 📚 Courses
+      summary: Enroll in course (Student)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Enrolled successfully
+
+  /courses/{id}/publish:
+    put:
+      tags:
+        - 📚 Courses
+      summary: Publish/unpublish course (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Publish status toggled
+
+  /courses/my-courses:
+    get:
+      tags:
+        - 📚 Courses
+      summary: Get my courses (Teacher)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: My courses retrieved
+
+  /courses/enrolled:
+    get:
+      tags:
+        - 📚 Courses
+      summary: Get enrolled courses (Student)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Enrolled courses retrieved
+
+  # ==================== CHAPTERS ====================
+  /chapters:
+    post:
+      tags:
+        - 📖 Chapters
+      summary: Create chapter (Teacher)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - courseId
+                - title
+              properties:
+                courseId:
+                  type: string
+                  description: Course ID
+                title:
+                  type: string
+                  description: Chapter title
+                order:
+                  type: integer
+                  description: Display order
+      responses:
+        "201":
+          description: Chapter created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  chapter:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      courseId:
+                        type: string
+                      title:
+                        type: string
+                      order:
+                        type: integer
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - Teacher only
+
+  /chapters/{id}:
+    put:
+      tags:
+        - 📖 Chapters
+      summary: Update chapter (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: New chapter title
+      responses:
+        "200":
+          description: Chapter updated
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+    delete:
+      tags:
+        - 📖 Chapters
+      summary: Delete chapter (Teacher)
+      description: Deletes chapter and all associated lessons and media
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chapter deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /chapters/reorder:
+    put:
+      tags:
+        - 📖 Chapters
+      summary: Reorder chapters (Teacher)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - courseId
+                - chapterIds
+              properties:
+                courseId:
+                  type: string
+                  description: Course ID
+                chapterIds:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of chapter IDs in new order
+      responses:
+        "200":
+          description: Chapters reordered
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ==================== LESSONS ====================
+  /lessons:
+    post:
+      tags:
+        - 📝 Lessons
+      summary: Create lesson (Teacher)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - chapterId
+                - title
+                - type
+              properties:
+                chapterId:
+                  type: string
+                title:
+                  type: string
+                content:
+                  type: string
+                type:
+                  type: string
+                  enum: [video, text, quiz]
+                duration:
+                  type: integer
+                  description: Duration in seconds
+                order:
+                  type: integer
+      responses:
+        "201":
+          description: Lesson created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  lesson:
+                    type: object
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /lessons/{id}:
+    get:
+      tags:
+        - 📝 Lessons
+      summary: Get lesson detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  lesson:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      title:
+                        type: string
+                      content:
+                        type: string
+                      type:
+                        type: string
+                      videoUrl:
+                        type: string
+                      duration:
+                        type: integer
+                      resources:
+                        type: array
+                        items:
+                          type: object
+        "404":
+          description: Lesson not found
+
+    put:
+      tags:
+        - 📝 Lessons
+      summary: Update lesson (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                duration:
+                  type: integer
+      responses:
+        "200":
+          description: Lesson updated
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+    delete:
+      tags:
+        - 📝 Lessons
+      summary: Delete lesson (Teacher)
+      description: Deletes lesson and all associated media
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /lessons/{id}/video:
+    post:
+      tags:
+        - 📝 Lessons
+      summary: Upload lesson video (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - video
+              properties:
+                video:
+                  type: string
+                  format: binary
+                  description: Video file
+      responses:
+        "200":
+          description: Video uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  videoUrl:
+                    type: string
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /lessons/{id}/resource:
+    post:
+      tags:
+        - 📝 Lessons
+      summary: Upload lesson resources (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Resource files (PDF, documents, etc.)
+      responses:
+        "200":
+          description: Resources uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  resources:
+                    type: array
+                    items:
+                      type: object
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /lessons/{id}/resource/{resId}:
+    delete:
+      tags:
+        - 📝 Lessons
+      summary: Delete lesson resource (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Lesson ID
+        - name: resId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Resource ID
+      responses:
+        "200":
+          description: Resource deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ==================== QUIZZES ====================
+  /quizzes:
+    post:
+      tags:
+        - ❓ Quizzes
+      summary: Create quiz (Teacher)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - courseId
+                - title
+                - passingScore
+              properties:
+                courseId:
+                  type: string
+                chapterId:
+                  type: string
+                  nullable: true
+                title:
+                  type: string
+                description:
+                  type: string
+                passingScore:
+                  type: number
+                  description: Minimum score to pass (0-100)
+                timeLimit:
+                  type: integer
+                  description: Time limit in minutes
+                maxAttempts:
+                  type: integer
+                  description: Maximum attempts allowed
+                questions:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - questionText
+                      - questionType
+                      - options
+                      - correctAnswer
+                    properties:
+                      questionText:
+                        type: string
+                      questionType:
+                        type: string
+                        enum: [multiple-choice, true-false, short-answer]
+                      options:
+                        type: array
+                        items:
+                          type: string
+                      correctAnswer:
+                        oneOf:
+                          - type: string
+                          - type: array
+                            items:
+                              type: string
+                      points:
+                        type: number
+      responses:
+        "201":
+          description: Quiz created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  quiz:
+                    type: object
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /quizzes/{id}:
+    get:
+      tags:
+        - ❓ Quizzes
+      summary: Get quiz detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quiz retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  quiz:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      passingScore:
+                        type: number
+                      timeLimit:
+                        type: integer
+                      maxAttempts:
+                        type: integer
+                      questions:
+                        type: array
+                        items:
+                          type: object
+        "404":
+          description: Quiz not found
+
+    put:
+      tags:
+        - ❓ Quizzes
+      summary: Update quiz (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                passingScore:
+                  type: number
+                timeLimit:
+                  type: integer
+                maxAttempts:
+                  type: integer
+      responses:
+        "200":
+          description: Quiz updated
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+    delete:
+      tags:
+        - ❓ Quizzes
+      summary: Delete quiz (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quiz deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /quizzes/{id}/start:
+    post:
+      tags:
+        - ✅ Quiz Attempts
+      summary: Start quiz attempt (Student)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Quiz attempt started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  attempt:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      quizId:
+                        type: string
+                      startedAt:
+                        type: string
+                        format: date-time
+                      expiresAt:
+                        type: string
+                        format: date-time
+        "400":
+          description: Max attempts reached or already in progress
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /quizzes/{id}/submit:
+    post:
+      tags:
+        - ✅ Quiz Attempts
+      summary: Submit quiz attempt (Student)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - answers
+              properties:
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - questionId
+                      - answer
+                    properties:
+                      questionId:
+                        type: string
+                      answer:
+                        oneOf:
+                          - type: string
+                          - type: array
+                            items:
+                              type: string
+      responses:
+        "200":
+          description: Quiz submitted and graded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    type: object
+                    properties:
+                      score:
+                        type: number
+                      totalScore:
+                        type: number
+                      percentage:
+                        type: number
+                      passed:
+                        type: boolean
+                      correctAnswers:
+                        type: integer
+                      totalQuestions:
+                        type: integer
+        "400":
+          description: Invalid submission
+        "401":
+          description: Unauthorized
+
+  /quizzes/{id}/attempts:
+    get:
+      tags:
+        - ✅ Quiz Attempts
+      summary: Get quiz attempts (Student)
+      description: Get all attempts for a quiz by the current student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attempts retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  attempts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        score:
+                          type: number
+                        percentage:
+                          type: number
+                        passed:
+                          type: boolean
+                        startedAt:
+                          type: string
+                          format: date-time
+                        completedAt:
+                          type: string
+                          format: date-time
+        "401":
+          description: Unauthorized
+
+  /quizzes/{id}/results/{attemptId}:
+    get:
+      tags:
+        - ✅ Quiz Attempts
+      summary: Get quiz result detail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Quiz ID
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Attempt ID
+      responses:
+        "200":
+          description: Result retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      score:
+                        type: number
+                      percentage:
+                        type: number
+                      passed:
+                        type: boolean
+                      answers:
+                        type: array
+                        items:
+                          type: object
+        "401":
+          description: Unauthorized
+        "404":
+          description: Result not found
+
+  # ==================== QUESTIONS ====================
+  /questions/quiz/{quizId}:
+    post:
+      tags:
+        - 📋 Questions
+      summary: Create question for quiz (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - questionText
+                - questionType
+                - options
+                - correctAnswer
+              properties:
+                questionText:
+                  type: string
+                questionType:
+                  type: string
+                  enum: [multiple-choice, true-false, short-answer]
+                options:
+                  type: array
+                  items:
+                    type: string
+                correctAnswer:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                points:
+                  type: number
+                  default: 1
+      responses:
+        "201":
+          description: Question created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  question:
+                    type: object
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /questions/{id}:
+    put:
+      tags:
+        - 📋 Questions
+      summary: Update question (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                questionText:
+                  type: string
+                questionType:
+                  type: string
+                options:
+                  type: array
+                  items:
+                    type: string
+                correctAnswer:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                points:
+                  type: number
+      responses:
+        "200":
+          description: Question updated
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+    delete:
+      tags:
+        - 📋 Questions
+      summary: Delete question (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Question deleted
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  # ==================== PROGRESS ====================
+  /progress/lesson/{lessonId}:
+    put:
+      tags:
+        - 📊 Progress
+      summary: Update lesson progress (Student)
+      description: Update watched duration for a lesson
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - watchedDuration
+              properties:
+                watchedDuration:
+                  type: integer
+                  description: Duration watched in seconds
+      responses:
+        "200":
+          description: Progress updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  progress:
+                    type: object
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /progress/complete/{lessonId}:
+    post:
+      tags:
+        - 📊 Progress
+      summary: Mark lesson as completed (Student)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson marked as completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  progress:
+                    type: object
+                    properties:
+                      lessonId:
+                        type: string
+                      isCompleted:
+                        type: boolean
+                      completedAt:
+                        type: string
+                        format: date-time
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /progress/course/{courseId}:
+    get:
+      tags:
+        - 📊 Progress
+      summary: Get course progress (Student)
+      description: Get course progress for current student
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Course progress retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  progress:
+                    type: object
+                    properties:
+                      courseId:
+                        type: string
+                      completedLessons:
+                        type: integer
+                      totalLessons:
+                        type: integer
+                      percentage:
+                        type: number
+                      lessons:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            lessonId:
+                              type: string
+                            isCompleted:
+                              type: boolean
+                            watchedDuration:
+                              type: integer
+        "401":
+          description: Unauthorized
+
+  # ==================== ANALYTICS ====================
+  /analytics/course/{courseId}:
+    get:
+      tags:
+        - 📈 Analytics
+      summary: Get course analytics (Teacher/Admin)
+      description: Get analytics data for a course with trends and growth
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Course analytics retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  analytics:
+                    type: object
+                    properties:
+                      totalStudents:
+                        type: integer
+                      completionRate:
+                        type: number
+                      averageScore:
+                        type: number
+                      totalRevenue:
+                        type: number
+                      engagementRate:
+                        type: number
+                      trends:
+                        type: object
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /analytics/student/{userId}:
+    get:
+      tags:
+        - 📈 Analytics
+      summary: Get student analytics
+      description: Get student analytics and learning statistics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Student analytics retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  analytics:
+                    type: object
+                    properties:
+                      enrolledCourses:
+                        type: integer
+                      completedCourses:
+                        type: integer
+                      totalLearningTime:
+                        type: integer
+                      averageScore:
+                        type: number
+                      certificates:
+                        type: integer
+        "401":
+          description: Unauthorized
+
+  /analytics/dashboard:
+    get:
+      tags:
+        - 📈 Analytics
+      summary: Get dashboard analytics (Teacher/Admin)
+      description: Get dashboard analytics summary
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Dashboard analytics retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  analytics:
+                    type: object
+                    properties:
+                      totalCourses:
+                        type: integer
+                      totalStudents:
+                        type: integer
+                      totalRevenue:
+                        type: number
+                      monthlyGrowth:
+                        type: number
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /analytics/export:
+    get:
+      tags:
+        - 📈 Analytics
+      summary: Export course analytics to CSV (Teacher/Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: CSV file downloaded
+          content:
+            text/csv:
+              schema:
+                type: string
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+
+  /analytics/student-report/{userId}:
+    get:
+      tags:
+        - 📈 Analytics
+      summary: Generate comprehensive student report
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Student report generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  report:
+                    type: object
+        "401":
+          description: Unauthorized
+
+  /analytics/collect:
+    post:
+      tags:
+        - 📈 Analytics
+      summary: Manually trigger analytics collection (Admin)
+      description: Manually trigger analytics collection for testing or manual runs
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Analytics collection triggered
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - Admin only
+
+  # ==================== DISCUSSIONS ====================
+  /discussions:
+    post:
+      tags:
+        - 💬 Discussions
+      summary: Create discussion
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - courseId
+                - title
+                - content
+              properties:
+                courseId:
+                  type: string
+                title:
+                  type: string
+                content:
+                  type: string
+      responses:
+        "201":
+          description: Discussion created
+
+  /discussions/course/{courseId}:
+    get:
+      tags:
+        - 💬 Discussions
+      summary: Get course discussions
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+      responses:
+        "200":
+          description: Discussions retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  discussions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Discussion"
+
+  /discussions/{id}:
+    get:
+      tags:
+        - 💬 Discussions
+      summary: Get discussion detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Discussion retrieved
+
+    put:
+      tags:
+        - 💬 Discussions
+      summary: Update discussion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+      responses:
+        "200":
+          description: Discussion updated
+
+    delete:
+      tags:
+        - 💬 Discussions
+      summary: Delete discussion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Discussion deleted
+
+  /discussions/{id}/like:
+    put:
+      tags:
+        - 💬 Discussions
+      summary: Like/unlike discussion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Like toggled
+
+  /discussions/{id}/comment:
+    post:
+      tags:
+        - 💭 Comments
+      summary: Comment on discussion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                parentId:
+                  type: string
+                  nullable: true
+      responses:
+        "201":
+          description: Comment created
+
+  /comments/{id}:
+    put:
+      tags:
+        - 💭 Comments
+      summary: Update comment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+      responses:
+        "200":
+          description: Comment updated
+
+    delete:
+      tags:
+        - 💭 Comments
+      summary: Delete comment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Comment deleted
+
+  /comments/{id}/like:
+    put:
+      tags:
+        - 💭 Comments
+      summary: Like/unlike comment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Like toggled
+
+  # ==================== LIVE SESSIONS ====================
+  /sessions:
+    post:
+      tags:
+        - 🎥 Live Sessions
+      summary: Create live session (Teacher)
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - courseId
+                - title
+                - scheduledAt
+                - duration
+              properties:
+                courseId:
+                  type: string
+                title:
+                  type: string
+                description:
+                  type: string
+                scheduledAt:
+                  type: string
+                  format: date-time
+                duration:
+                  type: integer
+      responses:
+        "201":
+          description: Session created
+
+  /sessions/my-sessions:
+    get:
+      tags:
+        - 🎥 Live Sessions
+      summary: Get my sessions (Teacher)
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Sessions retrieved
+
+  /sessions/{id}:
+    get:
+      tags:
+        - 🎥 Live Sessions
+      summary: Get session detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session retrieved
+
+    put:
+      tags:
+        - 🎥 Live Sessions
+      summary: Update session (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                scheduledAt:
+                  type: string
+                  format: date-time
+      responses:
+        "200":
+          description: Session updated
+
+    delete:
+      tags:
+        - 🎥 Live Sessions
+      summary: Delete session (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session deleted
+
+  /sessions/{id}/start:
+    put:
+      tags:
+        - 🎥 Live Sessions
+      summary: Start session (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session started
+
+  /sessions/{id}/end:
+    put:
+      tags:
+        - 🎥 Live Sessions
+      summary: End session (Teacher)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session ended
+
+  /sessions/{id}/join:
+    post:
+      tags:
+        - 🎥 Live Sessions
+      summary: Join session
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Joined successfully
+
+  # ==================== NOTIFICATIONS ====================
+  /notifications:
+    get:
+      tags:
+        - 🔔 Notifications
+      summary: Get notifications
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/LimitParam"
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [course, quiz, discussion, session, system]
+        - name: isRead
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Notifications retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  notifications:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Notification"
+
+  /notifications/unread-count:
+    get:
+      tags:
+        - 🔔 Notifications
+      summary: Get unread count
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Count retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+
+  /notifications/{id}/read:
+    put:
+      tags:
+        - 🔔 Notifications
+      summary: Mark as read
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Marked as read
+
+  /notifications/read-all:
+    put:
+      tags:
+        - 🔔 Notifications
+      summary: Mark all as read
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: All marked as read
+
+  /notifications/{id}:
+    delete:
+      tags:
+        - 🔔 Notifications
+      summary: Delete notification
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification deleted

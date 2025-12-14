@@ -1,0 +1,996 @@
+openapi: 3.0.3
+info:
+  title: E-Learning Platform API - Part 3 (Quiz & Progress)
+  description: |
+    **Part 3: Quiz System & Learning Progress**
+
+    📝 **Coverage:**
+    - Quiz CRUD operations
+    - Question management
+    - Quiz attempts & submissions
+    - Auto-save answers
+    - Timer management
+    - Result calculation
+    - Learning progress tracking
+    - Completion certificates
+
+    🎯 **Features:**
+    - Multiple question types (MCQ, True/False, Essay)
+    - Auto-save during quiz
+    - Time limit enforcement
+    - Instant feedback
+    - Progress analytics
+
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+
+tags:
+  - name: Quizzes
+    description: Quiz management operations
+  - name: Questions
+    description: Question management within quizzes
+  - name: Quiz Attempts
+    description: Student quiz taking and submissions
+  - name: Progress
+    description: Learning progress tracking
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ============ QUIZ SCHEMAS ============
+    Quiz:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        title:
+          type: string
+          example: "React Hooks Quiz"
+        courseId:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+        lessonId:
+          type: string
+          nullable: true
+          example: "507f1f77bcf86cd799439013"
+        description:
+          type: string
+          example: "Test your knowledge of React Hooks"
+        duration:
+          type: integer
+          example: 1800
+          description: "Time limit in seconds (0 = unlimited)"
+        passingScore:
+          type: integer
+          example: 70
+          description: "Minimum percentage to pass (0-100)"
+        totalPoints:
+          type: integer
+          example: 100
+        isPublished:
+          type: boolean
+          example: true
+        allowRetake:
+          type: boolean
+          example: true
+        showCorrectAnswers:
+          type: boolean
+          example: true
+          description: "Show correct answers after submission"
+        randomizeQuestions:
+          type: boolean
+          example: false
+        questionCount:
+          type: integer
+          example: 10
+        createdBy:
+          type: object
+          properties:
+            _id:
+              type: string
+            name:
+              type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    QuizCreate:
+      type: object
+      required:
+        - title
+        - courseId
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+          example: "React Hooks Quiz"
+        courseId:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        lessonId:
+          type: string
+          nullable: true
+          example: "507f1f77bcf86cd799439012"
+        description:
+          type: string
+          example: "Test your understanding of React Hooks"
+        duration:
+          type: integer
+          minimum: 0
+          default: 0
+          example: 1800
+        passingScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 70
+          example: 70
+        allowRetake:
+          type: boolean
+          default: true
+        showCorrectAnswers:
+          type: boolean
+          default: true
+        randomizeQuestions:
+          type: boolean
+          default: false
+
+    # ============ QUESTION SCHEMAS ============
+    Question:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        quizId:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+        type:
+          type: string
+          enum: [multiple-choice, true-false, essay, fill-blank]
+          example: "multiple-choice"
+        question:
+          type: string
+          example: "What is the purpose of useEffect hook?"
+        options:
+          type: array
+          items:
+            type: string
+          example:
+            [
+              "Manage side effects",
+              "Handle state",
+              "Create refs",
+              "Memoize values",
+            ]
+          description: "Options for multiple-choice questions"
+        correctAnswer:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          example: "Manage side effects"
+        points:
+          type: integer
+          example: 10
+        explanation:
+          type: string
+          nullable: true
+          example: "useEffect is used for side effects like API calls, subscriptions, etc."
+        order:
+          type: integer
+          example: 1
+
+    QuestionCreate:
+      type: object
+      required:
+        - type
+        - question
+        - correctAnswer
+      properties:
+        type:
+          type: string
+          enum: [multiple-choice, true-false, essay, fill-blank]
+          example: "multiple-choice"
+        question:
+          type: string
+          minLength: 5
+          example: "What is JSX?"
+        options:
+          type: array
+          items:
+            type: string
+          description: "Required for multiple-choice"
+        correctAnswer:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          example: "JavaScript XML"
+        points:
+          type: integer
+          default: 10
+          example: 10
+        explanation:
+          type: string
+          nullable: true
+          example: "JSX is a syntax extension for JavaScript"
+
+    # ============ QUIZ ATTEMPT SCHEMAS ============
+    QuizAttempt:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        quizId:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+        studentId:
+          type: string
+          example: "507f1f77bcf86cd799439013"
+        answers:
+          type: array
+          items:
+            type: object
+            properties:
+              questionId:
+                type: string
+              answer:
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
+              isCorrect:
+                type: boolean
+              pointsEarned:
+                type: number
+        score:
+          type: number
+          example: 85.5
+          description: "Percentage score"
+        totalPoints:
+          type: integer
+          example: 85
+        maxPoints:
+          type: integer
+          example: 100
+        isPassed:
+          type: boolean
+          example: true
+        timeSpent:
+          type: integer
+          example: 1200
+          description: "Time spent in seconds"
+        startedAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [in-progress, submitted, graded]
+          example: "graded"
+
+    QuizSubmission:
+      type: object
+      required:
+        - attemptId
+        - answers
+      properties:
+        attemptId:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        answers:
+          type: array
+          items:
+            type: object
+            required:
+              - questionId
+              - answer
+            properties:
+              questionId:
+                type: string
+              answer:
+                oneOf:
+                  - type: string
+                  - type: array
+                    items:
+                      type: string
+
+    # ============ PROGRESS SCHEMAS ============
+    LessonProgress:
+      type: object
+      properties:
+        lessonId:
+          type: string
+        completed:
+          type: boolean
+        watchTime:
+          type: integer
+          description: "Time watched in seconds"
+        lastWatchedPosition:
+          type: integer
+          description: "Last video position in seconds"
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CourseProgress:
+      type: object
+      properties:
+        courseId:
+          type: string
+        studentId:
+          type: string
+        completedLessons:
+          type: array
+          items:
+            $ref: "#/components/schemas/LessonProgress"
+        completedQuizzes:
+          type: array
+          items:
+            type: string
+            description: "Quiz IDs"
+        overallProgress:
+          type: number
+          example: 75.5
+          description: "Overall completion percentage"
+        lastAccessedAt:
+          type: string
+          format: date-time
+        enrolledAt:
+          type: string
+          format: date-time
+
+paths:
+  # ==================== QUIZZES ====================
+  /quizzes:
+    post:
+      tags:
+        - Quizzes
+      summary: Create new quiz (Teacher only)
+      description: Create a new quiz for a course or lesson
+      operationId: createQuiz
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizCreate"
+      responses:
+        "201":
+          description: Quiz created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  quiz:
+                    $ref: "#/components/schemas/Quiz"
+        "403":
+          description: Not authorized (Teacher only)
+
+  /quizzes/{id}:
+    get:
+      tags:
+        - Quizzes
+      summary: Get quiz detail
+      description: Get detailed quiz information including questions
+      operationId: getQuizDetail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quiz retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  quiz:
+                    $ref: "#/components/schemas/Quiz"
+                  questions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Question"
+        "404":
+          description: Quiz not found
+
+    put:
+      tags:
+        - Quizzes
+      summary: Update quiz (Teacher only)
+      description: Update quiz information
+      operationId: updateQuiz
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizCreate"
+      responses:
+        "200":
+          description: Quiz updated successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Quiz not found
+
+    delete:
+      tags:
+        - Quizzes
+      summary: Delete quiz (Teacher only)
+      description: Delete quiz and all associated attempts
+      operationId: deleteQuiz
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quiz deleted successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Quiz not found
+
+  # ==================== QUESTIONS ====================
+  /questions/quiz/{quizId}:
+    post:
+      tags:
+        - Questions
+      summary: Add question to quiz (Teacher only)
+      description: Create a new question in quiz
+      operationId: createQuestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: quizId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionCreate"
+      responses:
+        "201":
+          description: Question created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  question:
+                    $ref: "#/components/schemas/Question"
+        "403":
+          description: Not authorized
+
+  /questions/{id}:
+    put:
+      tags:
+        - Questions
+      summary: Update question (Teacher only)
+      description: Update question content, options, or answer
+      operationId: updateQuestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionCreate"
+      responses:
+        "200":
+          description: Question updated successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Question not found
+
+    delete:
+      tags:
+        - Questions
+      summary: Delete question (Teacher only)
+      description: Remove question from quiz
+      operationId: deleteQuestion
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Question deleted successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Question not found
+
+  # ==================== QUIZ ATTEMPTS ====================
+  /quizzes/{id}/start:
+    post:
+      tags:
+        - Quiz Attempts
+      summary: Start quiz attempt (Student only)
+      description: |
+        Start a new quiz attempt. Creates attempt record and returns questions.
+
+        **Process:**
+        1. Check if quiz is published
+        2. Check if student is enrolled in course
+        3. Check retake policy
+        4. Create attempt record
+        5. Start timer
+        6. Return randomized questions (if enabled)
+      operationId: startQuiz
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Quiz ID
+      responses:
+        "200":
+          description: Quiz attempt started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  attemptId:
+                    type: string
+                  quiz:
+                    $ref: "#/components/schemas/Quiz"
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        question:
+                          type: string
+                        type:
+                          type: string
+                        options:
+                          type: array
+                          items:
+                            type: string
+                        points:
+                          type: integer
+                      description: "Questions without correct answers"
+                  startTime:
+                    type: string
+                    format: date-time
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+        "400":
+          description: Cannot start quiz (not enrolled, retake not allowed, etc.)
+        "403":
+          description: Not authorized (Student only)
+
+  /quizzes/{id}/attempts/{attemptId}/answers:
+    put:
+      tags:
+        - Quiz Attempts
+      summary: Save quiz answers (auto-save)
+      description: |
+        Save student answers during quiz attempt (auto-save feature).
+
+        **Features:**
+        - Auto-save every 30 seconds
+        - Save on each answer change
+        - Validate time limit
+        - No partial submission
+      operationId: saveQuizAnswers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answers:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      questionId:
+                        type: string
+                      answer:
+                        oneOf:
+                          - type: string
+                          - type: array
+                            items:
+                              type: string
+      responses:
+        "200":
+          description: Answers saved successfully
+        "400":
+          description: Time expired or invalid attempt
+        "403":
+          description: Not authorized
+
+    get:
+      tags:
+        - Quiz Attempts
+      summary: Get saved answers
+      description: Retrieve previously saved answers for resume
+      operationId: getQuizAnswers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Answers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  answers:
+                    type: array
+                    items:
+                      type: object
+                  timeRemaining:
+                    type: integer
+                    description: "Seconds remaining"
+
+  /quizzes/{id}/submit:
+    post:
+      tags:
+        - Quiz Attempts
+      summary: Submit quiz for grading (Student only)
+      description: |
+        Submit quiz attempt for final grading.
+
+        **Process:**
+        1. Validate all required answers
+        2. Check time limit
+        3. Calculate score
+        4. Mark attempt as submitted
+        5. Update progress
+        6. Send notification
+
+        **Auto-grading:**
+        - MCQ, True/False: Instant grading
+        - Essay, Fill-blank: Manual grading required
+      operationId: submitQuiz
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizSubmission"
+      responses:
+        "200":
+          description: Quiz submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  result:
+                    $ref: "#/components/schemas/QuizAttempt"
+                  passed:
+                    type: boolean
+        "400":
+          description: Invalid submission or time expired
+        "403":
+          description: Not authorized
+
+  /quizzes/{id}/attempts:
+    get:
+      tags:
+        - Quiz Attempts
+      summary: Get quiz attempts (Student only)
+      description: Get all attempts for this quiz by current student
+      operationId: getQuizAttempts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attempts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  attempts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/QuizAttempt"
+
+  /quizzes/{id}/results/{attemptId}:
+    get:
+      tags:
+        - Quiz Attempts
+      summary: Get quiz result detail
+      description: |
+        Get detailed result with questions, answers, and feedback.
+
+        **Includes:**
+        - Score and pass/fail status
+        - Time spent
+        - Question-by-question breakdown
+        - Correct answers (if enabled)
+        - Explanations
+        - Certificate (if passed)
+      operationId: getQuizResultDetail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Result retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  attempt:
+                    $ref: "#/components/schemas/QuizAttempt"
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        question:
+                          $ref: "#/components/schemas/Question"
+                        studentAnswer:
+                          oneOf:
+                            - type: string
+                            - type: array
+                              items:
+                                type: string
+                        isCorrect:
+                          type: boolean
+                        pointsEarned:
+                          type: number
+        "403":
+          description: Not authorized to view this result
+
+  /quizzes/{id}/certificates/{attemptId}:
+    get:
+      tags:
+        - Quiz Attempts
+      summary: Download quiz certificate
+      description: Generate and download certificate for passed attempt
+      operationId: downloadCertificate
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: attemptId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [pdf, png]
+            default: pdf
+      responses:
+        "200":
+          description: Certificate generated
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Quiz not passed or certificate not available
+
+  # ==================== PROGRESS ====================
+  /progress/courses/{courseId}:
+    get:
+      tags:
+        - Progress
+      summary: Get course progress
+      description: Get student's progress for a specific course
+      operationId: getCourseProgress
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Progress retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  progress:
+                    $ref: "#/components/schemas/CourseProgress"
+        "403":
+          description: Not authorized or not enrolled
+
+  /progress/lessons/{lessonId}/complete:
+    put:
+      tags:
+        - Progress
+      summary: Mark lesson as complete
+      description: Update lesson completion status
+      operationId: completLesson
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson marked as complete
+        "403":
+          description: Not enrolled in course
+
+  /progress/lessons/{lessonId}/watch-time:
+    put:
+      tags:
+        - Progress
+      summary: Update video watch time
+      description: Track video watching progress
+      operationId: updateWatchTime
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - watchTime
+              properties:
+                watchTime:
+                  type: integer
+                  description: "Watched duration in seconds"
+                  example: 300
+                lastPosition:
+                  type: integer
+                  description: "Last video position in seconds"
+                  example: 450
+      responses:
+        "200":
+          description: Watch time updated
+        "403":
+          description: Not enrolled in course

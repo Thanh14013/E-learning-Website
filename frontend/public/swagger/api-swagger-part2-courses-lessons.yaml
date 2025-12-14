@@ -1,0 +1,1366 @@
+openapi: 3.0.3
+info:
+  title: E-Learning Platform API - Part 2 (Courses, Chapters & Lessons)
+  description: |
+    **Part 2: Course Management**
+
+    📚 **Coverage:**
+    - Course CRUD operations
+    - Course enrollment & unenrollment
+    - Course search & filtering
+    - Chapter management
+    - Lesson management
+    - Video & resource uploads
+    - Course reviews
+
+    🎯 **Features:**
+    - Multi-chapter course structure
+    - Video streaming support
+    - File upload for resources
+    - Drag-drop reordering
+    - Publish/unpublish courses
+    - Student enrollment tracking
+
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api
+    description: Local Development Server
+
+tags:
+  - name: Courses
+    description: Course CRUD and management
+  - name: Course Enrollment
+    description: Student enrollment operations
+  - name: Chapters
+    description: Chapter management within courses
+  - name: Lessons
+    description: Lesson management and content uploads
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # ============ COURSE SCHEMAS ============
+    Course:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        title:
+          type: string
+          example: "Lập trình Web với React"
+        description:
+          type: string
+          example: "Khóa học toàn diện về React từ cơ bản đến nâng cao"
+        thumbnail:
+          type: string
+          nullable: true
+          example: "https://cloudinary.com/course-thumbnail.jpg"
+        instructor:
+          type: object
+          properties:
+            _id:
+              type: string
+            name:
+              type: string
+              example: "Giáo viên Nguyễn"
+            email:
+              type: string
+            avatar:
+              type: string
+        category:
+          type: string
+          enum: [programming, design, business, marketing, data-science, other]
+          example: "programming"
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          example: "intermediate"
+        price:
+          type: number
+          example: 499000
+        discount:
+          type: number
+          example: 20
+          description: "Discount percentage (0-100)"
+        language:
+          type: string
+          example: "vi"
+        duration:
+          type: number
+          example: 1200
+          description: "Total duration in minutes"
+        isPublished:
+          type: boolean
+          example: true
+        enrollmentCount:
+          type: integer
+          example: 1245
+        averageRating:
+          type: number
+          example: 4.5
+        reviewCount:
+          type: integer
+          example: 89
+        chapters:
+          type: array
+          items:
+            $ref: "#/components/schemas/Chapter"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CourseCreate:
+      type: object
+      required:
+        - title
+        - description
+        - category
+        - level
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 200
+          example: "Lập trình Web với React"
+        description:
+          type: string
+          minLength: 20
+          example: "Khóa học React từ cơ bản đến nâng cao..."
+        category:
+          type: string
+          enum: [programming, design, business, marketing, data-science, other]
+          example: "programming"
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          example: "beginner"
+        price:
+          type: number
+          minimum: 0
+          example: 499000
+        discount:
+          type: number
+          minimum: 0
+          maximum: 100
+          example: 0
+        language:
+          type: string
+          default: "vi"
+          example: "vi"
+
+    CourseUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        level:
+          type: string
+        price:
+          type: number
+        discount:
+          type: number
+        language:
+          type: string
+
+    CourseReview:
+      type: object
+      required:
+        - rating
+        - content
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        content:
+          type: string
+          minLength: 10
+          example: "Khóa học rất hay và dễ hiểu!"
+
+    # ============ CHAPTER SCHEMAS ============
+    Chapter:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        title:
+          type: string
+          example: "Chương 1: Giới thiệu React"
+        courseId:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+        order:
+          type: integer
+          example: 1
+        lessons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lesson"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChapterCreate:
+      type: object
+      required:
+        - title
+        - courseId
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+          example: "Chương 1: Giới thiệu"
+        courseId:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        order:
+          type: integer
+          example: 1
+
+    ChapterUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Chương 1: Giới thiệu (Updated)"
+
+    ChapterReorder:
+      type: object
+      required:
+        - chapters
+      properties:
+        chapters:
+          type: array
+          description: "Array of chapter IDs in desired order"
+          items:
+            type: string
+          example: ["chapterId1", "chapterId2", "chapterId3"]
+
+    # ============ LESSON SCHEMAS ============
+    Lesson:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        title:
+          type: string
+          example: "Bài 1: JSX và Components"
+        chapterId:
+          type: string
+          example: "507f1f77bcf86cd799439012"
+        order:
+          type: integer
+          example: 1
+        videoUrl:
+          type: string
+          nullable: true
+          example: "https://cloudinary.com/video.mp4"
+        videoDuration:
+          type: integer
+          nullable: true
+          example: 600
+          description: "Duration in seconds"
+        content:
+          type: string
+          nullable: true
+          example: "# Nội dung bài học\\n\\nJSX là..."
+        isFree:
+          type: boolean
+          example: false
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              _id:
+                type: string
+              name:
+                type: string
+                example: "slides.pdf"
+              url:
+                type: string
+                example: "https://cloudinary.com/resource.pdf"
+              size:
+                type: integer
+                example: 1024000
+              type:
+                type: string
+                example: "application/pdf"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LessonCreate:
+      type: object
+      required:
+        - title
+        - chapterId
+      properties:
+        title:
+          type: string
+          minLength: 3
+          maxLength: 200
+          example: "Bài 1: JSX và Components"
+        chapterId:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        content:
+          type: string
+          example: "# Nội dung bài học"
+        isFree:
+          type: boolean
+          default: false
+          example: false
+        order:
+          type: integer
+          example: 1
+
+    LessonUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        isFree:
+          type: boolean
+        order:
+          type: integer
+        chapterId:
+          type: string
+          description: "Move lesson to different chapter"
+
+paths:
+  # ==================== COURSES ====================
+  /courses:
+    get:
+      tags:
+        - Courses
+      summary: Get all courses (public)
+      description: |
+        Retrieve paginated list of courses with filters and search.
+
+        **Filters:**
+        - Category: programming, design, business, etc.
+        - Level: beginner, intermediate, advanced
+        - Price range: min-max
+        - Rating: minimum rating
+
+        **Sorting:**
+        - newest, popular, rating, price-asc, price-desc
+
+        **Search:**
+        - By title or description
+      operationId: getAllCourses
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 12
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: "Filter by category"
+        - name: level
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+        - name: rating
+          in: query
+          schema:
+            type: number
+          description: "Minimum rating (1-5)"
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: "Search by title or description"
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [newest, popular, rating, price-asc, price-desc]
+            default: newest
+      responses:
+        "200":
+          description: Courses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  courses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Course"
+                  pagination:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                      limit:
+                        type: integer
+                      total:
+                        type: integer
+                      totalPages:
+                        type: integer
+
+    post:
+      tags:
+        - Courses
+      summary: Create new course (Teacher/Admin only)
+      description: |
+        Create a new course. Only teachers and admins can create courses.
+
+        **Steps:**
+        1. Create course basic info
+        2. Upload thumbnail
+        3. Add chapters
+        4. Add lessons to chapters
+        5. Upload videos and resources
+        6. Publish course
+      operationId: createCourse
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourseCreate"
+      responses:
+        "201":
+          description: Course created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  course:
+                    $ref: "#/components/schemas/Course"
+        "400":
+          description: Validation error
+        "403":
+          description: Not authorized (Teacher/Admin only)
+
+  /courses/my-courses:
+    get:
+      tags:
+        - Courses
+      summary: Get my courses (Teacher only)
+      description: Get all courses created by authenticated teacher
+      operationId: getMyCourses
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Courses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  courses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Course"
+
+  /courses/enrolled:
+    get:
+      tags:
+        - Course Enrollment
+      summary: Get enrolled courses (Student only)
+      description: Get all courses the authenticated student is enrolled in
+      operationId: getEnrolledCourses
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Enrolled courses retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  courses:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Course"
+
+  /courses/{id}:
+    get:
+      tags:
+        - Courses
+      summary: Get course detail
+      description: |
+        Get detailed course information including chapters and lessons.
+
+        **Authentication:**
+        - Optional - unauthenticated users can view public info
+        - Authenticated students see enrollment status
+        - Course creator sees full edit permissions
+      operationId: getCourseDetail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Course ID
+      responses:
+        "200":
+          description: Course detail retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  course:
+                    $ref: "#/components/schemas/Course"
+                  isEnrolled:
+                    type: boolean
+                    description: "Whether current user is enrolled (if authenticated)"
+        "404":
+          description: Course not found
+
+    put:
+      tags:
+        - Courses
+      summary: Update course (Teacher/Admin only)
+      description: Update course information. Only course creator or admin can update.
+      operationId: updateCourse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourseUpdate"
+      responses:
+        "200":
+          description: Course updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  course:
+                    $ref: "#/components/schemas/Course"
+        "403":
+          description: Not authorized
+        "404":
+          description: Course not found
+
+    delete:
+      tags:
+        - Courses
+      summary: Delete course (Teacher/Admin only)
+      description: |
+        Permanently delete course and all associated data:
+        - All chapters
+        - All lessons
+        - All videos and resources
+        - All student progress
+        - All reviews
+      operationId: deleteCourse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Course deleted successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Course not found
+
+  /courses/{id}/thumbnail:
+    post:
+      tags:
+        - Courses
+      summary: Upload course thumbnail (Teacher/Admin only)
+      description: |
+        Upload thumbnail image for course.
+
+        **Constraints:**
+        - Max file size: 10MB
+        - Formats: JPG, PNG
+        - Recommended: 1280x720px (16:9 ratio)
+      operationId: uploadCourseThumbnail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - thumbnail
+              properties:
+                thumbnail:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Thumbnail uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  thumbnailUrl:
+                    type: string
+        "400":
+          description: Invalid file or size exceeded
+
+  /courses/{id}/publish:
+    put:
+      tags:
+        - Courses
+      summary: Publish/Unpublish course (Teacher/Admin only)
+      description: Toggle course published status
+      operationId: togglePublishCourse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Publish status toggled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  isPublished:
+                    type: boolean
+
+  /courses/{id}/enroll:
+    post:
+      tags:
+        - Course Enrollment
+      summary: Enroll in course (Student only)
+      description: Enroll authenticated student in course
+      operationId: enrollCourse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Enrolled successfully
+        "400":
+          description: Already enrolled or course not published
+        "403":
+          description: Not authorized (Student only)
+
+  /courses/{id}/unenroll:
+    delete:
+      tags:
+        - Course Enrollment
+      summary: Unenroll from course (Student only)
+      description: Remove student enrollment from course
+      operationId: unenrollCourse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unenrolled successfully
+        "400":
+          description: Not enrolled in this course
+
+  /courses/{id}/students:
+    get:
+      tags:
+        - Courses
+      summary: Get enrolled students (Teacher/Admin only)
+      description: Get list of students enrolled in course
+      operationId: getCourseStudents
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Students retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  students:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
+                        email:
+                          type: string
+                        enrolledAt:
+                          type: string
+                          format: date-time
+                        progress:
+                          type: number
+                          description: "Completion percentage"
+
+  /courses/{id}/review:
+    post:
+      tags:
+        - Courses
+      summary: Review course (Student only)
+      description: Add or update course review
+      operationId: reviewCourse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CourseReview"
+      responses:
+        "200":
+          description: Review submitted successfully
+        "400":
+          description: Not enrolled or validation error
+        "403":
+          description: Not authorized (Student only)
+
+  /courses/{id}/content:
+    get:
+      tags:
+        - Courses
+      summary: Get course content structure
+      description: Get complete course structure with all chapters and lessons
+      operationId: getCourseContent
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Course content retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  chapters:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Chapter"
+
+  # ==================== CHAPTERS ====================
+  /chapters:
+    post:
+      tags:
+        - Chapters
+      summary: Create new chapter (Teacher/Admin only)
+      description: Add a new chapter to a course
+      operationId: createChapter
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChapterCreate"
+      responses:
+        "201":
+          description: Chapter created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  chapter:
+                    $ref: "#/components/schemas/Chapter"
+        "403":
+          description: Not authorized
+
+  /chapters/{id}:
+    put:
+      tags:
+        - Chapters
+      summary: Update chapter (Teacher/Admin only)
+      description: Update chapter title
+      operationId: updateChapter
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChapterUpdate"
+      responses:
+        "200":
+          description: Chapter updated successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Chapter not found
+
+    delete:
+      tags:
+        - Chapters
+      summary: Delete chapter (Teacher/Admin only)
+      description: |
+        Delete chapter and all associated:
+        - All lessons in chapter
+        - All videos and resources
+      operationId: deleteChapter
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chapter deleted successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Chapter not found
+
+  /chapters/reorder:
+    put:
+      tags:
+        - Chapters
+      summary: Reorder chapters (Teacher/Admin only)
+      description: Update order of chapters in a course
+      operationId: reorderChapters
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChapterReorder"
+      responses:
+        "200":
+          description: Chapters reordered successfully
+        "403":
+          description: Not authorized
+
+  # ==================== LESSONS ====================
+  /lessons:
+    post:
+      tags:
+        - Lessons
+      summary: Create new lesson (Teacher/Admin only)
+      description: Add a new lesson to a chapter
+      operationId: createLesson
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonCreate"
+      responses:
+        "201":
+          description: Lesson created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  lesson:
+                    $ref: "#/components/schemas/Lesson"
+        "403":
+          description: Not authorized
+
+  /lessons/{id}:
+    get:
+      tags:
+        - Lessons
+      summary: Get lesson detail
+      description: Get detailed lesson information including video and resources
+      operationId: getLessonDetail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  lesson:
+                    $ref: "#/components/schemas/Lesson"
+        "404":
+          description: Lesson not found
+
+    put:
+      tags:
+        - Lessons
+      summary: Update lesson (Teacher/Admin only)
+      description: Update lesson information or move to different chapter
+      operationId: updateLesson
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LessonUpdate"
+      responses:
+        "200":
+          description: Lesson updated successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Lesson not found
+
+    delete:
+      tags:
+        - Lessons
+      summary: Delete lesson (Teacher/Admin only)
+      description: Delete lesson and all associated media (video, resources)
+      operationId: deleteLesson
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson deleted successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Lesson not found
+
+  /lessons/{id}/video:
+    post:
+      tags:
+        - Lessons
+      summary: Upload lesson video (Teacher/Admin only)
+      description: |
+        Upload video file for lesson.
+
+        **Constraints:**
+        - Max file size: 500MB
+        - Formats: MP4, MOV, AVI
+        - Video transcoding automatic
+        - HLS streaming enabled
+      operationId: uploadLessonVideo
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - video
+              properties:
+                video:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Video uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  videoUrl:
+                    type: string
+                  duration:
+                    type: integer
+        "400":
+          description: Invalid file or size exceeded
+
+  /lessons/{id}/resource:
+    post:
+      tags:
+        - Lessons
+      summary: Upload lesson resources (Teacher/Admin only)
+      description: |
+        Upload resource files for lesson (PDF, documents, etc.)
+
+        **Constraints:**
+        - Max file size per file: 50MB
+        - Multiple files supported
+        - Formats: PDF, DOC, DOCX, PPT, PPTX, ZIP
+      operationId: uploadLessonResource
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - files
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "200":
+          description: Resources uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
+                        url:
+                          type: string
+                        size:
+                          type: integer
+
+  /lessons/{id}/resource/{resId}:
+    delete:
+      tags:
+        - Lessons
+      summary: Delete lesson resource (Teacher/Admin only)
+      description: Delete a specific resource from lesson
+      operationId: deleteLessonResource
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Lesson ID
+        - name: resId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Resource ID
+      responses:
+        "200":
+          description: Resource deleted successfully
+        "403":
+          description: Not authorized
+        "404":
+          description: Resource not found
+
+  /courses/{courseId}/lessons/{lessonId}/notes:
+    get:
+      tags:
+        - Lessons
+      summary: Get student notes for lesson
+      description: Get all notes the authenticated student has taken for this lesson
+      operationId: getLessonNotes
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  notes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        content:
+                          type: string
+                        timestamp:
+                          type: integer
+                          description: "Video timestamp in seconds"
+                        createdAt:
+                          type: string
+                          format: date-time
+
+    post:
+      tags:
+        - Lessons
+      summary: Create lesson note
+      description: Add a note to the lesson with optional video timestamp
+      operationId: createLessonNote
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: "Important concept to remember"
+                timestamp:
+                  type: integer
+                  example: 300
+                  description: "Video timestamp in seconds"
+      responses:
+        "201":
+          description: Note created successfully
+
+  /courses/{courseId}/lessons/{lessonId}/notes/{noteId}:
+    put:
+      tags:
+        - Lessons
+      summary: Update lesson note
+      description: Update existing note content
+      operationId: updateLessonNote
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+      responses:
+        "200":
+          description: Note updated successfully
+
+    delete:
+      tags:
+        - Lessons
+      summary: Delete lesson note
+      description: Delete a specific note
+      operationId: deleteLessonNote
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lessonId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Note deleted successfully

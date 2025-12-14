@@ -1,0 +1,144 @@
+.apiDocsContainer {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 0;
+}
+
+.header {
+  max-width: 1400px;
+  margin: 0 auto 2rem;
+  padding: 0 2rem;
+  text-align: center;
+  color: white;
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.description {
+  font-size: 1.1rem;
+  opacity: 0.95;
+  margin-bottom: 1rem;
+}
+
+.badges {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.badge {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.swaggerWrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* Override Swagger UI styles for better appearance */
+.swaggerWrapper :global(.swagger-ui) {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+}
+
+.swaggerWrapper :global(.swagger-ui .topbar) {
+  display: none;
+}
+
+.swaggerWrapper :global(.swagger-ui .info) {
+  margin: 30px 0;
+}
+
+.swaggerWrapper :global(.swagger-ui .info .title) {
+  font-size: 2rem;
+  color: #667eea;
+}
+
+.swaggerWrapper :global(.swagger-ui .opblock.opblock-post) {
+  border-color: #49cc90;
+  background: rgba(73, 204, 144, 0.1);
+}
+
+.swaggerWrapper :global(.swagger-ui .opblock.opblock-get) {
+  border-color: #61affe;
+  background: rgba(97, 175, 254, 0.1);
+}
+
+.swaggerWrapper :global(.swagger-ui .opblock.opblock-put) {
+  border-color: #fca130;
+  background: rgba(252, 161, 48, 0.1);
+}
+
+.swaggerWrapper :global(.swagger-ui .opblock.opblock-delete) {
+  border-color: #f93e3e;
+  background: rgba(249, 62, 62, 0.1);
+}
+
+.swaggerWrapper :global(.swagger-ui .opblock-tag) {
+  font-size: 1.3rem;
+  padding: 15px 20px;
+  border-bottom: 2px solid #e8e8e8;
+}
+
+.swaggerWrapper :global(.swagger-ui .opblock-summary-description) {
+  font-size: 1rem;
+}
+
+.swaggerWrapper :global(.swagger-ui .btn.try-out__btn) {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.swaggerWrapper :global(.swagger-ui .btn.execute) {
+  background: #49cc90;
+  color: white;
+  border-color: #49cc90;
+}
+
+.swaggerWrapper :global(.swagger-ui .btn.cancel) {
+  background: #f93e3e;
+  color: white;
+  border-color: #f93e3e;
+}
+
+@media (max-width: 768px) {
+  .apiDocsContainer {
+    padding: 1rem 0;
+  }
+
+  .header {
+    padding: 0 1rem;
+  }
+
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .description {
+    font-size: 1rem;
+  }
+
+  .swaggerWrapper {
+    margin: 0 0.5rem;
+    border-radius: 8px;
+  }
+}

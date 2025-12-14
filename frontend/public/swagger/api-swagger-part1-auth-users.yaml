@@ -1,0 +1,884 @@
+openapi: 3.0.3
+info:
+  title: E-Learning Platform API - Part 1 (Auth & Users)
+  description: |
+    **Comprehensive API Documentation for E-Learning Platform**
+
+    🎓 **Overview:**
+    - Full-featured online learning platform
+    - Role-based access: Student, Teacher, Admin
+    - Real-time features with WebSocket
+    - Video streaming & WebRTC support
+
+    📋 **Part 1 Coverage:**
+    - Authentication & Authorization
+    - User Management
+    - Profile Operations
+
+    🔐 **Authentication:**
+    - JWT Bearer Token in Authorization header
+    - Token expires in 24h (configurable)
+    - Refresh token mechanism available
+
+    👥 **User Roles:**
+    - **Student**: Enroll courses, take quizzes, join discussions
+    - **Teacher**: Create courses, manage content, grade quizzes
+    - **Admin**: Full system access, user management, moderation
+
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@elearning.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000/api
+    description: Local Development Server
+  - url: https://api.elearning.com/api
+    description: Production Server
+
+tags:
+  - name: Authentication
+    description: User authentication operations (login, register, password reset)
+  - name: User Management
+    description: User profile and account management
+  - name: Admin - Users
+    description: Admin operations for user management
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login/register
+
+  schemas:
+    # ============ USER SCHEMAS ============
+    User:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "507f1f77bcf86cd799439011"
+        fullName:
+          type: string
+          example: "Nguyễn Văn A"
+        email:
+          type: string
+          format: email
+          example: "student@example.com"
+        role:
+          type: string
+          enum: [student, teacher, admin]
+          example: "student"
+        avatar:
+          type: string
+          nullable: true
+          example: "https://cloudinary.com/avatar.jpg"
+        isEmailVerified:
+          type: boolean
+          example: true
+        isBanned:
+          type: boolean
+          example: false
+        phone:
+          type: string
+          nullable: true
+          example: "+84912345678"
+        address:
+          type: string
+          nullable: true
+          example: "123 Nguyễn Huệ, Q1, TP.HCM"
+        bio:
+          type: string
+          nullable: true
+          example: "Software developer passionate about learning"
+        socialLinks:
+          type: object
+          properties:
+            facebook:
+              type: string
+              nullable: true
+            linkedin:
+              type: string
+              nullable: true
+            github:
+              type: string
+              nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserRegistration:
+      type: object
+      required:
+        - fullName
+        - email
+        - password
+        - role
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: "Nguyễn Văn A"
+        email:
+          type: string
+          format: email
+          example: "newuser@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: "SecurePass123"
+        role:
+          type: string
+          enum: [student, teacher]
+          default: student
+          example: "student"
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "student@example.com"
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: "#/components/schemas/User"
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        fullName:
+          type: string
+          example: "Nguyễn Văn B"
+        phone:
+          type: string
+          example: "+84912345678"
+        address:
+          type: string
+          example: "456 Lê Lợi, Q1, TP.HCM"
+        bio:
+          type: string
+          example: "Updated bio"
+        socialLinks:
+          type: object
+          properties:
+            facebook:
+              type: string
+            linkedin:
+              type: string
+            github:
+              type: string
+
+    # ============ COMMON SCHEMAS ============
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Error message"
+        errors:
+          type: array
+          items:
+            type: string
+
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation successful"
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 10
+
+paths:
+  # ==================== AUTHENTICATION ====================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new user account
+      description: |
+        Register a new user with email, password, and role.
+
+        **Roles:**
+        - `student` - Can enroll in courses
+        - `teacher` - Can create and manage courses
+
+        **Email Verification:**
+        - Verification email sent automatically
+        - Account needs verification before full access
+
+        **Rate Limiting:**
+        - 5 requests per 15 minutes per IP
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRegistration"
+            examples:
+              student:
+                summary: Student registration
+                value:
+                  fullName: "Nguyễn Văn A"
+                  email: "student@example.com"
+                  password: "SecurePass123"
+                  role: "student"
+              teacher:
+                summary: Teacher registration
+                value:
+                  fullName: "Giáo viên Nguyễn"
+                  email: "teacher@example.com"
+                  password: "TeacherPass123"
+                  role: "teacher"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                emailExists:
+                  value:
+                    success: false
+                    message: "Email đã tồn tại"
+                validationError:
+                  value:
+                    success: false
+                    message: "Validation failed"
+                    errors:
+                      - "Password must be at least 6 characters"
+        "429":
+          description: Too many registration attempts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login to account
+      description: |
+        Authenticate user with email and password.
+        Returns JWT token and user information.
+
+        **Mock Credentials for Testing:**
+        - Email: any valid email
+        - Password: any password (6+ chars)
+
+        **Token Usage:**
+        - Include in Authorization header: `Bearer {token}`
+        - Token expires in 24 hours
+        - Use refresh token to get new access token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLogin"
+            examples:
+              student:
+                value:
+                  email: "student@example.com"
+                  password: "password123"
+              teacher:
+                value:
+                  email: "teacher@example.com"
+                  password: "password123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                success: false
+                message: "Email hoặc mật khẩu không đúng"
+        "403":
+          description: Account banned or not verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout from account
+      description: Invalidate current session and refresh token
+      operationId: logoutUser
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/forgot-password:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: |
+        Send password reset email to user.
+
+        **Process:**
+        1. Submit email address
+        2. Receive reset link via email
+        3. Link expires in 1 hour
+        4. Use token to reset password
+      operationId: forgotPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "user@example.com"
+      responses:
+        "200":
+          description: Reset email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+              example:
+                success: true
+                message: "Email khôi phục mật khẩu đã được gửi"
+        "404":
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/reset-password/{token}:
+    put:
+      tags:
+        - Authentication
+      summary: Reset password with token
+      description: Reset user password using token from email
+      operationId: resetPassword
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Password reset token from email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: "NewSecurePass123"
+      responses:
+        "200":
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "400":
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/verify-email:
+    post:
+      tags:
+        - Authentication
+      summary: Verify email address
+      description: Verify user email with token from registration email
+      operationId: verifyEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  example: "verification-token-from-email"
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "400":
+          description: Invalid verification token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/resend-verification:
+    post:
+      tags:
+        - Authentication
+      summary: Resend verification email
+      description: Request new verification email
+      operationId: resendVerification
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "400":
+          description: Email already verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      responses:
+        "200":
+          description: New token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+        "401":
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ==================== USER MANAGEMENT ====================
+  /users/profile:
+    get:
+      tags:
+        - User Management
+      summary: Get current user profile
+      description: Retrieve authenticated user's profile information
+      operationId: getUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - User Management
+      summary: Update user profile
+      description: Update authenticated user's profile information
+      operationId: updateUserProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/avatar:
+    post:
+      tags:
+        - User Management
+      summary: Upload user avatar
+      description: |
+        Upload profile picture for authenticated user.
+
+        **Constraints:**
+        - Max file size: 5MB
+        - Formats: JPG, PNG, GIF
+        - Image auto-resized to 500x500px
+        - Uploaded to Cloudinary
+      operationId: uploadAvatar
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Image file (JPG, PNG, GIF)
+      responses:
+        "200":
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  avatarUrl:
+                    type: string
+                    example: "https://cloudinary.com/avatar.jpg"
+        "400":
+          description: Invalid file or size exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # ==================== ADMIN USER MANAGEMENT ====================
+  /users/list:
+    get:
+      tags:
+        - Admin - Users
+      summary: Get all users (Admin only)
+      description: |
+        Retrieve paginated list of all users with filters.
+
+        **Filters:**
+        - Role: student, teacher, admin
+        - Status: active, banned, unverified
+        - Search: by name or email
+
+        **Pagination:**
+        - Default: 10 users per page
+        - Max: 100 users per page
+      operationId: getUserList
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+          description: Users per page
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [student, teacher, admin]
+          description: Filter by role
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, banned, unverified]
+          description: Filter by status
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by name or email
+      responses:
+        "200":
+          description: User list retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+        "403":
+          description: Not authorized (admin only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/{id}/role:
+    put:
+      tags:
+        - Admin - Users
+      summary: Update user role (Admin only)
+      description: Change user's role (student/teacher/admin)
+      operationId: updateUserRole
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum: [student, teacher, admin]
+                  example: "teacher"
+      responses:
+        "200":
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "403":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/{id}/ban:
+    put:
+      tags:
+        - Admin - Users
+      summary: Ban or unban user (Admin only)
+      description: Toggle user ban status
+      operationId: banUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - isBanned
+              properties:
+                isBanned:
+                  type: boolean
+                  example: true
+      responses:
+        "200":
+          description: Ban status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "403":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/{id}:
+    delete:
+      tags:
+        - Admin - Users
+      summary: Delete user account (Admin only)
+      description: Permanently delete user and associated data
+      operationId: deleteUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        "200":
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "403":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
