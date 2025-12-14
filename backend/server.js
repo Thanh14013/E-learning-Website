@@ -6,7 +6,10 @@ import morgan from "morgan";
 import "dotenv/config";
 import connectDB from "./src/config/mongodb.config.js";
 import { connectCloudinary } from "./src/config/cloudinary.config.js";
-import { initializeSocketIO, setSocketIOInstance } from "./src/config/socket.config.js";
+import {
+  initializeSocketIO,
+  setSocketIOInstance,
+} from "./src/config/socket.config.js";
 import { initializeAllNamespaces } from "./src/socket/index.js";
 import authRoutes from "./src/routes/auth.routes.js";
 import discussionRoutes from "./src/routes/discussion.routes.js";
@@ -23,7 +26,10 @@ import quizRoutes from "./src/routes/quiz.routes.js";
 import questionRoutes from "./src/routes/question.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import { setupAnalyticsCronJobs } from "./src/services/cron.service.js";
-import { errorHandler, notFoundHandler } from "./src/middleware/errorHandler.js";
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./src/middleware/errorHandler.js";
 
 // App config
 const app = express();
@@ -106,12 +112,12 @@ app.use("/api/discussions", discussionRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/courses", courseRoutes);
-app.use("/api/chapter", chapterRoutes);
+app.use("/api/chapters", chapterRoutes);
 app.use("/api/sessions", sessionRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
-app.use("/api/lessons", lessonRoutes)
-app.use("/api/progress", progressRoutes)
+app.use("/api/lessons", lessonRoutes);
+app.use("/api/progress", progressRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/questions", questionRoutes);
 

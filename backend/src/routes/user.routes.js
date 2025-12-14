@@ -1,10 +1,12 @@
 import express from "express";
 import {
-    deleteUser,
-    getUserList,
-    getUserProfile,
-    updateUserProfile,
-    uploadAvatar
+  deleteUser,
+  getUserList,
+  getUserProfile,
+  updateUserProfile,
+  uploadAvatar,
+  updateUserRole,
+  banUser,
 } from "../controllers/user.controller.js";
 import upload from "../middleware/upload.js";
 import { isAdmin } from "../middleware/authorize.js";
@@ -23,6 +25,12 @@ router.post("/avatar", authenticate, upload.single("avatar"), uploadAvatar);
 
 // GET /api/users/list - Admin: Get user list
 router.get("/list", authenticate, isAdmin, getUserList);
+
+// PUT /api/users/:id/role - Admin: Update user role
+router.put("/:id/role", authenticate, isAdmin, updateUserRole);
+
+// PUT /api/users/:id/ban - Admin: Ban/unban user
+router.put("/:id/ban", authenticate, isAdmin, banUser);
 
 // DELETE /api/users/:id - Admin: Delete user
 router.delete("/:id", authenticate, isAdmin, deleteUser);

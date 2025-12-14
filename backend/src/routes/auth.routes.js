@@ -2,6 +2,7 @@ import express from "express";
 import {
   register,
   verifyEmail,
+  resendVerification,
   resetPassword,
   refreshAccessToken,
   login,
@@ -24,13 +25,8 @@ const router = express.Router();
 // POST /api/auth/register - Register new user with validation and rate limiting
 router.post("/register", registerLimiter, validateRegister, register);
 
-// POST /api/auth/verify-email/:token - Verify email with token validation and rate limiting
-router.post(
-  "/verify-email/:token",
-  emailVerificationLimiter,
-  validateToken,
-  verifyEmail
-);
+// POST /api/auth/verify-email - Verify email with token in body
+router.post("/verify-email", emailVerificationLimiter, verifyEmail);
 
 // POST /api/auth/refresh-token - Refresh access token with validation
 router.post("/refresh-token", validateRefreshToken, refreshAccessToken);
@@ -46,5 +42,8 @@ router.post("/logout", authenticate, logout);
 
 // POST /api/auth/forgot-password - Generate password reset token
 router.post("/forgot-password", forgotPassword);
+
+// POST /api/auth/resend-verification - Resend email verification
+router.post("/resend-verification", authenticate, resendVerification);
 
 export default router;
