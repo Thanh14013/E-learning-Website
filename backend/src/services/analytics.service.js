@@ -426,6 +426,9 @@ export const getTeacherDashboard = async (teacherId) => {
       averageRating: Math.round(averageRating * 100) / 100,
       courseAnalytics,
       topCourses,
+      pendingQuizzes: 0, // Placeholder - implement if needed
+      newDiscussions: 0, // Placeholder - implement if needed
+      recentActivities: [], // Placeholder - implement if needed
     };
   } catch (error) {
     console.error("Get teacher dashboard error:", error);

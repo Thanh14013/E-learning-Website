@@ -9,65 +9,69 @@ import Chapter from "../models/chapter.model.js";
  * @access  Private (Student)
  */
 export const updateLessonProgress = async (req, res) => {
-    try {
-        const { watchedDuration, markCompleted } = req.body;
-        const lessonId = req.params.lessonId;
-        const userId = req.user._id;
+  try {
+    const { watchedDuration, markCompleted } = req.body;
+    const lessonId = req.params.lessonId;
+    const userId = req.user._id;
 
-        const lesson = await Lesson.findById(lessonId);
-        if (!lesson) {
-            return res.status(404).json({ message: "Lesson not found" });
-        }
-
-        // Lấy course bằng chapter
-        const chapter = await Chapter.findById(lesson.chapterId);
-        const courseId = chapter.courseId;
-
-        // Check enrolled
-        const profile = await UserProfile.findOne({ userId });
-        const isEnrolled = profile.enrolledCourses.includes(courseId);
-        if (!isEnrolled) {
-            return res.status(403).json({ message: "You are not enrolled in this course" });
-        }
-
-        let progress = await Progress.findOne({ userId, lessonId });
-
-        if (!progress) {
-            progress = new Progress({
-                userId,
-                lessonId,
-                courseId,
-                watchedDuration: 0,
-            });
-        }
-
-        // Update fields
-        if (watchedDuration > progress.watchedDuration) {
-            progress.watchedDuration = watchedDuration;
-        }
-
-        progress.lastWatchedAt = new Date();
-
-        const isAutoComplete = watchedDuration / lesson.videoDuration >= 0.9;
-
-        if (markCompleted || isAutoComplete) {
-            progress.isCompleted = true;
-        }
-
-        await progress.save();
-
-        // Emit socket
-        req.io.of("/progress").emit("progress:updated", {
-            userId,
-            lessonId,
-            progress,
-        });
-
-        return res.json({ message: "Progress updated", progress });
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Server error when updating progress" });
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) {
+      return res.status(404).json({ message: "Lesson not found" });
     }
+
+    // Lấy course bằng chapter
+    const chapter = await Chapter.findById(lesson.chapterId);
+    const courseId = chapter.courseId;
+
+    // Check enrolled
+    const profile = await UserProfile.findOne({ userId });
+    const isEnrolled = profile.enrolledCourses.includes(courseId);
+    if (!isEnrolled) {
+      return res
+        .status(403)
+        .json({ message: "You are not enrolled in this course" });
+    }
+
+    let progress = await Progress.findOne({ userId, lessonId });
+
+    if (!progress) {
+      progress = new Progress({
+        userId,
+        lessonId,
+        courseId,
+        watchedDuration: 0,
+      });
+    }
+
+    // Update fields
+    if (watchedDuration > progress.watchedDuration) {
+      progress.watchedDuration = watchedDuration;
+    }
+
+    progress.lastWatchedAt = new Date();
+
+    const isAutoComplete = watchedDuration / lesson.videoDuration >= 0.9;
+
+    if (markCompleted || isAutoComplete) {
+      progress.isCompleted = true;
+    }
+
+    await progress.save();
+
+    // Emit socket
+    req.io.of("/progress").emit("progress:updated", {
+      userId,
+      lessonId,
+      progress,
+    });
+
+    return res.json({ message: "Progress updated", progress });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Server error when updating progress" });
+  }
 };
 
 /**
@@ -76,60 +80,64 @@ export const updateLessonProgress = async (req, res) => {
  * @access  Private (Student)
  */
 export const markLessonCompleted = async (req, res) => {
-    try {
-        const lessonId = req.params.lessonId;
-        const userId = req.user._id;
+  try {
+    const lessonId = req.params.lessonId;
+    const userId = req.user._id;
 
-        const lesson = await Lesson.findById(lessonId).lean();
-        if (!lesson) return res.status(404).json({ message: "Lesson not found" });
+    const lesson = await Lesson.findById(lessonId).lean();
+    if (!lesson) return res.status(404).json({ message: "Lesson not found" });
 
-        const chapter = await Chapter.findById(lesson.chapterId);
-        const courseId = chapter.courseId;
+    const chapter = await Chapter.findById(lesson.chapterId);
+    const courseId = chapter.courseId;
 
-        const profile = await UserProfile.findOne({ userId });
-        const isEnrolled = profile.enrolledCourses.includes(courseId);
+    const profile = await UserProfile.findOne({ userId });
+    const isEnrolled = profile.enrolledCourses.includes(courseId);
 
-        if (!isEnrolled)
-            return res.status(403).json({ message: "You are not enrolled in this course" });
+    if (!isEnrolled)
+      return res
+        .status(403)
+        .json({ message: "You are not enrolled in this course" });
 
-        let progress = await Progress.findOne({ userId, lessonId });
-        if (!progress) {
-            progress = new Progress({
-                userId,
-                lessonId,
-                courseId,
-                watchedDuration: lesson.videoDuration,
-            });
-        }
-
-        progress.isCompleted = true;
-        await progress.save();
-
-        const lessons = await Lesson.find({ chapterId: chapter._id });
-        const completedCount = await Progress.countDocuments({
-            userId,
-            isCompleted: true,
-            courseId,
-        });
-
-        const isCourseCompleted = completedCount === lessons.length;
-
-        // Emit socket
-        req.io.of("/progress").emit("progress:updated", {
-            userId,
-            lessonId,
-            progress,
-            courseCompleted: isCourseCompleted,
-        });
-
-        return res.json({
-            message: "Lesson marked as completed",
-            isCourseCompleted,
-        });
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Server error when marking completed" });
+    let progress = await Progress.findOne({ userId, lessonId });
+    if (!progress) {
+      progress = new Progress({
+        userId,
+        lessonId,
+        courseId,
+        watchedDuration: lesson.videoDuration,
+      });
     }
+
+    progress.isCompleted = true;
+    await progress.save();
+
+    const lessons = await Lesson.find({ chapterId: chapter._id });
+    const completedCount = await Progress.countDocuments({
+      userId,
+      isCompleted: true,
+      courseId,
+    });
+
+    const isCourseCompleted = completedCount === lessons.length;
+
+    // Emit socket
+    req.io.of("/progress").emit("progress:updated", {
+      userId,
+      lessonId,
+      progress,
+      courseCompleted: isCourseCompleted,
+    });
+
+    return res.json({
+      message: "Lesson marked as completed",
+      isCourseCompleted,
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Server error when marking completed" });
+  }
 };
 
 /**
@@ -138,42 +146,59 @@ export const markLessonCompleted = async (req, res) => {
  * @access  Private (Student)
  */
 export const getCourseProgress = async (req, res) => {
-    try {
-        const courseId = req.params.courseId;
-        const userId = req.user._id;
+  try {
+    const courseId = req.params.courseId;
+    const userId = req.user._id;
 
-        const chapters = await Chapter.find({ courseId }).select("_id");
-        const chapterIds = chapters.map(c => c._id);
+    const chapters = await Chapter.find({ courseId }).select("_id");
+    const chapterIds = chapters.map((c) => c._id);
 
-        const lessons = await Lesson.find({ chapterId: { $in: chapterIds } });
+    const lessons = await Lesson.find({ chapterId: { $in: chapterIds } });
 
-        const totalLessons = lessons.length;
+    const totalLessons = lessons.length;
 
-        const completedProgress = await Progress.find({
-            userId,
-            courseId,
-            isCompleted: true,
-        });
+    const completedProgress = await Progress.find({
+      userId,
+      courseId,
+      isCompleted: true,
+    });
 
-        const completedCount = completedProgress.length;
+    const completedCount = completedProgress.length;
 
-        const percentage = Math.round((completedCount / totalLessons) * 100);
+    const progressPercentage = Math.round(
+      (completedCount / totalLessons) * 100
+    );
 
-        const lastProgress = await Progress.findOne({
-            userId,
-            courseId,
-        })
-            .sort({ lastWatchedAt: -1 })
-            .select("lessonId watchedDuration lastWatchedAt");
+    // Get all progress records for lesson-level details
+    const allProgress = await Progress.find({ userId, courseId });
 
-        return res.json({
-            totalLessons,
-            completedCount,
-            percentage,
-            lastWatched: lastProgress || null,
-        });
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Server error when getting course progress" });
-    }
+    const lessonProgress = lessons.map((lesson) => {
+      const prog = allProgress.find(
+        (p) => p.lessonId.toString() === lesson._id.toString()
+      );
+      return {
+        lessonId: lesson._id,
+        watchedDuration: prog?.watchedDuration || 0,
+        lastWatchedAt: prog?.lastWatchedAt || null,
+        completed: prog?.isCompleted || false,
+        progressPercentage: prog
+          ? Math.round(
+              (prog.watchedDuration / (lesson.videoDuration || 1)) * 100
+            )
+          : 0,
+      };
+    });
+
+    return res.json({
+      totalLessons,
+      completedLessons: completedCount,
+      progressPercentage,
+      lessonProgress,
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Server error when getting course progress" });
+  }
 };

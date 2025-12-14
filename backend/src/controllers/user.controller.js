@@ -1,4 +1,4 @@
-import {uploadFile} from "../config/cloudinary.config.js";
+import { uploadFile } from "../config/cloudinary.config.js";
 import User from "../models/user.model.js";
 import UserProfile from "../models/userProfile.model.js";
 import path from "path";
@@ -13,28 +13,33 @@ import Progress from "../models/progress.model.js";
  * @access Private
  */
 export const getUserProfile = async (req, res) => {
-    try {
-        const userId = req.user._id;
+  try {
+    const userId = req.user._id;
 
-        const user = await User.findById(userId).select("-password -refreshToken");
+    const user = await User.findById(userId).select("-password -refreshToken");
 
-        if (!user) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        const profile = await UserProfile.findOne({ userId })
-            .populate("enrolledCourses", "title description thumbnail")
-            .populate("teachingCourses", "title description thumbnail");
-
-        return res.status(200).json({
-            message: "User profile fetched successfully.",
-            user,
-            profile: profile || null,
-        });
-    } catch (error) {
-        console.error("Get user profile error:", error);
-        res.status(500).json({ message: "Server error while fetching user profile." });
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
     }
+
+    const profile = await UserProfile.findOne({ userId })
+      .populate("enrolledCourses", "title description thumbnail")
+      .populate("teachingCourses", "title description thumbnail");
+
+    return res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully.",
+      data: {
+        user,
+        profile: profile || null,
+      },
+    });
+  } catch (error) {
+    console.error("Get user profile error:", error);
+    res
+      .status(500)
+      .json({ message: "Server error while fetching user profile." });
+  }
 };
 
 /**
@@ -51,86 +56,79 @@ export const getUserProfile = async (req, res) => {
  * @body {object} [socialLinks] - Object containing social links { facebook, twitter, linkedin }
  */
 export const updateUserProfile = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const {
-            fullName,
-            email,
-            phone,
-            address,
-            bio,
-            dateOfBirth,
-            socialLinks,
-        } = req.body;
+  try {
+    const userId = req.user._id;
+    const { fullName, email, phone, address, bio, dateOfBirth, socialLinks } =
+      req.body;
 
-        // Validate input fields
-        if (email && !/^\S+@\S+\.\S+$/.test(email)) {
-            return res.status(400).json({ message: "Invalid email format." });
-        }
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        // update name, email
-        if (fullName) {
-            user.fullName = fullName.trim();
-        }
-
-        if (email) {
-            user.email = email.toLowerCase().trim();
-        }
-
-        await user.save({ validateBeforeSave: false });
-
-        let profile = await UserProfile.findOne({ userId });
-        if (!profile) {
-            profile = new UserProfile({ userId });
-        }
-
-        // Update user profile
-        if (phone) {
-            profile.phone = phone.trim();
-        }
-
-        if (address) {
-            profile.address = address.trim();
-        }
-
-        if (bio) {
-            profile.bio = bio.trim();
-        }
-
-        if (dateOfBirth) {
-            profile.dateOfBirth = new Date(dateOfBirth);
-        }
-
-        if (socialLinks && typeof socialLinks === "object") {
-            profile.socialLinks = {
-                facebook: socialLinks.facebook || profile.socialLinks.facebook,
-                twitter: socialLinks.twitter || profile.socialLinks.twitter,
-                linkedin: socialLinks.linkedin || profile.socialLinks.linkedin,
-            };
-        }
-
-        await profile.save();
-
-        return res.status(200).json({
-            message: "Profile updated successfully.",
-            user: {
-                _id: user._id,
-                fullName: user.fullName,
-                email: user.email,
-                role: user.role,
-                avatar: user.avatar,
-            },
-            profile,
-        });
-    } catch (error) {
-        console.error("Update user profile error:", error);
-        res.status(500).json({ message: "Server error while updating profile." });
+    // Validate input fields
+    if (email && !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ message: "Invalid email format." });
     }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // update name, email
+    if (fullName) {
+      user.fullName = fullName.trim();
+    }
+
+    if (email) {
+      user.email = email.toLowerCase().trim();
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    let profile = await UserProfile.findOne({ userId });
+    if (!profile) {
+      profile = new UserProfile({ userId });
+    }
+
+    // Update user profile
+    if (phone) {
+      profile.phone = phone.trim();
+    }
+
+    if (address) {
+      profile.address = address.trim();
+    }
+
+    if (bio) {
+      profile.bio = bio.trim();
+    }
+
+    if (dateOfBirth) {
+      profile.dateOfBirth = new Date(dateOfBirth);
+    }
+
+    if (socialLinks && typeof socialLinks === "object") {
+      profile.socialLinks = {
+        facebook: socialLinks.facebook || profile.socialLinks.facebook,
+        twitter: socialLinks.twitter || profile.socialLinks.twitter,
+        linkedin: socialLinks.linkedin || profile.socialLinks.linkedin,
+      };
+    }
+
+    await profile.save();
+
+    return res.status(200).json({
+      message: "Profile updated successfully.",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+      },
+      profile,
+    });
+  } catch (error) {
+    console.error("Update user profile error:", error);
+    res.status(500).json({ message: "Server error while updating profile." });
+  }
 };
 
 /**
@@ -141,54 +139,54 @@ export const updateUserProfile = async (req, res) => {
  * @file {File} file - Image file (multipart/form-data)
  */
 export const uploadAvatar = async (req, res) => {
-    try {
-        const userId = req.user._id;
+  try {
+    const userId = req.user._id;
 
-        if (!req.file) {
-            return res.status(400).json({ message: "No file uploaded." });
-        }
-
-        // ✅ Upload to Cloudinary
-        const filePath = path.resolve(req.file.path);
-        const imageUrl = await uploadFile(filePath, {
-            folder: "avatars",
-            resource_type: "image",
-            transformation: [{ width: 400, height: 400, crop: "fill" }],
-        });
-
-        // Xóa file tạm sau khi upload
-        fs.unlinkSync(filePath);
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        // Delete old avatar if exists
-        if (user.avatar && user.avatar.includes("cloudinary.com")) {
-            try {
-                // Extract publicId (.../avatars/xxxx.jpg)
-                const parts = user.avatar.split("/");
-                const filename = parts[parts.length - 1];
-                const publicId = `avatars/${filename.split(".")[0]}`;
-                const { v2: cloudinary } = await import("cloudinary");
-                await cloudinary.uploader.destroy(publicId);
-            } catch (err) {
-                console.warn("Warning: Failed to delete old avatar ->", err.message);
-            }
-        }
-
-        user.avatar = imageUrl;
-        await user.save({ validateBeforeSave: false });
-
-        return res.status(200).json({
-            message: "Avatar uploaded successfully.",
-            avatarUrl: imageUrl,
-        });
-    } catch (error) {
-        console.error("Upload avatar error:", error);
-        res.status(500).json({ message: "Server error while uploading avatar." });
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded." });
     }
+
+    // ✅ Upload to Cloudinary
+    const filePath = path.resolve(req.file.path);
+    const imageUrl = await uploadFile(filePath, {
+      folder: "avatars",
+      resource_type: "image",
+      transformation: [{ width: 400, height: 400, crop: "fill" }],
+    });
+
+    // Xóa file tạm sau khi upload
+    fs.unlinkSync(filePath);
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Delete old avatar if exists
+    if (user.avatar && user.avatar.includes("cloudinary.com")) {
+      try {
+        // Extract publicId (.../avatars/xxxx.jpg)
+        const parts = user.avatar.split("/");
+        const filename = parts[parts.length - 1];
+        const publicId = `avatars/${filename.split(".")[0]}`;
+        const { v2: cloudinary } = await import("cloudinary");
+        await cloudinary.uploader.destroy(publicId);
+      } catch (err) {
+        console.warn("Warning: Failed to delete old avatar ->", err.message);
+      }
+    }
+
+    user.avatar = imageUrl;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      message: "Avatar uploaded successfully.",
+      avatarUrl: imageUrl,
+    });
+  } catch (error) {
+    console.error("Upload avatar error:", error);
+    res.status(500).json({ message: "Server error while uploading avatar." });
+  }
 };
 
 /**
@@ -203,39 +201,135 @@ export const uploadAvatar = async (req, res) => {
  * @query {string} [sort=createdAt] - Field to sort by (e.g., "email", "-createdAt")
  */
 export const getUserList = async (req, res) => {
-    try {
-        const {
-            role,
-            isVerified,
-            page = 1,
-            limit = 10,
-            sort = "createdAt"
-        } = req.query;
+  try {
+    const {
+      role,
+      isVerified,
+      page = 1,
+      limit = 10,
+      sort = "createdAt",
+    } = req.query;
 
-        const query = {};
-        if (role) query.role = role;
-        if (isVerified !== undefined) query.isVerified = isVerified === "true";
+    const query = {};
+    if (role) query.role = role;
+    if (isVerified !== undefined) query.isVerified = isVerified === "true";
 
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        const totalUsers = await User.countDocuments(query);
-        const users = await User.find(query)
-            .sort(sort)
-            .skip(skip)
-            .limit(parseInt(limit))
-            .select("-password -refreshToken -verificationToken -resetPasswordToken -resetPasswordExpire");
+    const totalUsers = await User.countDocuments(query);
+    const users = await User.find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .select(
+        "-password -refreshToken -verificationToken -resetPasswordToken -resetPasswordExpire"
+      );
 
-        return res.status(200).json({
-            total: totalUsers,
-            page: parseInt(page),
-            limit: parseInt(limit),
-            totalPages: Math.ceil(totalUsers / limit),
-            users,
-        });
-    } catch (error) {
-        console.error("Get user list error:", error);
-        res.status(500).json({ message: "Server error while fetching users." });
+    return res.status(200).json({
+      total: totalUsers,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      totalPages: Math.ceil(totalUsers / limit),
+      users,
+    });
+  } catch (error) {
+    console.error("Get user list error:", error);
+    res.status(500).json({ message: "Server error while fetching users." });
+  }
+};
+
+/**
+ * PUT /api/users/:id/role
+ * @desc Update user role (admin only)
+ * @access Admin
+ *
+ * @params {string} id - ID of the user
+ * @body {string} role - New role (student | teacher | admin)
+ */
+export const updateUserRole = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { role } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID format." });
     }
+
+    if (!["student", "teacher", "admin"].includes(role)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid role. Must be student, teacher, or admin." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    user.role = role;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      message: "User role updated successfully.",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Update user role error:", error);
+    res.status(500).json({ message: "Server error while updating user role." });
+  }
+};
+
+/**
+ * PUT /api/users/:id/ban
+ * @desc Ban or unban a user (admin only)
+ * @access Admin
+ *
+ * @params {string} id - ID of the user
+ * @body {boolean} isBanned - Ban status
+ */
+export const banUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { isBanned } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID format." });
+    }
+
+    if (typeof isBanned !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "isBanned must be a boolean value." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    user.isBanned = isBanned;
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      message: `User ${isBanned ? "banned" : "unbanned"} successfully.`,
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isBanned: user.isBanned,
+      },
+    });
+  } catch (error) {
+    console.error("Ban user error:", error);
+    res
+      .status(500)
+      .json({ message: "Server error while banning/unbanning user." });
+  }
 };
 
 /**
@@ -246,37 +340,39 @@ export const getUserList = async (req, res) => {
  * @params {string} id - ID of the user to delete
  */
 export const deleteUser = async (req, res) => {
-    try {
-        const userId = req.params.id;
+  try {
+    const userId = req.params.id;
 
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({ message: "Invalid user ID format." });
-        }
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        // Delete user profile if exists
-        await UserProfile.findOneAndDelete({ userId });
-
-        // Delete courses if user is a teacher
-        if (user.role === "teacher") {
-            await Course.deleteMany({ teacher: userId });
-        }
-
-        // Delete progress if user is a student
-        if (user.role === "student") {
-            await Progress.deleteMany({ user: userId });
-        }
-
-        // Delete user itself
-        await user.deleteOne();
-
-        return res.status(200).json({ message: "User and related data deleted successfully." });
-    } catch (error) {
-        console.error("Delete user error:", error);
-        res.status(500).json({ message: "Server error while deleting user." });
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID format." });
     }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Delete user profile if exists
+    await UserProfile.findOneAndDelete({ userId });
+
+    // Delete courses if user is a teacher
+    if (user.role === "teacher") {
+      await Course.deleteMany({ teacher: userId });
+    }
+
+    // Delete progress if user is a student
+    if (user.role === "student") {
+      await Progress.deleteMany({ user: userId });
+    }
+
+    // Delete user itself
+    await user.deleteOne();
+
+    return res
+      .status(200)
+      .json({ message: "User and related data deleted successfully." });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({ message: "Server error while deleting user." });
+  }
 };

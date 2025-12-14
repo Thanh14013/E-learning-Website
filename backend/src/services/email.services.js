@@ -2,7 +2,7 @@ import sgMail from "@sendgrid/mail";
 
 const frontendDomain = process.env.FRONTEND_URL || "";
 const sendGridApiKey = process.env.SENDGRID_API_KEY || "";
-const sendGridGromEmail = process.env.SENDGRID_FROM_EMAIL || "";
+const sendGridFromEmail = process.env.FROM_EMAIL || "";
 
 sgMail.setApiKey(sendGridApiKey);
 
@@ -11,7 +11,7 @@ export const sendVerificationEmail = async (email, fullName, token) => {
 
   const msg = {
     to: email,
-    from: sendGridGromEmail,
+    from: sendGridFromEmail,
     subject: "Xác thực tài khoản của bạn",
     html: `
             <h3>Hello ${fullName},</h3>
@@ -37,7 +37,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const msg = {
       to,
-      from: sendGridGromEmail,
+      from: sendGridFromEmail,
       subject,
       html,
       text: text || "",
