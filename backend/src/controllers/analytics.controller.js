@@ -412,8 +412,8 @@ export const generateStudentReport = async (req, res) => {
 
     const report = {
       student: {
-        id: user._id,
-        name: user.fullName,
+        _id: user._id,
+        fullName: user.fullName,
         email: user.email,
         avatar: user.avatar,
         memberSince: user.createdAt,

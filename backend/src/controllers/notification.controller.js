@@ -226,3 +226,78 @@ export const deleteAllNotifications = async (req, res) => {
     });
   }
 };
+
+/**
+ * @route   GET /api/notifications/preferences
+ * @desc    Get notification preferences for current user
+ * @access  Private
+ */
+export const getPreferences = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // TODO: Get preferences from user profile or separate preferences model
+    // For now, return default preferences
+    const defaultPreferences = {
+      email: {
+        courseUpdates: true,
+        newLessons: true,
+        quizResults: true,
+        discussionReplies: true,
+        systemAnnouncements: true,
+      },
+      push: {
+        courseUpdates: true,
+        newLessons: true,
+        quizResults: true,
+        discussionReplies: true,
+        systemAnnouncements: true,
+      },
+      inApp: {
+        courseUpdates: true,
+        newLessons: true,
+        quizResults: true,
+        discussionReplies: true,
+        systemAnnouncements: true,
+      },
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: defaultPreferences,
+    });
+  } catch (error) {
+    console.error("Get preferences error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching preferences",
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/notifications/preferences
+ * @desc    Update notification preferences for current user
+ * @access  Private
+ */
+export const updatePreferences = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const preferences = req.body;
+
+    // TODO: Save preferences to user profile or separate preferences model
+    // For now, just return the preferences back
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification preferences updated successfully",
+      data: preferences,
+    });
+  } catch (error) {
+    console.error("Update preferences error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating preferences",
+    });
+  }
+};
