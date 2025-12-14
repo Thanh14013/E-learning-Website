@@ -7,6 +7,8 @@ import {
   markAllNotificationsRead,
   deleteNotification,
   deleteAllNotifications,
+  getPreferences,
+  updatePreferences,
 } from "../controllers/notification.controller.js";
 
 const router = express.Router();
@@ -24,6 +26,20 @@ router.get("/", authenticate, getNotifications);
  * @access  Private
  */
 router.get("/unread-count", authenticate, getUnreadCount);
+
+/**
+ * @route   GET /api/notifications/preferences
+ * @desc    Get notification preferences
+ * @access  Private
+ */
+router.get("/preferences", authenticate, getPreferences);
+
+/**
+ * @route   PUT /api/notifications/preferences
+ * @desc    Update notification preferences
+ * @access  Private
+ */
+router.put("/preferences", authenticate, updatePreferences);
 
 /**
  * @route   PUT /api/notifications/read-all
