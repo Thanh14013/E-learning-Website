@@ -1,0 +1,258 @@
+.studentAnalytics {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.timeRangeSelector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.timeRangeSelector label {
+  font-weight: 500;
+  color: var(--color-gray-700);
+}
+
+.timeRangeSelector select {
+  padding: 8px 12px;
+  border: 1px solid var(--color-gray-300);
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+}
+
+.studentCard {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.studentAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.studentAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: var(--color-teacher-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.studentInfo h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.5rem;
+  color: var(--color-gray-900);
+}
+
+.studentInfo p {
+  margin: 4px 0;
+  color: var(--color-gray-600);
+}
+
+.enrolledDate {
+  font-size: 0.9rem;
+  color: var(--color-gray-500);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.statCard {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.statIcon {
+  font-size: 2.5rem;
+  background: var(--color-teacher-primary-light);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.statContent h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.75rem;
+  color: var(--color-teacher-primary);
+}
+
+.statContent p {
+  margin: 0 0 4px 0;
+  color: var(--color-gray-600);
+  font-weight: 500;
+}
+
+.statDetail {
+  font-size: 0.85rem;
+  color: var(--color-gray-500);
+}
+
+.chartSection {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.chartSection h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.25rem;
+  color: var(--color-gray-800);
+}
+
+.tableSection {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.tableSection h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.25rem;
+  color: var(--color-gray-800);
+}
+
+.quizTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.quizTable thead {
+  background: var(--color-gray-50);
+}
+
+.quizTable th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-gray-700);
+  border-bottom: 2px solid var(--color-gray-200);
+}
+
+.quizTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
+.quizTable tbody tr:hover {
+  background: var(--color-gray-50);
+}
+
+.scoreHigh {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--color-success-light);
+  color: var(--color-success);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.scoreMedium {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.scoreLow {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--color-error-light);
+  color: var(--color-error);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.exportSection {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--color-gray-500);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .studentAnalytics {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .studentCard {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quizTable {
+    font-size: 0.9rem;
+  }
+
+  .quizTable th,
+  .quizTable td {
+    padding: 8px;
+  }
+}
