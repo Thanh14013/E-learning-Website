@@ -16,8 +16,21 @@ import QuizzList from "../components/quizz/QuizzList.jsx";
 import QuizDetail from "../components/quizz/QuizDetail.jsx";
 import ProtectedRoute from "../components/ProtectedRoutes.jsx";
 import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
-import DiscussionsPage from "../pages/courses/DiscussionPage.jsx"; 
+import DiscussionsPage from "../pages/courses/DiscussionPage.jsx";
 import DiscussionDetailPage from "../pages/courses/DiscussionDetailPage.jsx";
+import QuizBuilder from "../components/quiz/QuizBuilder.jsx";
+import StudentAnalytics from "../pages/teacher/StudentAnalytics.jsx";
+import SessionScheduler from "../pages/teacher/SessionScheduler.jsx";
+import VideoRoom from "../components/video-call/VideoRoom.jsx";
+import NotificationSettings from "../pages/settings/NotificationSettings.jsx";
+import UserManagement from "../pages/admin/UserManagement.jsx";
+import ContentModeration from "../pages/admin/ContentModeration.jsx";
+import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
+import SystemSettings from "../pages/admin/SystemSettings.jsx";
+import CourseApproval from "../pages/admin/CourseApproval.jsx";
+import NotificationPreferences from "../pages/settings/NotificationPreferences.jsx";
+import AdminLayout from "../components/layout/AdminLayout.jsx";
+import ApiDocs from "../pages/ApiDocs.jsx";
 
 const router = createBrowserRouter([
   {
@@ -27,18 +40,19 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
+      { path: "api-docs", element: <ApiDocs /> },
       { path: "forgot-password", element: <ForgotPasswordPage /> },
       { path: "reset-password/:token", element: <ResetPasswordPage /> },
-      
+
       { path: "courses", element: <Courses /> },
       { path: "courses/:courseId", element: <CourseDetailPage /> },
       { path: "courses/:courseId/lessons/:lessonId", element: <LessonPlayer /> },
-      
-      // 1. Danh sách thảo luận
+
+      // Discussions
       { path: "courses/:courseId/discussions", element: <DiscussionsPage /> },
-      // 2. Chi tiết thảo luận
-      { path: "discussions/:discussionId", element: <DiscussionDetailPage /> },      
-      //quizz routes
+      { path: "discussions/:discussionId", element: <DiscussionDetailPage /> },
+
+      // Quiz routes
       { path: "quiz-demo", element: <QuizDemo /> },
       { path: "quizzes", element: <QuizzList courseId="demo-course" /> },
       { path: "quiz/:quizId", element: <QuizDetail /> },
@@ -49,12 +63,35 @@ const router = createBrowserRouter([
         children: [
           { path: "dashboard", element: <Dashboard /> },
           { path: "profile", element: <Profile /> },
-          { path: "settings/notifications", element: <NotificationSettings /> },
-          { path: "teacher/courses", element: <CourseManagement /> },
           { path: "courses/create", element: <CreateCourse /> },
-          { path: "courses/:courseId/edit", element: <CourseEditor /> },
+
+          // Settings
+          { path: "settings/notifications", element: <NotificationSettings /> },
+          { path: "settings/notification-preferences", element: <NotificationPreferences /> },
+
+          // Live Video Session
+          { path: "session/:sessionId", element: <VideoRoom /> },
+
+          // Teacher routes
+          { path: "teacher/quiz-builder", element: <QuizBuilder /> },
+          { path: "teacher/quiz-builder/:quizId", element: <QuizBuilder /> },
+          { path: "teacher/students/:studentId/analytics", element: <StudentAnalytics /> },
+          { path: "teacher/sessions", element: <SessionScheduler /> },
         ],
       },
+    ],
+  },
+
+  // Admin Routes with AdminLayout
+  {
+    path: "/admin",
+    element: <ProtectedRoute><AdminLayout /></ProtectedRoute>,
+    children: [
+      { path: "dashboard", element: <AdminDashboard /> },
+      { path: "users", element: <UserManagement /> },
+      { path: "moderation", element: <ContentModeration /> },
+      { path: "courses/approval", element: <CourseApproval /> },
+      { path: "settings", element: <SystemSettings /> },
     ],
   },
 ]);

@@ -5,12 +5,13 @@ import { useAuth } from '../contexts/AuthContext';
 const ProtectedRoute = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
-  if (!user) {
-    // Chuyển hướng người dùng đến trang /login nếu họ chưa đăng nhập
+
+  const accessToken = localStorage.getItem("accessToken");
+
+  if (!user || !accessToken) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  // Nếu người dùng đã đăng nhập, cho phép hiển thị các trang con (Dashboard, Profile)
   return <Outlet />;
 };
 
