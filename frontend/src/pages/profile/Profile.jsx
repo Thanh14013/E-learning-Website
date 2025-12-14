@@ -5,7 +5,7 @@ export default function Profile() {
   return (
     <div>
       <h2>Profile</h2>
-      <p>Name: {user.name}</p>
+      <p>Name: {user.fullName}</p>
       <p>Email: {user.email}</p>
       <button onClick={logout}>Logout</button>
     </div>

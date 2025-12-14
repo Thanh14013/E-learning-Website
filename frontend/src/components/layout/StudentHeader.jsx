@@ -206,7 +206,7 @@ export default function StudentHeader() {
                 className={styles.avatar}
               />
               <span className={styles.userName}>
-                {user.name?.split(" ")[0] || "User"}
+                {user.fullName?.split(" ")[0] || "User"}
               </span>
               <span className={styles.arrow}>▾</span>
             </button>

@@ -98,7 +98,7 @@ const NotificationSettings = () => {
   // Deep merge preferences with defaults
   const mergeWithDefaults = (data) => {
     if (!data) return DEFAULT_PREFERENCES;
-    
+
     return {
       email: {
         enabled: data.email?.enabled ?? DEFAULT_PREFERENCES.email.enabled,
@@ -230,7 +230,7 @@ const NotificationSettings = () => {
         </div>
         {user && (
           <div className={styles.userBadge}>
-            <span className={styles.userName}>{user.name}</span>
+            <span className={styles.userName}>{user.fullName}</span>
             <span className={styles.userEmail}>{user.email}</span>
           </div>
         )}
@@ -265,9 +265,8 @@ const NotificationSettings = () => {
                 {FREQUENCY_OPTIONS.map((option) => (
                   <label
                     key={option.value}
-                    className={`${styles.frequencyOption} ${
-                      preferences.email.frequency === option.value ? styles.frequencyActive : ''
-                    }`}
+                    className={`${styles.frequencyOption} ${preferences.email.frequency === option.value ? styles.frequencyActive : ''
+                      }`}
                   >
                     <input
                       type="radio"
