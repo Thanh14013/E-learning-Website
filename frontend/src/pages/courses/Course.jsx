@@ -14,7 +14,7 @@ const CoursesPage = () => {
 
     const [displayedCourses, setDisplayedCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // Đọc các giá trị filter ban đầu từ URL để khởi tạo state
     const initialUrlParams = new URLSearchParams(location.search);
     const [filters, setFilters] = useState({
@@ -68,7 +68,7 @@ const CoursesPage = () => {
             <div className={styles.filterBar}>
                 <div className="form-group">
                     <label className="form-label">Category</label>
-                    <select name="category" value={filters.category} onChange={handleFilterChange}  className="form-select">
+                    <select name="category" value={filters.category} onChange={handleFilterChange} className="form-select">
                         <option value="">All Categories</option>
                         <option value="Speaking">Speaking</option>
                         <option value="Writing">Writing</option>
@@ -98,7 +98,7 @@ const CoursesPage = () => {
                 <div className={styles.courseGrid}>
                     {displayedCourses.map(course => {
                         const isEnrolled = user && user.role === 'student' && myCourseIds.includes(course._id);
-                        const isMyTeachingCourse = user && user.role === 'teacher' && course.teacher?._id === user.id;
+                        const isMyTeachingCourse = user && user.role === 'teacher' && course.teacher?._id === user._id;
 
                         return (
                             <Link to={`/courses/${course._id}`} key={course._id} className={styles.cardLink}>
@@ -108,14 +108,14 @@ const CoursesPage = () => {
                                         </div>
                                         <div className={styles.cardContent}>
                                             <h4>{course.name}</h4>
-                                                  <div className={styles.cardMeta}>
-                                                    {course.bestseller && (
-                                                      <span className={styles.bestsellerTag}>
+                                            <div className={styles.cardMeta}>
+                                                {course.bestseller && (
+                                                    <span className={styles.bestsellerTag}>
                                                         Bestseller
-                                                      </span>
-                                                    )}
-                                                  </div>
-                                            <p className={styles.teacherName}>Taught by: {course.teacher?.name || '...'}</p>
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className={styles.teacherName}>Taught by: {course.teacher?.fullName || '...'}</p>
 
                                             {user && user.role === 'student' && (isEnrolled ? (
                                                 <div className={`${styles.btn} ${styles.btnUnenroll}`}>You have already enrolled in this course</div>

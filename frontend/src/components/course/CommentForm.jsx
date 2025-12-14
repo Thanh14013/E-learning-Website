@@ -9,9 +9,9 @@ const CommentForm = ({ onSubmit, onCancel, parentId = null, placeholder = "Write
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!content.trim()) return;
-    
+
     if (content.trim().length < 1 || content.trim().length > 2000) {
       alert('Comment must be between 1 and 2000 characters');
       return;
@@ -41,13 +41,13 @@ const CommentForm = ({ onSubmit, onCancel, parentId = null, placeholder = "Write
     <form className={styles.commentForm} onSubmit={handleSubmit}>
       <div className={styles.formHeader}>
         <div className={styles.avatar}>
-          {user.name.charAt(0).toUpperCase()}
+          {user.fullName.charAt(0).toUpperCase()}
         </div>
         <div className={styles.userInfo}>
-          <span className={styles.userName}>{user.name}</span>
+          <span className={styles.userName}>{user.fullName}</span>
         </div>
       </div>
-      
+
       <div className={styles.formBody}>
         <textarea
           className="form-input"
@@ -58,15 +58,15 @@ const CommentForm = ({ onSubmit, onCancel, parentId = null, placeholder = "Write
           maxLength={2000}
           disabled={isSubmitting}
         />
-        
+
         <div className={styles.formFooter}>
           <div className={styles.characterCount}>
             {content.length} / 2000
           </div>
-          
+
           <div className={styles.formActions}>
             {onCancel && (
-              <button 
+              <button
                 type="button"
                 className="btn btn-ghost"
                 onClick={onCancel}
@@ -75,7 +75,7 @@ const CommentForm = ({ onSubmit, onCancel, parentId = null, placeholder = "Write
                 Cancel
               </button>
             )}
-            <button 
+            <button
               type="submit"
               className="btn btn-primary-student"
               disabled={isSubmitting || !content.trim()}

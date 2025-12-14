@@ -23,15 +23,15 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
   const discussionId = propId || paramId;
 
   const { user } = useAuth();
-  const { 
-    currentDiscussion, 
-    loading, 
-    fetchDiscussionDetail, 
+  const {
+    currentDiscussion,
+    loading,
+    fetchDiscussionDetail,
     toggleLikeDiscussion,
     deleteDiscussion,
     createComment
   } = useDiscussions();
-  
+
   const [isLiked, setIsLiked] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -43,7 +43,7 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
 
   useEffect(() => {
     if (currentDiscussion?.discussion && user) {
-      setIsLiked(currentDiscussion.discussion.likes?.includes(user.id) || false);
+      setIsLiked(currentDiscussion.discussion.likes?.includes(user._id) || false);
     }
   }, [currentDiscussion, user]);
 
@@ -96,7 +96,7 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
     <div className={styles.discussionDetailPage}>
       <button className={styles.backButton} onClick={() => navigate(-1)}>
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
+          <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
         Back to Discussions
       </button>
@@ -107,14 +107,14 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
             {discussion.isPinned && (
               <div className={styles.pinnedBadge}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/>
+                  <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
                 </svg>
                 Pinned by Teacher
               </div>
             )}
-            
+
             <h1 className={styles.discussionTitle}>{discussion.title}</h1>
-            
+
             <div className={styles.authorSection}>
               <div className={styles.avatar}>
                 {discussion.userId.fullName.charAt(0).toUpperCase()}
@@ -133,7 +133,7 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
                   )}
                 </div>
               </div>
-              
+
               {canEdit && (
                 <div className={styles.actions}>
                   <button className="btn btn-ghost" title="Edit">Edit</button>
@@ -160,9 +160,9 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
                 <span>{totalComments} replies</span>
               </div>
             </div>
-            
+
             <button className={`${styles.likeButton} ${isLiked ? styles.liked : ''}`} onClick={handleLike}>
-               {isLiked ? 'Liked' : 'Like'} ({discussion.likesCount})
+              {isLiked ? 'Liked' : 'Like'} ({discussion.likesCount})
             </button>
           </div>
         </article>
