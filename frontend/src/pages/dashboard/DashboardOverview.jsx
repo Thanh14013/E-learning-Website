@@ -92,10 +92,10 @@ export default function Dashboard() {
   return (
     <div className={styles.dashboardLayout}>
       <aside className={styles.navSidebar}><NavigationSidebar /></aside>
-      
+
       <main className={styles.mainContent}>
         <h1 className={styles.mainTitle}>Dashboard</h1>
-        <p className={styles.mainSubtitle}>Welcome back, {user.name}!</p>
+        <p className={styles.mainSubtitle}>Welcome back, {user.fullName}!</p>
         <RoleView user={user} />
       </main>
 
