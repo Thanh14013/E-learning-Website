@@ -20,17 +20,17 @@ export const CourseProvider = ({ children }) => {
         // Luôn luôn fetch tất cả các khóa học bằng `api` instance
         const allCoursesRes = await api.get('/courses');
         console.log("CONTEXT: Response từ /api/courses:", allCoursesRes);
-        setAllCourses(allCoursesRes.data || []); // Dữ liệu nằm trong res.data
+        setAllCourses(allCoursesRes.data.data || []); // Backend trả data trong response.data.data
 
         // Nếu người dùng đã đăng nhập, fetch thêm các khóa học của họ
         if (user) {
           console.log("CONTEXT: User đã đăng nhập, fetching my-courses...");
-          const myCoursesEndpoint = user.role === 'student' 
-            ? '/courses/my-courses' 
-            : '/courses/my-teaching-courses';
+          const myCoursesEndpoint = user.role === 'student'
+            ? '/courses/enrolled'
+            : '/courses/my-courses';
           const myCoursesRes = await api.get(myCoursesEndpoint);
           console.log("CONTEXT: Response từ my-courses:", myCoursesRes);
-          setMyCourses(myCoursesRes.data || []);
+          setMyCourses(myCoursesRes.data.data || myCoursesRes.data || []);
         } else {
           // Nếu không đăng nhập, đảm bảo myCourses là mảng rỗng
           setMyCourses([]);
@@ -50,8 +50,8 @@ export const CourseProvider = ({ children }) => {
     fetchData();
   }, [user]); // useEffect chỉ cần chạy lại khi user thay đổi
 
-  const addCourse = async (courseData) => {};
-  const enrollCourse = async (courseId) => {};
+  const addCourse = async (courseData) => { };
+  const enrollCourse = async (courseId) => { };
 
   const value = { allCourses, myCourses, loading, addCourse, enrollCourse };
 
@@ -63,9 +63,9 @@ export const CourseProvider = ({ children }) => {
 };
 
 export const useCourses = () => {
-    const context = useContext(CourseContext);
-    if (context === null) {
-        throw new Error('useCourses() must be used within a CourseProvider');
-    }
-    return context;
+  const context = useContext(CourseContext);
+  if (context === null) {
+    throw new Error('useCourses() must be used within a CourseProvider');
+  }
+  return context;
 };

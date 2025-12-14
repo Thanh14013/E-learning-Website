@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 /**
  * Quiz Service - API calls for quiz-related operations
@@ -12,55 +12,9 @@ const quizService = {
    * @returns {Promise} Quiz result with answers and explanations
    */
   getQuizResult: async (quizId, attemptId) => {
-    // TODO: Replace with actual API call
-    // const response = await api.get(`/quizzes/${quizId}/results/${attemptId}`);
-    // return response.data;
-
-    // Mock data for development
-    return {
-      attemptId,
-      quizId,
-      attemptNumber: 1,
-      score: 17,
-      totalPoints: 20,
-      percentage: 85,
-      isPassed: true,
-      submittedAt: new Date().toISOString(),
-      timeUsed: 28,
-      answers: [
-        {
-          questionId: 'q1',
-          answer: 'b',
-          isCorrect: true,
-          pointsEarned: 1
-        },
-        {
-          questionId: 'q2',
-          answer: 'true',
-          isCorrect: true,
-          pointsEarned: 1
-        },
-        {
-          questionId: 'q3',
-          answer: 'React hooks are functions...',
-          isCorrect: null, // Essay - manual grading
-          pointsEarned: 4
-        },
-        {
-          questionId: 'q4',
-          answer: ['JavaScript', 'user'],
-          isCorrect: true,
-          pointsEarned: 2
-        },
-        {
-          questionId: 'q5',
-          answer: 'd',
-          isCorrect: true,
-          pointsEarned: 1
-        }
-      ]
-    };
-  }, // <--- ĐÃ SỬA: Thêm đóng ngoặc nhọn và dấu phẩy ở đây
+    const response = await api.get(`/quizzes/${quizId}/results/${attemptId}`);
+    return response.data;
+  },
 
   /**
    * Start a quiz attempt
@@ -72,35 +26,8 @@ const quizService = {
     return response.data;
   },
 
-  /**
-   * Save quiz answers (auto-save)
-   * @param {string} quizId - Quiz ID
-   * @param {string} attemptId - Attempt ID
-   * @param {Object} answers - Answers object { questionId: answer }
-   * @returns {Promise} Saved answers
-   */
-  saveAnswers: async (quizId, attemptId, answers) => {
-    try {
-      const response = await api.put(`/quizzes/${quizId}/attempts/${attemptId}/answers`, {
-        answers
-      });
-      return response.data;
-    } catch (error) {
-      // Throw error để component xử lý
-      throw error;
-    }
-  },
-
-  /**
-   * Get saved answers for a quiz attempt
-   * @param {string} quizId - Quiz ID
-   * @param {string} attemptId - Attempt ID
-   * @returns {Promise} Saved answers
-   */
-  getSavedAnswers: async (quizId, attemptId) => {
-    const response = await api.get(`/quizzes/${quizId}/attempts/${attemptId}/answers`);
-    return response.data;
-  },
+  // Note: Backend doesn't support auto-save during quiz
+  // Answers are only saved when quiz is submitted
 
   /**
    * Submit quiz
@@ -112,7 +39,7 @@ const quizService = {
   submitQuiz: async (quizId, attemptId, answers) => {
     const response = await api.post(`/quizzes/${quizId}/submit`, {
       attemptId,
-      answers
+      answers,
     });
     return response.data;
   },
@@ -123,29 +50,8 @@ const quizService = {
    * @returns {Promise} List of attempts
    */
   getQuizAttempts: async (quizId) => {
-    // TODO: Replace with actual API call
-    // const response = await api.get(`/quizzes/${quizId}/attempts`);
-    // return response.data;
-
-    // Mock data for development
-    return [
-      {
-        id: 'attempt-1',
-        attemptNumber: 1,
-        percentage: 85,
-        isPassed: true,
-        submittedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-        timeUsed: 28
-      },
-      {
-        id: 'attempt-2',
-        attemptNumber: 2,
-        percentage: 92,
-        isPassed: true,
-        submittedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        timeUsed: 25
-      }
-    ];
+    const response = await api.get(`/quizzes/${quizId}/attempts`);
+    return response.data;
   },
 
   /**
@@ -154,12 +60,9 @@ const quizService = {
    * @returns {Promise} Quiz details
    */
   getQuizDetail: async (quizId) => {
-    // TODO: Replace with actual API call
-    // const response = await api.get(`/quizzes/${quizId}`);
-    // return response.data;
-
-    // Mock data for development
-    return {
+    const response = await api.get(`/quizzes/${quizId}`);
+    return response.data;
+  },
       id: quizId,
       title: "JavaScript Fundamentals Quiz",
       description: "Test your knowledge of basic JavaScript concepts",
@@ -168,59 +71,64 @@ const quizService = {
       attemptsAllowed: 3,
       questions: [
         {
-          id: 'q1',
-          type: 'multiple_choice',
-          question: 'What is the capital of France?',
+          id: "q1",
+          type: "multiple_choice",
+          question: "What is the capital of France?",
           options: [
-            { id: 'a', text: 'London', isCorrect: false },
-            { id: 'b', text: 'Paris', isCorrect: true },
-            { id: 'c', text: 'Berlin', isCorrect: false },
-            { id: 'd', text: 'Madrid', isCorrect: false }
+            { id: "a", text: "London", isCorrect: false },
+            { id: "b", text: "Paris", isCorrect: true },
+            { id: "c", text: "Berlin", isCorrect: false },
+            { id: "d", text: "Madrid", isCorrect: false },
           ],
           points: 1,
-          explanation: 'Paris is the capital and largest city of France.'
+          explanation: "Paris is the capital and largest city of France.",
         },
         {
-          id: 'q2',
-          type: 'true_false',
-          question: 'React is a JavaScript library for building user interfaces.',
-          correctAnswer: 'true',
+          id: "q2",
+          type: "true_false",
+          question:
+            "React is a JavaScript library for building user interfaces.",
+          correctAnswer: "true",
           points: 1,
-          explanation: 'React is indeed a JavaScript library developed by Facebook for building user interfaces.'
+          explanation:
+            "React is indeed a JavaScript library developed by Facebook for building user interfaces.",
         },
         {
-          id: 'q3',
-          type: 'essay',
-          question: 'Explain the concept of React hooks and provide examples.',
+          id: "q3",
+          type: "essay",
+          question: "Explain the concept of React hooks and provide examples.",
           points: 5,
-          explanation: 'React hooks are functions that let you use state and other React features in functional components. Examples include useState, useEffect, useContext, etc.'
+          explanation:
+            "React hooks are functions that let you use state and other React features in functional components. Examples include useState, useEffect, useContext, etc.",
         },
         {
-          id: 'q4',
-          type: 'fill_blank',
-          question: 'Fill in the blanks to complete the sentence.',
-          text: 'React is a _ library for building _ interfaces.',
-          blanks: ['JavaScript', 'user'],
-          correctAnswers: ['JavaScript', 'user'],
+          id: "q4",
+          type: "fill_blank",
+          question: "Fill in the blanks to complete the sentence.",
+          text: "React is a _ library for building _ interfaces.",
+          blanks: ["JavaScript", "user"],
+          correctAnswers: ["JavaScript", "user"],
           points: 2,
-          explanation: 'React is a JavaScript library for building user interfaces.'
+          explanation:
+            "React is a JavaScript library for building user interfaces.",
         },
         {
-          id: 'q5',
-          type: 'multiple_choice',
-          question: 'Which of the following is NOT a JavaScript framework?',
+          id: "q5",
+          type: "multiple_choice",
+          question: "Which of the following is NOT a JavaScript framework?",
           options: [
-            { id: 'a', text: 'React', isCorrect: false },
-            { id: 'b', text: 'Vue', isCorrect: false },
-            { id: 'c', text: 'Angular', isCorrect: false },
-            { id: 'd', text: 'Python', isCorrect: true }
+            { id: "a", text: "React", isCorrect: false },
+            { id: "b", text: "Vue", isCorrect: false },
+            { id: "c", text: "Angular", isCorrect: false },
+            { id: "d", text: "Python", isCorrect: true },
           ],
           points: 1,
-          explanation: 'Python is a programming language, not a JavaScript framework.'
-        }
-      ]
+          explanation:
+            "Python is a programming language, not a JavaScript framework.",
+        },
+      ],
     };
-  }
+  },
 };
 
 export default quizService;

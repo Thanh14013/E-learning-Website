@@ -30,7 +30,8 @@ class SocketService {
       return;
     }
 
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
+    const socketUrl =
+      import.meta.env.VITE_SOCKET_URL || "http://localhost:3000";
     const options = {
       autoConnect: true,
       reconnection: true,
@@ -66,28 +67,32 @@ class SocketService {
     this.socket.on("disconnect", (reason) => {
       this.isConnected = false;
       console.log("[socketService] DISCONNECTED:", reason);
-      
+
       if (reason === "io server disconnect") {
         // Server disconnected, manual reconnect needed
         this.socket.connect();
       } else {
         toastService.warning("Mất kết nối với máy chủ");
       }
-      
+
       this.notifyContexts("connection", { connected: false, reason });
     });
 
     this.socket.on("connect_error", (error) => {
       this.reconnectAttempts++;
       console.error("[socketService] Connection error:", error.message);
-      
+
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         toastService.error("Không thể kết nối với máy chủ");
       }
     });
 
     this.socket.on("reconnect", (attemptNumber) => {
-      console.log("[socketService] RECONNECTED after", attemptNumber, "attempts");
+      console.log(
+        "[socketService] RECONNECTED after",
+        attemptNumber,
+        "attempts"
+      );
       toastService.success("Đã kết nối lại với máy chủ");
       this.notifyContexts("connection", { connected: true, reconnected: true });
     });
@@ -114,11 +119,15 @@ class SocketService {
     this.socket.on("notification:new", (notification) => {
       console.log("[socketService] notification:new", notification);
       this.notifyContexts("notification:new", notification);
-      
+
       // Show toast for important notifications
       if (notification?.title) {
-        const toastType = notification.type === "error" ? "error" : 
-                         notification.type === "warning" ? "warning" : "info";
+        const toastType =
+          notification.type === "error"
+            ? "error"
+            : notification.type === "warning"
+            ? "warning"
+            : "info";
         toastService[toastType](notification.title, {
           duration: notification.type === "error" ? 5000 : 3000,
         });
@@ -139,7 +148,7 @@ class SocketService {
     this.socket.on("discussion:created", (data) => {
       console.log("[socketService] discussion:created", data);
       this.notifyContexts("discussion:created", data);
-      
+
       if (data?.title) {
         toastService.info(`Thảo luận mới: ${data.title}`);
       }
@@ -149,9 +158,11 @@ class SocketService {
     this.socket.on("comment:created", (data) => {
       console.log("[socketService] comment:created", data);
       this.notifyContexts("comment:created", data);
-      
+
       if (data?.userName && data?.discussionTitle) {
-        toastService.info(`${data.userName} đã bình luận trong "${data.discussionTitle}"`);
+        toastService.info(
+          `${data.userName} đã bình luận trong "${data.discussionTitle}"`
+        );
       }
     });
 
@@ -172,9 +183,11 @@ class SocketService {
     this.socket.on("session:user-joined", (data) => {
       console.log("[socketService] session:user-joined", data);
       this.notifyContexts("session:user-joined", data);
-      
+
       if (data?.userName && data?.sessionTitle) {
-        toastService.info(`${data.userName} đã tham gia "${data.sessionTitle}"`);
+        toastService.info(
+          `${data.userName} đã tham gia "${data.sessionTitle}"`
+        );
       }
     });
 
@@ -194,9 +207,9 @@ class SocketService {
     this.socket.on("session:user-screen-share", (data) => {
       console.log("[socketService] session:user-screen-share", data);
       this.notifyContexts("session:user-screen-share", data);
-      
+
       if (data?.userName) {
-        const message = data.isSharing 
+        const message = data.isSharing
           ? `${data.userName} đã bắt đầu chia sẻ màn hình`
           : `${data.userName} đã dừng chia sẻ màn hình`;
         toastService.info(message);
@@ -213,7 +226,7 @@ class SocketService {
     this.socket.on("session:started", (data) => {
       console.log("[socketService] session:started", data);
       this.notifyContexts("session:started", data);
-      
+
       if (data?.title) {
         toastService.success(`Phiên học "${data.title}" đã bắt đầu`);
       }
@@ -223,7 +236,7 @@ class SocketService {
     this.socket.on("session:ended", (data) => {
       console.log("[socketService] session:ended", data);
       this.notifyContexts("session:ended", data);
-      
+
       if (data?.title) {
         toastService.info(`Phiên học "${data.title}" đã kết thúc`);
       }
@@ -274,7 +287,10 @@ class SocketService {
         try {
           callback(data);
         } catch (error) {
-          console.error(`[socketService] Error in callback for ${eventType}:`, error);
+          console.error(
+            `[socketService] Error in callback for ${eventType}:`,
+            error
+          );
         }
       });
     }

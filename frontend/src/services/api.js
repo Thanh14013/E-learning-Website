@@ -3,24 +3,24 @@ import { handleApiError, isAuthenticationError } from "../utils/errorHandler";
 import toastService from "./toastService";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
-  timeout: 10000, // 10s timeout
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Request Interceptor - Add token to requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const accessToken = localStorage.getItem("accessToken");
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
   (error) => {
-    // Handle request errors
     if (import.meta.env.DEV) {
       console.error("Request Error:", error);
     }
@@ -40,7 +40,8 @@ api.interceptors.response.use(
 
     // Handle authentication errors (401)
     if (isAuthenticationError(error)) {
-      localStorage.removeItem("token");
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
       // Show toast notification
