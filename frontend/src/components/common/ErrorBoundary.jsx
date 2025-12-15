@@ -5,9 +5,9 @@ import './ErrorBoundary.css';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { 
-      hasError: false, 
-      error: null, 
+    this.state = {
+      hasError: false,
+      error: null,
       errorInfo: null,
       retryCount: 0
     };
@@ -21,7 +21,7 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Log error details
     this.logError(error, errorInfo);
-    
+
     // Update state with error details
     this.setState({
       error: error,
@@ -31,7 +31,7 @@ class ErrorBoundary extends React.Component {
 
   logError = (error, errorInfo) => {
     // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('Error Boundary caught an error:', error);
       console.error('Error Info:', errorInfo);
     }
@@ -47,7 +47,7 @@ class ErrorBoundary extends React.Component {
     // - Sentry: Sentry.captureException(error, { extra: errorInfo });
     // - LogRocket: LogRocket.captureException(error);
     // - Custom API endpoint
-    
+
     const errorData = {
       message: error.message,
       stack: error.stack,
@@ -60,7 +60,7 @@ class ErrorBoundary extends React.Component {
 
     // For now, we'll just log it (replace with actual service call)
     console.log('Error reported to service:', errorData);
-    
+
     // Example of sending to a custom API:
     // fetch('/api/errors', {
     //   method: 'POST',
@@ -86,7 +86,7 @@ class ErrorBoundary extends React.Component {
       errorInfo: null,
       retryCount: 0
     });
-    
+
     // Navigate to home page
     window.location.href = '/';
   };
@@ -97,31 +97,31 @@ class ErrorBoundary extends React.Component {
         <div className="error-boundary">
           <div className="error-boundary__content">
             <div className="error-boundary__icon">
-              <svg 
-                width="64" 
-                height="64" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                width="64"
+                height="64"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
                 strokeWidth="2"
                 className="error-icon"
               >
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
             </div>
-            
+
             <h2 className="error-boundary__title">
               Oops! Something went wrong
             </h2>
-            
+
             <p className="error-boundary__message">
-              We're sorry, but something unexpected happened. Our team has been notified 
+              We're sorry, but something unexpected happened. Our team has been notified
               and we're working to fix this issue.
             </p>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <details className="error-boundary__details">
                 <summary>Error Details (Development Only)</summary>
                 <div className="error-boundary__error-info">
@@ -134,15 +134,15 @@ class ErrorBoundary extends React.Component {
             )}
 
             <div className="error-boundary__actions">
-              <Button 
+              <Button
                 onClick={this.handleRetry}
                 variant="primary"
                 className="error-boundary__retry-btn"
               >
                 Try Again
               </Button>
-              
-              <Button 
+
+              <Button
                 onClick={this.handleGoHome}
                 variant="secondary"
                 className="error-boundary__home-btn"

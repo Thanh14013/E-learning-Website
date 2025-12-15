@@ -63,6 +63,14 @@ const quizService = {
     const response = await api.get(`/quizzes/${quizId}`);
     return response.data;
   },
+
+  /**
+   * Get mock quiz data (for development/testing)
+   * @param {string} quizId - Quiz ID
+   * @returns {Object} Mock quiz data
+   */
+  getMockQuizData: (quizId) => {
+    return {
       id: quizId,
       title: "JavaScript Fundamentals Quiz",
       description: "Test your knowledge of basic JavaScript concepts",

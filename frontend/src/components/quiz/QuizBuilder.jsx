@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import toastService from '../../services/toastService';
 import { Button } from '../../components/common/Button';
@@ -14,8 +13,7 @@ import styles from './QuizBuilder.module.css';
  * Supports: Multiple Choice, True/False, Essay, Fill-in-the-Blank
  */
 export default function QuizBuilder({ courseId, quizId = null, onClose }) {
-    const { user } = useAuth();
-    const navigate = useNavigate();
+
 
     // Quiz metadata
     const [quizData, setQuizData] = useState({
