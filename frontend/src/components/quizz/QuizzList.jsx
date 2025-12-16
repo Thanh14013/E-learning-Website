@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import api from '../../services/api';
+import toastService from '../../services/toastService';
 import './QuizzList.css';
 
 const QuizzList = ({ courseId }) => {
@@ -20,103 +22,84 @@ const QuizzList = ({ courseId }) => {
   const fetchQuizzes = async () => {
     try {
       setLoading(true);
-      // Enhanced mock data following teacher UI patterns
-      const mockQuizzes = [
-        {
-          id: 1,
-          title: "JavaScript Fundamentals Quiz",
-          description: "Test your knowledge of basic JavaScript concepts including variables, functions, and DOM manipulation",
-          duration: 30,
-          passingScore: 70,
-          totalQuestions: 20,
-          attempts: [
-            { id: 1, score: 85, completedAt: "2024-01-15T10:30:00Z", status: "completed" },
-            { id: 2, score: 92, completedAt: "2024-01-20T14:15:00Z", status: "completed" }
-          ],
-          status: "completed",
-          bestScore: 92,
-          lastAttempt: "2024-01-20T14:15:00Z",
-          category: "Programming",
-          difficulty: "Beginner",
-          isPublished: true,
-          createdAt: "2024-01-10T08:00:00Z"
-        },
-        {
-          id: 2,
-          title: "React Components Quiz",
-          description: "Understanding React components, lifecycle methods, hooks, and state management",
-          duration: 45,
-          passingScore: 75,
-          totalQuestions: 25,
-          attempts: [
-            { id: 3, score: 68, completedAt: "2024-01-18T09:45:00Z", status: "completed" },
-            { id: 4, score: null, completedAt: null, status: "in_progress" }
-          ],
-          status: "in_progress",
-          bestScore: 68,
-          lastAttempt: "2024-01-18T09:45:00Z",
-          category: "Programming",
-          difficulty: "Intermediate",
-          isPublished: true,
-          createdAt: "2024-01-12T10:30:00Z"
-        },
-        {
-          id: 3,
-          title: "Node.js Backend Quiz",
-          description: "Server-side JavaScript, Express.js, MongoDB, and RESTful API development",
-          duration: 60,
-          passingScore: 80,
-          totalQuestions: 30,
-          attempts: [],
-          status: "not_started",
-          bestScore: null,
-          lastAttempt: null,
-          category: "Programming",
-          difficulty: "Advanced",
-          isPublished: true,
-          createdAt: "2024-01-14T14:20:00Z"
-        },
-        {
-          id: 4,
-          title: "CSS Grid & Flexbox Quiz",
-          description: "Modern CSS layout techniques including Grid and Flexbox properties",
-          duration: 25,
-          passingScore: 65,
-          totalQuestions: 15,
-          attempts: [
-            { id: 5, score: 78, completedAt: "2024-01-16T16:30:00Z", status: "completed" }
-          ],
-          status: "completed",
-          bestScore: 78,
-          lastAttempt: "2024-01-16T16:30:00Z",
-          category: "Design",
-          difficulty: "Intermediate",
-          isPublished: true,
-          createdAt: "2024-01-11T09:15:00Z"
-        },
-        {
-          id: 5,
-          title: "Database Design Quiz",
-          description: "SQL queries, database normalization, and relationship design",
-          duration: 40,
-          passingScore: 70,
-          totalQuestions: 22,
-          attempts: [],
-          status: "not_started",
-          bestScore: null,
-          lastAttempt: null,
-          category: "Programming",
-          difficulty: "Intermediate",
-          isPublished: false,
-          createdAt: "2024-01-13T11:45:00Z"
-        }
-      ];
-      
-      setQuizzes(mockQuizzes);
+      // Fetch quizzes from backend API
+      const response = await api.get(`/quizzes/course/${courseId}`);
+      const quizzesData = response.data.data || response.data || [];
+
+      // Fetch user's attempts for each quiz to determine status
+      const quizzesWithStatus = await Promise.all(
+        quizzesData.map(async (quiz) => {
+          try {
+            const attemptsResponse = await api.get(`/quizzes/${quiz._id}/attempts`);
+            const attempts = attemptsResponse.data.data || attemptsResponse.data || [];
+
+            // Determine quiz status and best score
+            let status = 'not_started';
+            let bestScore = null;
+            let lastAttempt = null;
+
+            if (attempts.length > 0) {
+              const completedAttempts = attempts.filter(a => a.submittedAt);
+              if (completedAttempts.length > 0) {
+                status = 'completed';
+                bestScore = Math.max(...completedAttempts.map(a => a.percentage || 0));
+                lastAttempt = completedAttempts[0].submittedAt;
+              } else if (attempts.some(a => a.startedAt && !a.submittedAt)) {
+                status = 'in_progress';
+              }
+            }
+
+            return {
+              id: quiz._id,
+              title: quiz.title,
+              description: quiz.description || '',
+              duration: quiz.duration || 0,
+              passingScore: quiz.passingScore || 70,
+              totalQuestions: quiz.totalQuestions || 0,
+              attempts: attempts.map(a => ({
+                id: a._id,
+                score: a.percentage || null,
+                completedAt: a.submittedAt || null,
+                status: a.submittedAt ? 'completed' : 'in_progress'
+              })),
+              status,
+              bestScore,
+              lastAttempt,
+              category: quiz.category || 'General',
+              difficulty: quiz.difficulty || 'Beginner',
+              isPublished: quiz.isPublished !== false,
+              createdAt: quiz.createdAt
+            };
+          } catch (attemptError) {
+            // If fetching attempts fails, return quiz without attempt data
+            console.error(`Error fetching attempts for quiz ${quiz._id}:`, attemptError);
+            return {
+              id: quiz._id,
+              title: quiz.title,
+              description: quiz.description || '',
+              duration: quiz.duration || 0,
+              passingScore: quiz.passingScore || 70,
+              totalQuestions: quiz.totalQuestions || 0,
+              attempts: [],
+              status: 'not_started',
+              bestScore: null,
+              lastAttempt: null,
+              category: quiz.category || 'General',
+              difficulty: quiz.difficulty || 'Beginner',
+              isPublished: quiz.isPublished !== false,
+              createdAt: quiz.createdAt
+            };
+          }
+        })
+      );
+
+      setQuizzes(quizzesWithStatus);
       setError(null);
     } catch (err) {
       setError('Failed to load quizzes');
       console.error('Error fetching quizzes:', err);
+      toastService.error('Failed to load quizzes');
+      setQuizzes([]);
     } finally {
       setLoading(false);
     }
@@ -125,7 +108,7 @@ const QuizzList = ({ courseId }) => {
   // Filter and sort quizzes
   const filteredQuizzes = quizzes.filter(quiz => {
     const matchesSearch = quiz.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         quiz.description.toLowerCase().includes(searchTerm.toLowerCase());
+      quiz.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || quiz.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -137,8 +120,10 @@ const QuizzList = ({ courseId }) => {
       case 'duration':
         return a.duration - b.duration;
       case 'difficulty':
-        { const difficultyOrder = { 'Beginner': 1, 'Intermediate': 2, 'Advanced': 3 };
-        return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]; }
+        {
+          const difficultyOrder = { 'Beginner': 1, 'Intermediate': 2, 'Advanced': 3 };
+          return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
+        }
       case 'created':
         return new Date(b.createdAt) - new Date(a.createdAt);
       default:
@@ -152,7 +137,7 @@ const QuizzList = ({ courseId }) => {
       in_progress: { text: 'In Progress', className: 'status-in-progress', icon: '🔄' },
       completed: { text: 'Completed', className: 'status-completed', icon: '✅' }
     };
-    
+
     const config = statusConfig[status] || statusConfig.not_started;
     return (
       <span className={`status-badge ${config.className}`}>
@@ -168,7 +153,7 @@ const QuizzList = ({ courseId }) => {
       'Intermediate': { className: 'difficulty-intermediate', color: '#F59E0B' },
       'Advanced': { className: 'difficulty-advanced', color: '#EF4444' }
     };
-    
+
     const config = difficultyConfig[difficulty] || difficultyConfig['Beginner'];
     return (
       <span className={`difficulty-badge ${config.className}`} style={{ backgroundColor: config.color }}>
@@ -180,7 +165,7 @@ const QuizzList = ({ courseId }) => {
   const getActionButton = (quiz) => {
     if (quiz.status === 'not_started') {
       return (
-        <button 
+        <button
           className="quiz-action-btn start-btn"
           onClick={() => handleStartQuiz(quiz.id)}
         >
@@ -189,7 +174,7 @@ const QuizzList = ({ courseId }) => {
       );
     } else if (quiz.status === 'in_progress') {
       return (
-        <button 
+        <button
           className="quiz-action-btn continue-btn"
           onClick={() => handleContinueQuiz(quiz.id)}
         >
@@ -198,7 +183,7 @@ const QuizzList = ({ courseId }) => {
       );
     } else {
       return (
-        <button 
+        <button
           className="quiz-action-btn retake-btn"
           onClick={() => handleRetakeQuiz(quiz.id)}
         >
@@ -296,47 +281,47 @@ const QuizzList = ({ courseId }) => {
         </div>
       </div>
 
-     {/* Filters and Search */}
-<div className="quiz-filters">
-  <div className="filters-row">
-    <div className="search-container col-70">
-      <input
-        type="text"
-        placeholder="Search quizzes..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="search-input"
-      />
-      <span className="search-icon">🔍</span>
-    </div>
+      {/* Filters and Search */}
+      <div className="quiz-filters">
+        <div className="filters-row">
+          <div className="search-container col-70">
+            <input
+              type="text"
+              placeholder="Search quizzes..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+            <span className="search-icon">🔍</span>
+          </div>
 
-    <div className="filter-group col-15">
-      <select
-        value={statusFilter}
-        onChange={(e) => setStatusFilter(e.target.value)}
-        className="filter-select"
-      >
-        <option value="all">All Status</option>
-        <option value="not_started">Not Started</option>
-        <option value="in_progress">In Progress</option>
-        <option value="completed">Completed</option>
-      </select>
-    </div>
+          <div className="filter-group col-15">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Status</option>
+              <option value="not_started">Not Started</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
 
-    <div className="filter-group col-15">
-      <select
-        value={sortBy}
-        onChange={(e) => setSortBy(e.target.value)}
-        className="filter-select"
-      >
-        <option value="title">Sort by Title</option>
-        <option value="duration">Sort by Duration</option>
-        <option value="difficulty">Sort by Difficulty</option>
-        <option value="created">Sort by Created Date</option>
-      </select>
-    </div>
-  </div>
-</div>
+          <div className="filter-group col-15">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="filter-select"
+            >
+              <option value="title">Sort by Title</option>
+              <option value="duration">Sort by Duration</option>
+              <option value="difficulty">Sort by Difficulty</option>
+              <option value="created">Sort by Created Date</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
 
       {/* Quiz Grid */}
@@ -375,7 +360,7 @@ const QuizzList = ({ courseId }) => {
                       <span className="metric-label">Duration</span>
                     </div>
                   </div>
-                  
+
                   <div className="metric-item">
                     <div className="metric-icon">❓</div>
                     <div className="metric-content">
@@ -383,7 +368,7 @@ const QuizzList = ({ courseId }) => {
                       <span className="metric-label">Questions</span>
                     </div>
                   </div>
-                  
+
                   <div className="metric-item">
                     <div className="metric-icon">🎯</div>
                     <div className="metric-content">
@@ -431,7 +416,7 @@ const QuizzList = ({ courseId }) => {
               {/* Quiz Actions */}
               <div className="quiz-actions">
                 {getActionButton(quiz)}
-                <button 
+                <button
                   className="quiz-details-btn"
                   onClick={() => handleViewDetails(quiz.id)}
                 >

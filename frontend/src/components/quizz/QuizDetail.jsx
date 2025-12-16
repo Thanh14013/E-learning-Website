@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import api from '../../services/api';
+import toastService from '../../services/toastService';
 import './QuizDetail.css';
 
 const QuizDetail = () => {
@@ -19,71 +21,74 @@ const QuizDetail = () => {
   const fetchQuizDetail = async () => {
     try {
       setLoading(true);
-      // Mock data following student UI patterns
-      const mockQuiz = {
-        id: quizId,
-        title: "JavaScript Fundamentals Quiz",
-        description: "Test your knowledge of basic JavaScript concepts including variables, functions, and DOM manipulation. This quiz covers essential topics that every JavaScript developer should know.",
-        courseId: "course-1",
-        courseTitle: "Complete JavaScript Course",
-        duration: 30,
-        passingScore: 70,
-        attemptsAllowed: 3,
-        totalQuestions: 20,
-        difficulty: "Beginner",
-        category: "Programming",
-        isPublished: true,
-        createdAt: "2024-01-10T08:00:00Z",
-        instructions: [
+
+      // Fetch quiz details from backend API
+      const quizResponse = await api.get(`/quizzes/${quizId}`);
+      const quizData = quizResponse.data.data || quizResponse.data;
+
+      // Fetch user's attempts for this quiz
+      const attemptsResponse = await api.get(`/quizzes/${quizId}/attempts`);
+      const attemptsData = attemptsResponse.data.data || attemptsResponse.data || [];
+
+      // Fetch course information if courseId is available
+      let courseTitle = 'Unknown Course';
+      if (quizData.courseId) {
+        try {
+          const courseResponse = await api.get(`/courses/${quizData.courseId}`);
+          const courseData = courseResponse.data.data || courseResponse.data;
+          courseTitle = courseData.title || courseData.name || 'Unknown Course';
+        } catch (courseError) {
+          console.error('Error fetching course:', courseError);
+        }
+      }
+
+      // Transform quiz data to match component structure
+      const transformedQuiz = {
+        id: quizData._id,
+        title: quizData.title,
+        description: quizData.description || '',
+        courseId: quizData.courseId,
+        courseTitle: courseTitle,
+        duration: quizData.duration || 30,
+        passingScore: quizData.passingScore || 70,
+        attemptsAllowed: quizData.attemptsAllowed || 3,
+        totalQuestions: quizData.totalQuestions || 0,
+        difficulty: quizData.difficulty || 'Beginner',
+        category: quizData.category || 'General',
+        isPublished: quizData.isPublished !== false,
+        createdAt: quizData.createdAt,
+        instructions: quizData.instructions || [
           "Read each question carefully before answering",
-          "You have 30 minutes to complete this quiz",
+          `You have ${quizData.duration || 30} minutes to complete this quiz`,
           "You can navigate between questions using the navigation panel",
           "Flag questions you want to review later",
           "Once submitted, you cannot make changes",
-          "You can attempt this quiz up to 3 times"
+          `You can attempt this quiz up to ${quizData.attemptsAllowed || 3} times`
         ],
-        topics: [
-          "Variables and Data Types",
-          "Functions and Scope",
-          "DOM Manipulation",
-          "Event Handling",
-          "Basic Algorithms"
-        ]
+        topics: quizData.topics || []
       };
 
-      const mockAttempts = [
-        {
-          id: 1,
-          score: 85,
-          percentage: 85,
-          isPassed: true,
-          attemptNumber: 1,
-          startedAt: "2024-01-15T10:30:00Z",
-          submittedAt: "2024-01-15T11:00:00Z",
-          timeUsed: 28,
-          correctAnswers: 17,
-          totalQuestions: 20
-        },
-        {
-          id: 2,
-          score: 92,
-          percentage: 92,
-          isPassed: true,
-          attemptNumber: 2,
-          startedAt: "2024-01-20T14:15:00Z",
-          submittedAt: "2024-01-20T14:42:00Z",
-          timeUsed: 27,
-          correctAnswers: 18,
-          totalQuestions: 20
-        }
-      ];
+      // Transform attempts data
+      const transformedAttempts = attemptsData.map((attempt, index) => ({
+        id: attempt._id,
+        score: attempt.score || 0,
+        percentage: attempt.percentage || 0,
+        isPassed: attempt.isPassed || false,
+        attemptNumber: attempt.attemptNumber || index + 1,
+        startedAt: attempt.startedAt,
+        submittedAt: attempt.submittedAt,
+        timeUsed: attempt.timeUsed || 0,
+        correctAnswers: attempt.correctAnswers || 0,
+        totalQuestions: attempt.totalQuestions || transformedQuiz.totalQuestions
+      }));
 
-      setQuiz(mockQuiz);
-      setAttempts(mockAttempts);
+      setQuiz(transformedQuiz);
+      setAttempts(transformedAttempts);
       setError(null);
     } catch (err) {
       setError('Failed to load quiz details');
       console.error('Error fetching quiz:', err);
+      toastService.error('Failed to load quiz details');
     } finally {
       setLoading(false);
     }
@@ -166,7 +171,7 @@ const QuizDetail = () => {
   }
 
   const canTakeQuiz = attempts.length < quiz.attemptsAllowed;
-  const bestAttempt = attempts.reduce((best, current) => 
+  const bestAttempt = attempts.reduce((best, current) =>
     current.percentage > (best?.percentage || 0) ? current : best, null
   );
 
@@ -186,7 +191,7 @@ const QuizDetail = () => {
         <div className="quiz-header-content">
           <div className="quiz-title-section">
             <div className="quiz-badges">
-              <span 
+              <span
                 className="difficulty-badge"
                 style={{ backgroundColor: getDifficultyColor(quiz.difficulty) }}
               >
@@ -201,7 +206,7 @@ const QuizDetail = () => {
 
           <div className="quiz-actions">
             {canTakeQuiz ? (
-              <button 
+              <button
                 className="start-quiz-btn"
                 onClick={handleStartQuiz}
               >
@@ -329,7 +334,7 @@ const QuizDetail = () => {
                     </div>
 
                     <div className="attempt-actions">
-                      <button 
+                      <button
                         className="view-attempt-btn"
                         onClick={() => handleViewAttempt(attempt.id)}
                       >
