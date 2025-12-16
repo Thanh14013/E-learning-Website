@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 .env
-/public/swagger
+public/swagger
