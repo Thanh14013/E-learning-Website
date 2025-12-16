@@ -1,3 +1,4 @@
+/* COURSE CAROUSEL CONTAINER */
 .carouselContainer {
   position: relative;
   max-width: fit-content;
@@ -5,7 +6,7 @@
 }
 
 :root {
-  --card-width: 280px; 
+  --card-width: 280px;
   --gap: 24px;
 }
 
@@ -13,168 +14,102 @@
   width: calc((var(--card-width) * 4) + (var(--gap) * 3));
   overflow: hidden;
   scroll-behavior: smooth;
-  padding: var(--spacing-1) 0; 
 }
 
 .courseList {
   display: flex;
   flex-wrap: nowrap;
   gap: var(--gap);
-  padding-bottom: var(--spacing-2); 
+  padding-bottom: 16px;
 }
 
+/*CAROUSEL NAVIGATION BUTTONS */
 .navButton {
   position: absolute;
   top: 40%;
   transform: translateY(-50%);
   z-index: 10;
-  
   background-color: var(--bg-card);
   border: 1px solid var(--color-gray-300);
   border-radius: 50%;
-  
   width: 44px;
   height: 44px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  
   box-shadow: var(--shadow-md);
-  transition: var(--transition-base); 
+  transition: all 0.2s ease;
 }
-
 .navButton:hover {
   background-color: var(--color-gray-100);
-  border-color: var(--color-gray-400);
   transform: translateY(-50%) scale(1.05);
-  color: var(--color-gray-900);
 }
-
 @media (prefers-color-scheme: dark) {
-  .navButton { 
-    border-color: var(--color-gray-600);
-    background-color: var(--color-gray-800);
-  }
-  .navButton:hover { 
-    background-color: var(--color-gray-700);
-    border-color: var(--color-gray-500);
-  }
-  .navButton svg { 
-    stroke: var(--text-primary); 
-  }
+    .navButton { border-color: var(--color-gray-600); }
+    .navButton:hover { background-color: var(--color-gray-700); }
+    .navButton svg { stroke: var(--text-primary); }
 }
 
 .navButton:disabled {
   opacity: 0.4;
   cursor: not-allowed;
   transform: translateY(-50%) scale(0.95);
-  box-shadow: none;
 }
-
 .navButton.left {
   left: -22px;
 }
-
 .navButton.right {
   right: -22px;
 }
-
 .navButton svg {
   width: 24px;
   height: 24px;
   stroke: var(--text-secondary);
-  transition: var(--transition-base);
 }
 
+/* COURSE CARD STYLES*/
 .courseCard {
   width: var(--card-width);
   flex-shrink: 0;
-  
   background-color: var(--bg-card);
-  border: 1px solid var(--color-gray-200);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
-  
   overflow: hidden;
   transition: var(--transition-base);
+  border: 1px solid var(--color-gray-200);
   display: flex;
   flex-direction: column;
 }
 
-.courseCard:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-gray-300);
-}
-
 @media (prefers-color-scheme: dark) {
-  .courseCard { 
-    border-color: var(--color-gray-700); 
-  }
-  .courseCard:hover {
-    border-color: var(--color-gray-600);
-  }
+    .courseCard { border-color: var(--color-gray-700); }
 }
 
-.courseCardImage { 
-  height: 120px; 
-  background-color: var(--color-gray-200); 
-  transition: var(--transition-base);
-}
+.courseCardImage { height: 120px; background-color: var(--color-gray-200); }
 
 .courseCardContent { 
-  padding: var(--spacing-2); 
-  flex-grow: 1; 
-  display: flex; 
-  flex-direction: column; 
-  color: var(--text-secondary);
+    padding: var(--spacing-2); 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    color: var(--text-secondary);
 }
-
 .courseCardContent h4 { 
-  font-size: 1.125rem;
-  font-weight: 600; 
-  margin-bottom: var(--spacing-1);
-  color: var(--text-primary); 
-  line-height: 1.4;
+    font-size: 1rem; 
+    font-weight: 600; 
+    margin: 0 0 4px 0;
+    color: var(--text-primary); 
 }
-
 .courseCardContent a { 
-  color: var(--text-primary); 
-  text-decoration: none; 
-  transition: var(--transition-base);
+    color: var(--text-primary); 
+    text-decoration: none; 
 }
+.courseCardContent a:hover { color: var(--color-student-primary); }
 
-.courseCardContent a:hover { 
-  color: var(--color-student-primary); 
-}
+.courseProgress { margin-top: auto; padding-top: var(--spacing-2); }
+.progressBar { height: 8px; background-color: var(--color-gray-200); border-radius: 999px; overflow: hidden; }
+@media (prefers-color-scheme: dark) { .progressBar { background-color: var(--color-gray-700); } }
 
-.courseProgress { 
-  margin-top: auto; 
-  padding-top: var(--spacing-2); 
-}
-
-.progressBar { 
-  height: 6px;
-  background-color: var(--color-gray-200); 
-  border-radius: var(--border-radius-full); 
-  overflow: hidden; 
-}
-
-@media (prefers-color-scheme: dark) { 
-  .progressBar { 
-    background-color: var(--color-gray-700); 
-  } 
-}
-
-.progressBarFill { 
-  height: 100%; 
-  background-color: var(--color-success); 
-  border-radius: var(--border-radius-full); 
-}
-
-.progressLabel { 
-  font-size: 0.8rem; 
-  color: var(--text-secondary); 
-  margin-top: 4px; 
-}
+.progressBarFill { height: 100%; background-color: var(--color-success); border-radius: 999px; }
+.progressLabel { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
