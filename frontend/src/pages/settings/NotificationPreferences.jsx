@@ -69,18 +69,13 @@ const NotificationPreferences = () => {
     const loadPreferences = async () => {
         try {
             setLoading(true);
-            // Mock - would fetch from API
-            // const response = await api.get('/users/notification-preferences');
-            // setPreferences(response.data.preferences);
-
-            // Load from localStorage for now
-            const saved = localStorage.getItem(`notification_prefs_${user?.id}`);
-            if (saved) {
-                setPreferences(JSON.parse(saved));
+            const response = await api.get('/notifications/preferences');
+            if (response.data.success) {
+                setPreferences(response.data.data);
             }
         } catch (error) {
             console.error('[NotificationPreferences] Error loading:', error);
-            toastService.error('Failed to load preferences');
+            toastService.error('Không thể tải cài đặt thông báo');
         } finally {
             setLoading(false);
         }
@@ -89,16 +84,13 @@ const NotificationPreferences = () => {
     const savePreferences = async () => {
         try {
             setSaving(true);
-            // Mock - would save to API
-            // await api.put('/users/notification-preferences', preferences);
-
-            // Save to localStorage for now
-            localStorage.setItem(`notification_prefs_${user?.id}`, JSON.stringify(preferences));
-
-            toastService.success('Preferences saved successfully');
+            const response = await api.put('/notifications/preferences', preferences);
+            if (response.data.success) {
+                toastService.success('Cài đặt thông báo đã được lưu');
+            }
         } catch (error) {
             console.error('[NotificationPreferences] Error saving:', error);
-            toastService.error('Failed to save preferences');
+            toastService.error('Không thể lưu cài đặt');
         } finally {
             setSaving(false);
         }

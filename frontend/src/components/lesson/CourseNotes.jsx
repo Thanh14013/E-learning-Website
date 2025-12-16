@@ -26,9 +26,6 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
         try {
             const response = await api.get(`/courses/${courseId}/lessons/${lessonId}/notes`);
             setNotes(response.data.notes || []);
-        } catch (error) {
-            toastService.error('Không thể tải ghi chú');
-        } finally {
             setLoading(false);
         }
     };
@@ -45,7 +42,6 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                 content: newNote,
                 timestamp: videoTimestamp || 0,
             });
-
             setNotes([response.data.note, ...notes]);
             setNewNote('');
             toastService.success('Đã thêm ghi chú');
@@ -66,7 +62,6 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
             const response = await api.put(`/courses/${courseId}/lessons/${lessonId}/notes/${noteId}`, {
                 content: editContent,
             });
-
             setNotes(notes.map((note) => (note._id === noteId ? response.data.note : note)));
             setEditingNoteId(null);
             setEditContent('');

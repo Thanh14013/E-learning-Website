@@ -86,8 +86,8 @@ const NotificationSettings = () => {
       setOriginalPreferences(mergedPreferences);
       console.log('[NotificationSettings] Loaded preferences:', mergedPreferences);
     } catch (error) {
-      console.warn('[NotificationSettings] Failed to load preferences, using defaults:', error);
-      // Use defaults if API fails (for demo/mock mode)
+      console.error('[NotificationSettings] Failed to load preferences:', error);
+      toastService.error('Không thể tải cài đặt thông báo');
       setPreferences(DEFAULT_PREFERENCES);
       setOriginalPreferences(DEFAULT_PREFERENCES);
     } finally {
