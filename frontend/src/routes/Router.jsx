@@ -3,6 +3,9 @@ import Layout from "../components/layout/Layout.jsx";
 import HomePage from "../pages/homepage/Home.jsx";
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
+import EmailVerificationRequired from "../pages/auth/EmailVerificationRequired.jsx";
+import CompleteTeacherProfile from "../pages/auth/CompleteTeacherProfile.jsx";
+import TeacherApprovalPending from "../pages/auth/TeacherApprovalPending.jsx";
 import Courses from "../pages/courses/Course.jsx";
 import CourseDetailPage from "../pages/courses/CourseDetail.jsx";
 import CreateCourse from "../pages/courses/CreateCourse.jsx";
@@ -40,6 +43,9 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
+      { path: "email-verification-required", element: <EmailVerificationRequired /> },
+      { path: "teacher/complete-profile", element: <CompleteTeacherProfile /> },
+      { path: "teacher/approval-pending", element: <TeacherApprovalPending /> },
       { path: "api-docs", element: <ApiDocs /> },
       { path: "forgot-password", element: <ForgotPasswordPage /> },
       { path: "reset-password/:token", element: <ResetPasswordPage /> },

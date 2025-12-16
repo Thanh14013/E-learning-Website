@@ -80,21 +80,4 @@ api.interceptors.response.use(
   }
 );
 
-// if (import.meta.env.VITE_USE_MOCK === "true") {
-//   api.post = async (url, data) => {
-//     if (url === "/auth/login") {
-//       if (data.email === "test@gmail.com" && data.password === "123456") {
-//         return {
-//           data: {
-//             token: "fake-jwt-token",
-//             user: { id: 1, name: "Mock User", email: data.email },
-//           },
-//         };
-//       }
-//       throw { response: { status: 401, data: { message: "Sai thông tin" } } };
-//     }
-//     return { data: {} };
-//   };
-// }
-
 export default api;
