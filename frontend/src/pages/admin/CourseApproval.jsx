@@ -89,14 +89,15 @@ const CourseApproval = () => {
     const loadCourses = async () => {
         try {
             setLoading(true);
-            // Mock - would fetch from API
-            // const response = await api.get('/admin/courses/pending');
-            // setCourses(response.data.courses);
-
-            await new Promise(resolve => setTimeout(resolve, 500));
+            const response = await api.get('/admin/courses/pending', {
+                params: { status: filter === 'all' ? undefined : filter }
+            });
+            if (response.data.success) {
+                setCourses(response.data.data);
+            }
         } catch (error) {
             console.error('[CourseApproval] Error loading:', error);
-            toastService.error('Failed to load courses');
+            toastService.error('Không thể tải danh sách khóa học');
         } finally {
             setLoading(false);
         }
@@ -115,46 +116,44 @@ const CourseApproval = () => {
 
     const handleApprove = async () => {
         try {
-            // Mock - would call API
-            // await api.put(`/admin/courses/${selectedCourse.id}/approve`, { notes: reviewNotes });
-
-            setCourses(prev => prev.map(c =>
-                c.id === selectedCourse.id
-                    ? { ...c, status: 'approved', approvedAt: new Date() }
-                    : c
-            ));
-
-            toastService.success(`Course "${selectedCourse.title}" approved`);
+            const response = await api.put(`/courses/${selectedCourse._id}/approve`, { notes: reviewNotes });
+            if (response.data.success) {
+                setCourses(prev => prev.map(c =>
+                    c._id === selectedCourse._id
+                        ? { ...c, approvalStatus: 'approved', approvedAt: new Date() }
+                        : c
+                ));
+                toastService.success(`Khóa học "${selectedCourse.title}" đã được duyệt`);
+            }
             setShowReviewModal(false);
             setSelectedCourse(null);
         } catch (error) {
             console.error('[CourseApproval] Error approving:', error);
-            toastService.error('Failed to approve course');
+            toastService.error('Không thể duyệt khóa học');
         }
     };
 
     const handleReject = async () => {
         if (!reviewNotes.trim()) {
-            toastService.error('Please provide rejection reason');
+            toastService.error('Vui lòng cung cấp lý do từ chối');
             return;
         }
 
         try {
-            // Mock - would call API
-            // await api.put(`/admin/courses/${selectedCourse.id}/reject`, { notes: reviewNotes });
-
-            setCourses(prev => prev.map(c =>
-                c.id === selectedCourse.id
-                    ? { ...c, status: 'rejected', rejectedAt: new Date(), rejectionReason: reviewNotes }
-                    : c
-            ));
-
-            toastService.success(`Course "${selectedCourse.title}" rejected`);
+            const response = await api.put(`/courses/${selectedCourse._id}/reject`, { notes: reviewNotes });
+            if (response.data.success) {
+                setCourses(prev => prev.map(c =>
+                    c._id === selectedCourse._id
+                        ? { ...c, approvalStatus: 'rejected', rejectedAt: new Date(), rejectionReason: reviewNotes }
+                        : c
+                ));
+                toastService.success(`Khóa học "${selectedCourse.title}" đã bị từ chối`);
+            }
             setShowReviewModal(false);
             setSelectedCourse(null);
         } catch (error) {
             console.error('[CourseApproval] Error rejecting:', error);
-            toastService.error('Failed to reject course');
+            toastService.error('Không thể từ chối khóa học');
         }
     };
 

@@ -148,16 +148,15 @@ const AdminDashboard = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            // Mock data - would fetch from API in production
-            // const response = await api.get('/admin/dashboard');
-            // setSystemHealth(response.data.systemHealth);
-            // setPlatformStats(response.data.platformStats);
-
-            // Simulate loading
-            await new Promise(resolve => setTimeout(resolve, 800));
+            const response = await api.get('/analytics/dashboard');
+            if (response.data.success) {
+                // Cập nhật dữ liệu thực từ API
+                // setPlatformStats(response.data.data.stats);
+                // setSystemHealth(response.data.data.health);
+            }
         } catch (error) {
             console.error('[AdminDashboard] Error loading data:', error);
-            toastService.error('Failed to load dashboard data');
+            toastService.error('Không thể tải dữ liệu dashboard');
         } finally {
             setLoading(false);
         }

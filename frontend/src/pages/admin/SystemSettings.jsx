@@ -93,18 +93,17 @@ const SystemSettings = () => {
     const loadSettings = async () => {
         try {
             setLoading(true);
-            // Mock - would fetch from API
+            // TODO: Tạo API endpoint /admin/settings ở backend
             // const response = await api.get('/admin/settings');
-            // setSettings(response.data.settings);
+            // if (response.data.success) {
+            //     setSettings(response.data.data);
+            // }
 
-            // Load from localStorage for demo
-            const saved = localStorage.getItem('system_settings');
-            if (saved) {
-                setSettings(JSON.parse(saved));
-            }
+            // Tạm thời giữ lại default settings vì chưa có API
+            console.warn('[SystemSettings] API chưa được implement');
         } catch (error) {
             console.error('[SystemSettings] Error loading:', error);
-            toastService.error('Failed to load settings');
+            toastService.error('Không thể tải cài đặt hệ thống');
         } finally {
             setLoading(false);
         }
@@ -113,16 +112,16 @@ const SystemSettings = () => {
     const saveSettings = async () => {
         try {
             setSaving(true);
-            // Mock - would save to API
-            // await api.put('/admin/settings', settings);
+            // TODO: Tạo API endpoint /admin/settings ở backend
+            // const response = await api.put('/admin/settings', settings);
+            // if (response.data.success) {
+            //     toastService.success('Cài đặt đã được lưu');
+            // }
 
-            // Save to localStorage for demo
-            localStorage.setItem('system_settings', JSON.stringify(settings));
-
-            toastService.success('Settings saved successfully');
+            toastService.warning('Chức năng này chưa được kết nối với backend');
         } catch (error) {
             console.error('[SystemSettings] Error saving:', error);
-            toastService.error('Failed to save settings');
+            toastService.error('Không thể lưu cài đặt');
         } finally {
             setSaving(false);
         }
