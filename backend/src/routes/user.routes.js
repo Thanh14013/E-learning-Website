@@ -7,6 +7,7 @@ import {
   uploadAvatar,
   updateUserRole,
   banUser,
+  completeTeacherProfile,
 } from "../controllers/user.controller.js";
 import upload from "../middleware/upload.js";
 import { isAdmin } from "../middleware/authorize.js";
@@ -23,6 +24,14 @@ router.put("/profile", authenticate, updateUserProfile);
 // POST /api/users/avatar - upload avatar
 router.post("/avatar", authenticate, upload.single("avatar"), uploadAvatar);
 
+// POST /api/users/complete-teacher-profile - Complete teacher profile with CV
+router.post(
+  "/complete-teacher-profile",
+  authenticate,
+  upload.single("cv"),
+  completeTeacherProfile
+);
+
 // GET /api/users/list - Admin: Get user list
 router.get("/list", authenticate, isAdmin, getUserList);
 
@@ -34,5 +43,11 @@ router.put("/:id/ban", authenticate, isAdmin, banUser);
 
 // DELETE /api/users/:id - Admin: Delete user
 router.delete("/:id", authenticate, isAdmin, deleteUser);
-
+// POST /api/users/complete-teacher-profile - Teacher: Complete profile with CV
+router.post(
+  "/complete-teacher-profile",
+  authenticate,
+  upload.single("cv"),
+  completeTeacherProfile
+);
 export default router;

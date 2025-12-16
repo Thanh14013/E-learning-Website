@@ -805,80 +805,80 @@ export const getCourseStudents = async (req, res) => {
  * @access Private
  */
 export const reviewCourse = async (req, res) => {
-    try {
-        const courseId = req.params.id;
-        const userId = req.user.id;
-        const { rating, comment } = req.body;
+  try {
+    const courseId = req.params.id;
+    const userId = req.user.id;
+    const { rating, comment } = req.body;
 
-        const course = await Course.findById(courseId);
-        if (!course) {
-            return res.status(404).json({
-                success: false,
-                message: "Course not found.",
-            });
-        }
-
-        // must be enrolled
-        if (!course.enrolledStudents.includes(userId)) {
-            return res.status(403).json({
-                success: false,
-                message: "You must enroll in this course before leaving a review.",
-            });
-        }
-
-        // must complete at least 1 lesson
-        const progress = await Progress.find({
-            userId,
-            courseId,
-            completed: true,
-        });
-
-        if (progress.length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: "You must complete a lesson before reviewing this course.",
-            });
-        }
-
-        // prevent duplicate review
-        const hasReviewed = course.reviews.some(
-            (r) => r.userId.toString() === userId
-        );
-
-        if (hasReviewed) {
-            return res.status(400).json({
-                success: false,
-                message: "You have already reviewed this course.",
-            });
-        }
-
-        // add review
-        course.reviews.push({
-            userId,
-            rating,
-            comment,
-            createdAt: new Date(),
-        });
-
-        // recalculate rating
-        course.totalReviews = course.reviews.length;
-        course.rating =
-            course.reviews.reduce((sum, r) => sum + r.rating, 0) /
-            course.totalReviews;
-
-        await course.save();
-
-        return res.status(201).json({
-            success: true,
-            message: "Review added successfully.",
-            rating: course.rating,
-            totalReviews: course.totalReviews,
-        });
-    } catch (error) {
-        console.error("Review course error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error while reviewing course.",
-        });
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found.",
+      });
     }
+
+    // must be enrolled
+    if (!course.enrolledStudents.includes(userId)) {
+      return res.status(403).json({
+        success: false,
+        message: "You must enroll in this course before leaving a review.",
+      });
+    }
+
+    // must complete at least 1 lesson
+    const progress = await Progress.find({
+      userId,
+      courseId,
+      completed: true,
+    });
+
+    if (progress.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "You must complete a lesson before reviewing this course.",
+      });
+    }
+
+    // prevent duplicate review
+    const hasReviewed = course.reviews.some(
+      (r) => r.userId.toString() === userId
+    );
+
+    if (hasReviewed) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already reviewed this course.",
+      });
+    }
+
+    // add review
+    course.reviews.push({
+      userId,
+      rating,
+      comment,
+      createdAt: new Date(),
+    });
+
+    // recalculate rating
+    course.totalReviews = course.reviews.length;
+    course.rating =
+      course.reviews.reduce((sum, r) => sum + r.rating, 0) /
+      course.totalReviews;
+
+    await course.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Review added successfully.",
+      rating: course.rating,
+      totalReviews: course.totalReviews,
+    });
+  } catch (error) {
+    console.error("Review course error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while reviewing course.",
+    });
+  }
 };

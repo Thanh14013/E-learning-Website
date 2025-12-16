@@ -376,3 +376,107 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Server error while deleting user." });
   }
 };
+/**
+ * POST /api/users/complete-teacher-profile
+ * @desc Submit teacher profile completion with CV
+ * @access Private (Teacher only)
+ *
+ * @body {string} phone - Teacher's phone number
+ * @body {string} address - Teacher's address
+ * @body {string} bio - Short bio
+ * @body {string} expertise - Areas of expertise
+ * @body {string} qualifications - Educational qualifications
+ * @file cv - CV file (PDF)
+ */
+export const completeTeacherProfile = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { phone, address, bio, expertise, qualifications } = req.body;
+
+    // Check if user is a teacher
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (user.role !== "teacher") {
+      return res
+        .status(403)
+        .json({ message: "Only teachers can complete this profile." });
+    }
+
+    if (!user.isVerified) {
+      return res
+        .status(403)
+        .json({ message: "Please verify your email first." });
+    }
+
+    if (user.profileCompleted) {
+      return res
+        .status(400)
+        .json({ message: "Profile has already been completed." });
+    }
+
+    // Validate required fields
+    if (!phone || !address || !bio || !expertise || !qualifications) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    // Check if CV file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: "CV file is required." });
+    }
+
+    // Upload CV to Cloudinary
+    let cvUrl, cvPublicId;
+    try {
+      const result = await uploadFile(req.file.path, "cvs");
+      cvUrl = result.secure_url;
+      cvPublicId = result.public_id;
+
+      // Delete local file after upload
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (uploadError) {
+      console.error("CV upload error:", uploadError);
+      return res.status(500).json({ message: "Failed to upload CV." });
+    }
+
+    // Update user profile
+    let profile = await UserProfile.findOne({ userId });
+    if (!profile) {
+      profile = new UserProfile({ userId });
+    }
+
+    profile.phone = phone.trim();
+    profile.address = address.trim();
+    profile.bio = bio.trim();
+    profile.expertise = expertise.trim();
+    profile.qualifications = qualifications.trim();
+    profile.cvUrl = cvUrl;
+    profile.cvPublicId = cvPublicId;
+
+    await profile.save();
+
+    // Update user status
+    user.profileCompleted = true;
+    user.profileApprovalStatus = "pending";
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Profile submitted successfully. Please wait for admin approval (at least 48 hours).",
+      data: {
+        profileCompleted: user.profileCompleted,
+        profileApprovalStatus: user.profileApprovalStatus,
+      },
+    });
+  } catch (error) {
+    console.error("Complete teacher profile error:", error);
+    res
+      .status(500)
+      .json({ message: "Server error while completing teacher profile." });
+  }
+};

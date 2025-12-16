@@ -61,6 +61,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    profileCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    profileApprovalStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: null,
+    },
     verificationToken: String,
     resetPasswordToken: String,
     resetPasswordExpire: Date,

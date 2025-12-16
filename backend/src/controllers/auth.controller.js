@@ -23,13 +23,20 @@ const isProduction = process.env.NODE_ENV === "production";
  */
 export const register = async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, role } = req.body;
 
     // Validate input data
     if (!fullName || !email || !password) {
       return res
         .status(400)
         .json({ message: "Please fill in all required fields." });
+    }
+
+    // Prevent admin role registration
+    if (role === "admin") {
+      return res
+        .status(403)
+        .json({ message: "Admin accounts cannot be registered." });
     }
 
     // Handle duplicate email error
@@ -43,11 +50,12 @@ export const register = async (req, res) => {
     // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
 
-    // create user record
+    // create user record with role (only student or teacher)
     const user = await User.create({
       fullName,
       email,
       password,
+      role: role === "teacher" ? "teacher" : "student",
       verificationToken,
     });
 
@@ -78,6 +86,8 @@ export const register = async (req, res) => {
         role: user.role,
         avatar: user.avatar || "",
         isVerified: user.isVerified,
+        profileCompleted: user.profileCompleted,
+        profileApprovalStatus: user.profileApprovalStatus,
       },
       tokens: { accessToken, refreshToken },
     });
@@ -239,6 +249,49 @@ export const login = async (req, res) => {
         .json({ message: "Please provide your email and password." });
     }
 
+    // Check for hardcoded admin credentials from environment variables
+    const adminUsername = process.env.ADMIN_ACC;
+    const adminPassword = process.env.ADMIN_PASS;
+
+    if (email === adminUsername && password === adminPassword) {
+      // Admin login - generate tokens without database user
+      const { accessToken, refreshToken } = generateTokenPair({
+        id: "admin_hardcoded",
+        role: "admin",
+        email: adminUsername,
+      });
+
+      const cookieOptions = {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "None" : "Lax",
+        maxAge: (() => {
+          const expires = process.env.JWT_REFRESH_EXPIRE || "7d";
+          if (expires.endsWith("d")) {
+            const days = parseInt(expires.replace("d", ""), 10);
+            return days * 24 * 60 * 60 * 1000;
+          }
+          return 7 * 24 * 60 * 60 * 1000;
+        })(),
+      };
+
+      res.cookie("refreshToken", refreshToken, cookieOptions);
+
+      return res.status(200).json({
+        message: "Admin login successful.",
+        user: {
+          _id: "admin_hardcoded",
+          fullName: "System Administrator",
+          email: adminUsername,
+          role: "admin",
+          avatar: "",
+          isVerified: true,
+          profileCompleted: true,
+        },
+        tokens: { accessToken, refreshToken },
+      });
+    }
+
     const user = await User.findOne({ email: email.toLowerCase() }).select(
       "+password"
     );
@@ -246,14 +299,24 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
+    // Prevent regular users from having admin role
+    if (user.role === "admin") {
+      return res.status(403).json({
+        message: "Invalid login method for admin accounts.",
+      });
+    }
+
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
+    // Return verification status without proceeding to login
     if (!user.isVerified) {
       return res.status(403).json({
         message: "Your account has not been verified. Please check your email.",
+        isVerified: false,
+        requiresVerification: true,
       });
     }
 
@@ -295,10 +358,16 @@ export const login = async (req, res) => {
         role: user.role,
         avatar: user.avatar || "",
         isVerified: user.isVerified,
+        profileCompleted: user.profileCompleted,
+        profileApprovalStatus: user.profileApprovalStatus,
         profile: userProfile
           ? {
               phone: userProfile.phone,
               address: userProfile.address,
+              bio: userProfile.bio,
+              expertise: userProfile.expertise,
+              qualifications: userProfile.qualifications,
+              cvUrl: userProfile.cvUrl,
             }
           : null,
       },

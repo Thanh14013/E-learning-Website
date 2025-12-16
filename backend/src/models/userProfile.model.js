@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 /**
  * @typedef {Object} UserProfile
@@ -15,54 +15,71 @@ import mongoose from 'mongoose';
  * @property {Array<mongoose.Schema.Types.ObjectId>} teachingCourses - Các khóa học đang giảng dạy.
  */
 const userProfileSchema = new mongoose.Schema(
-    {
-        // Relationship with User Model (One-to-One)
-        userId: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User', // Reference to the User model
-            required: true,
-            unique: true, // Setup unique index to enforce one profile per user
-        },
-        phone: {
-            type: String,
-            trim: true,
-        },
-        address: {
-            type: String,
-            trim: true,
-        },
-        dateOfBirth: {
-            type: Date,
-        },
-        bio: {
-            type: String,
-            trim: true,
-            maxlength: [500, 'Tiểu sử không được vượt quá 500 ký tự.'],
-        },
-        socialLinks: {
-            facebook: { type: String, trim: true },
-            twitter: { type: String, trim: true },
-            linkedin: { type: String, trim: true },
-        },
-        enrolledCourses: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Course', // Reference to the Course model
-            },
-        ],
-        teachingCourses: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Course', // Reference to the Course model
-            },
-        ],
+  {
+    // Relationship with User Model (One-to-One)
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", // Reference to the User model
+      required: true,
+      unique: true, // Setup unique index to enforce one profile per user
     },
-    {
-        // Add timestamps (createdAt, updatedAt)
-        timestamps: true,
-    }
+    phone: {
+      type: String,
+      trim: true,
+    },
+    address: {
+      type: String,
+      trim: true,
+    },
+    dateOfBirth: {
+      type: Date,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: [500, "Tiểu sử không được vượt quá 500 ký tự."],
+    },
+    socialLinks: {
+      facebook: { type: String, trim: true },
+      twitter: { type: String, trim: true },
+      linkedin: { type: String, trim: true },
+    },
+    // Teacher specific fields
+    expertise: {
+      type: String,
+      trim: true,
+    },
+    qualifications: {
+      type: String,
+      trim: true,
+    },
+    cvUrl: {
+      type: String,
+      trim: true,
+    },
+    cvPublicId: {
+      type: String,
+      trim: true,
+    },
+    enrolledCourses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course", // Reference to the Course model
+      },
+    ],
+    teachingCourses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course", // Reference to the Course model
+      },
+    ],
+  },
+  {
+    // Add timestamps (createdAt, updatedAt)
+    timestamps: true,
+  }
 );
 
-const UserProfile = mongoose.model('UserProfile', userProfileSchema);
+const UserProfile = mongoose.model("UserProfile", userProfileSchema);
 
 export default UserProfile;
