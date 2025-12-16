@@ -41,7 +41,7 @@ servers:
 
 tags:
   - name: Authentication
-    description: User authentication operations (login, register, password reset)
+    description: User authentication operations (login, password reset). Admin uses hardcoded credentials from .env
   - name: User Management
     description: User profile and account management
   - name: Admin - Users
@@ -53,7 +53,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT token obtained from login/register
+      description: JWT token obtained from login endpoint
 
   schemas:
     # ============ USER SCHEMAS ============
@@ -78,12 +78,23 @@ components:
           type: string
           nullable: true
           example: "https://cloudinary.com/avatar.jpg"
-        isEmailVerified:
+        isVerified:
           type: boolean
           example: true
+          description: "Email verification status"
         isBanned:
           type: boolean
           example: false
+        profileCompleted:
+          type: boolean
+          example: false
+          description: "Teacher profile completion status (only for teachers)"
+        profileApprovalStatus:
+          type: string
+          enum: [pending, approved, rejected]
+          nullable: true
+          example: null
+          description: "Teacher profile approval status (only for teachers)"
         phone:
           type: string
           nullable: true
@@ -121,7 +132,6 @@ components:
         - fullName
         - email
         - password
-        - role
       properties:
         fullName:
           type: string
@@ -142,6 +152,12 @@ components:
           enum: [student, teacher]
           default: student
           example: "student"
+          description: "User role - selected via radio buttons in UI"
+        dateOfBirth:
+          type: string
+          format: date
+          example: "2000-01-01"
+          description: "Optional date of birth"
 
     UserLogin:
       type: object
@@ -245,17 +261,31 @@ paths:
     post:
       tags:
         - Authentication
-      summary: Register new user account
+      summary: Register new user account (Student/Teacher only)
       description: |
         Register a new user with email, password, and role.
 
-        **Roles:**
-        - `student` - Can enroll in courses
-        - `teacher` - Can create and manage courses
+        **⚠️ IMPORTANT: Admin accounts CANNOT be registered via API**
+        - Admin role is blocked from registration
+        - Only ONE admin account exists (hardcoded in .env)
+        - Admin credentials: ADMIN_ACC and ADMIN_PASS
 
-        **Email Verification:**
-        - Verification email sent automatically
-        - Account needs verification before full access
+        **UI Changes:**
+        - Role selection via **Radio Buttons** (Student/Teacher ONLY)
+        - Admin option is NOT available
+
+        **Allowed Roles:**
+        - `student` - Can enroll in courses
+        - `teacher` - Can create and manage courses (requires profile completion)
+        - `admin` - ❌ NOT ALLOWED (will return 403 error)
+
+        **Email Verification (MANDATORY):**
+        - Verification email sent automatically via SendGrid
+        - Account CANNOT login until email is verified
+        - Redirects to `/email-verification-required` after registration
+
+        **Teacher Flow:**
+        After registration → Email Verification → Login → Complete Profile → Admin Approval → Dashboard
 
         **Rate Limiting:**
         - 5 requests per 15 minutes per IP
@@ -274,6 +304,7 @@ paths:
                   email: "student@example.com"
                   password: "SecurePass123"
                   role: "student"
+                  dateOfBirth: "2000-01-01"
               teacher:
                 summary: Teacher registration
                 value:
@@ -281,13 +312,55 @@ paths:
                   email: "teacher@example.com"
                   password: "TeacherPass123"
                   role: "teacher"
+                  dateOfBirth: "1990-05-15"
       responses:
         "201":
           description: User registered successfully
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Registration successful. Please check your email to verify your account."
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        example: "507f1f77bcf86cd799439011"
+                      fullName:
+                        type: string
+                        example: "Nguyễn Văn A"
+                      email:
+                        type: string
+                        example: "student@example.com"
+                      role:
+                        type: string
+                        example: "student"
+                      avatar:
+                        type: string
+                        example: ""
+                      isVerified:
+                        type: boolean
+                        example: false
+                      profileCompleted:
+                        type: boolean
+                        example: false
+                      profileApprovalStatus:
+                        type: string
+                        nullable: true
+                        example: null
+                  tokens:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      refreshToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         "400":
           description: Validation error or email already exists
           content:
@@ -298,13 +371,22 @@ paths:
                 emailExists:
                   value:
                     success: false
-                    message: "Email đã tồn tại"
+                    message: "This email already exists in our system."
                 validationError:
                   value:
                     success: false
-                    message: "Validation failed"
-                    errors:
-                      - "Password must be at least 6 characters"
+                    message: "Please fill in all required fields."
+        "403":
+          description: Admin role registration is forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                adminNotAllowed:
+                  value:
+                    success: false
+                    message: "Admin accounts cannot be registered."
         "429":
           description: Too many registration attempts
           content:
@@ -321,13 +403,48 @@ paths:
         Authenticate user with email and password.
         Returns JWT token and user information.
 
-        **Mock Credentials for Testing:**
-        - Email: any valid email
-        - Password: any password (6+ chars)
+        **⚠️ ADMIN LOGIN:**
+        - Admin uses hardcoded credentials from environment variables
+        - Username: ADMIN_ACC (from .env)
+        - Password: ADMIN_PASS (from .env)
+        - Admin account does NOT exist in database
+        - Token contains role="admin" for authorization
+
+        **Email Verification Required (Student/Teacher only):**
+        - Regular users CANNOT login if email is not verified
+        - Returns 403 error with `requiresVerification` flag
+        - Admin bypasses email verification
+
+        **Student Login Flow:**
+        ```
+        Login → Check credentials → Check isVerified
+          ├─ Not Verified → 403 Error + Redirect to /email-verification-required
+          └─ Verified → 200 Success + Redirect to /dashboard
+        ```
+
+        **Teacher Login Flow:**
+        ```
+        Login → Check credentials → Check isVerified
+          ├─ Not Verified → 403 Error + Redirect to /email-verification-required
+          └─ Verified → Check profileCompleted
+              ├─ Not Completed → Redirect to /teacher/complete-profile
+              └─ Completed → Check profileApprovalStatus
+                  ├─ pending → Redirect to /teacher/approval-pending
+                  ├─ rejected → Show error message
+                  └─ approved → Redirect to /dashboard
+        ```
+
+        **Admin Login Flow:**
+        ```
+        Login → Check if credentials match ADMIN_ACC & ADMIN_PASS
+          ├─ Match → Generate admin token → 200 Success + Redirect to /admin/dashboard
+          └─ No Match → Continue checking database for student/teacher accounts
+        ```
 
         **Token Usage:**
         - Include in Authorization header: `Bearer {token}`
-        - Token expires in 24 hours
+        - Access token expires in 15 minutes
+        - Refresh token expires in 7 days
         - Use refresh token to get new access token
       operationId: loginUser
       requestBody:
@@ -337,6 +454,11 @@ paths:
             schema:
               $ref: "#/components/schemas/UserLogin"
             examples:
+              admin:
+                summary: Admin login (hardcoded)
+                value:
+                  email: "thanh123"
+                  password: "nguyenvuthanh"
               student:
                 value:
                   email: "student@example.com"
@@ -351,7 +473,70 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AuthResponse"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful."
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        example: "507f1f77bcf86cd799439011"
+                      fullName:
+                        type: string
+                        example: "Nguyễn Văn A"
+                      email:
+                        type: string
+                        example: "student@example.com"
+                      role:
+                        type: string
+                        example: "student"
+                      avatar:
+                        type: string
+                        example: ""
+                      isVerified:
+                        type: boolean
+                        example: true
+                      profileCompleted:
+                        type: boolean
+                        example: false
+                      profileApprovalStatus:
+                        type: string
+                        nullable: true
+                        example: null
+                      profile:
+                        type: object
+                        nullable: true
+                        properties:
+                          phone:
+                            type: string
+                            nullable: true
+                          address:
+                            type: string
+                            nullable: true
+                          bio:
+                            type: string
+                            nullable: true
+                          expertise:
+                            type: string
+                            nullable: true
+                            description: "Teacher only"
+                          qualifications:
+                            type: string
+                            nullable: true
+                            description: "Teacher only"
+                          cvUrl:
+                            type: string
+                            nullable: true
+                            description: "Teacher only"
+                  tokens:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
         "401":
           description: Invalid credentials
           content:
@@ -360,13 +545,31 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 success: false
-                message: "Email hoặc mật khẩu không đúng"
+                message: "Invalid email or password."
         "403":
-          description: Account banned or not verified
+          description: Email not verified (CRITICAL - cannot login)
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Your account has not been verified. Please check your email."
+                  isVerified:
+                    type: boolean
+                    example: false
+                  requiresVerification:
+                    type: boolean
+                    example: true
+                    description: "Flag indicating email verification is required"
+              examples:
+                notVerified:
+                  summary: Email not verified
+                  value:
+                    message: "Your account has not been verified. Please check your email."
+                    isVerified: false
+                    requiresVerification: true
 
   /auth/logout:
     post:
@@ -681,6 +884,152 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+
+  /users/complete-teacher-profile:
+    post:
+      tags:
+        - User Management
+      summary: Complete teacher profile (Teachers only)
+      description: |
+        Submit complete teacher profile information with CV upload.
+        This endpoint is REQUIRED for teachers after email verification and before dashboard access.
+
+        **Prerequisites:**
+        - Must be logged in as teacher
+        - Email must be verified (isVerified = true)
+        - Profile not yet completed (profileCompleted = false)
+
+        **Required Fields:**
+        - Phone number
+        - Address
+        - Bio (personal introduction)
+        - Expertise (areas of specialization)
+        - Qualifications (education & certifications)
+        - CV file (PDF only, max 5MB)
+
+        **Workflow:**
+        1. Teacher logs in after email verification
+        2. Redirected to `/teacher/complete-profile`
+        3. Fills all required fields and uploads CV
+        4. Submit → CV uploaded to Cloudinary
+        5. Backend sets `profileCompleted = true` and `profileApprovalStatus = "pending"`
+        6. Redirected to `/teacher/approval-pending`
+        7. Wait 24-48 hours for admin review
+        8. Admin approves/rejects
+        9. Email notification sent
+        10. If approved, teacher can access dashboard
+
+        **CV Upload:**
+        - File uploaded to Cloudinary folder: "cvs"
+        - Returns secure_url and public_id
+        - Local file deleted after successful upload
+      operationId: completeTeacherProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - phone
+                - address
+                - bio
+                - expertise
+                - qualifications
+                - cv
+              properties:
+                phone:
+                  type: string
+                  example: "0987654321"
+                  description: "Teacher's phone number"
+                address:
+                  type: string
+                  example: "123 Đường ABC, Quận XYZ, TP.HCM"
+                  description: "Full address"
+                bio:
+                  type: string
+                  example: "Tôi là giảng viên với 10 năm kinh nghiệm..."
+                  description: "Personal introduction and teaching philosophy"
+                expertise:
+                  type: string
+                  example: "Lập trình Web (React, Node.js), Machine Learning, Data Science"
+                  description: "Areas of expertise and specialization"
+                qualifications:
+                  type: string
+                  example: "Thạc sĩ Khoa học Máy tính - ĐH Bách Khoa, Chứng chỉ AWS Solutions Architect"
+                  description: "Educational background, degrees, and certifications"
+                cv:
+                  type: string
+                  format: binary
+                  description: "CV file in PDF format (max 5MB)"
+      responses:
+        "200":
+          description: Profile submitted successfully, awaiting admin approval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Profile submitted successfully. Please wait for admin approval (at least 48 hours)."
+                  data:
+                    type: object
+                    properties:
+                      profileCompleted:
+                        type: boolean
+                        example: true
+                      profileApprovalStatus:
+                        type: string
+                        example: "pending"
+        "400":
+          description: Validation error or profile already completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                missingFields:
+                  value:
+                    success: false
+                    message: "All fields are required."
+                alreadyCompleted:
+                  value:
+                    success: false
+                    message: "Profile has already been completed."
+                invalidFile:
+                  value:
+                    success: false
+                    message: "CV file is required."
+        "403":
+          description: Not authorized or email not verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                notTeacher:
+                  value:
+                    success: false
+                    message: "Only teachers can complete this profile."
+                notVerified:
+                  value:
+                    success: false
+                    message: "Please verify your email first."
+        "500":
+          description: Server error (e.g., CV upload failed)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                success: false
+                message: "Failed to upload CV."
 
   # ==================== ADMIN USER MANAGEMENT ====================
   /users/list:
