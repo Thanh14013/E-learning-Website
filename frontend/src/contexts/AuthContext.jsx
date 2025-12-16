@@ -42,6 +42,8 @@ export const AuthProvider = ({ children }) => {
         role: user.role,
         avatar: user.avatar,
         isVerified: user.isVerified,
+        profileCompleted: user.profileCompleted,
+        profileApprovalStatus: user.profileApprovalStatus,
         profile: user.profile
       };
 
@@ -51,13 +53,23 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("accessToken", tokens.accessToken);
 
       toastService.success(`Chào mừng ${userData.fullName}!`);
-      return true;
+      return { success: true, user: userData };
     } catch (err) {
       const parsedError = handleApiError(err, "Login");
+
+      // Handle unverified email
+      if (err.response?.status === 403 && err.response?.data?.requiresVerification) {
+        return {
+          success: false,
+          requiresVerification: true,
+          message: parsedError.message
+        };
+      }
+
       if (parsedError.type !== 'NETWORK' && parsedError.statusCode !== 401) {
         toastService.error(parsedError.message);
       }
-      return false;
+      return { success: false, message: parsedError.message };
     }
   };
 
@@ -73,7 +85,9 @@ export const AuthProvider = ({ children }) => {
         email: user.email,
         role: user.role,
         avatar: user.avatar,
-        isVerified: user.isVerified
+        isVerified: user.isVerified,
+        profileCompleted: user.profileCompleted,
+        profileApprovalStatus: user.profileApprovalStatus,
       };
 
       setUser(newUser);
@@ -83,12 +97,15 @@ export const AuthProvider = ({ children }) => {
       if (tokens.refreshToken) {
         localStorage.setItem("refreshToken", tokens.refreshToken);
       }
+
+      toastService.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
+      return { success: true, user: newUser };
     } catch (err) {
       const parsedError = handleApiError(err, "Register");
       if (parsedError.type !== 'NETWORK') {
         toastService.error(parsedError.message);
       }
-      return false;
+      return { success: false, message: parsedError.message };
     }
   };
 

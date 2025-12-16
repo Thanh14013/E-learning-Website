@@ -37,7 +37,7 @@ export function Register() {
 
     setLoading(true);
 
-    const dobString = (formData.year && formData.month && formData.day) 
+    const dobString = (formData.year && formData.month && formData.day)
       ? `${formData.year}-${formData.month.padStart(2, '0')}-${formData.day.padStart(2, '0')}`
       : null;
 
@@ -52,8 +52,8 @@ export function Register() {
       });
 
       if (res.success) {
-        //Đăng ký thành công -> Chuyển hướng sang trang Login
-        navigate("/login");
+        //Đăng ký thành công -> Chuyển hướng sang trang xác thực email
+        navigate("/email-verification-required");
       } else {
         setError(res.message || "Đăng ký thất bại. Vui lòng thử lại.");
       }
@@ -99,16 +99,31 @@ export function Register() {
 
         {/* Phân Role gv và hs */}
         <div className={styles.formGroup}>
-          <label className={styles.label}>Role</label>
-          <select
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            className={styles.select}
-          >
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-          </select>
+          <label className={styles.label}>I am a:</label>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="role"
+                value="student"
+                checked={formData.role === "student"}
+                onChange={handleChange}
+                className={styles.radioInput}
+              />
+              <span className={styles.radioText}>Student</span>
+            </label>
+            <label className={styles.radioLabel}>
+              <input
+                type="radio"
+                name="role"
+                value="teacher"
+                checked={formData.role === "teacher"}
+                onChange={handleChange}
+                className={styles.radioInput}
+              />
+              <span className={styles.radioText}>Teacher</span>
+            </label>
+          </div>
         </div>
 
         <div className={styles.formGroup}>

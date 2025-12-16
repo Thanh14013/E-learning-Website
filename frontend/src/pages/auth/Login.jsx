@@ -7,7 +7,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
-    const from = location.state?.from?.pathname || "/dashboard";
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +23,34 @@ const Login = () => {
       const res = await login(email, password);
 
       if (res.success) {
-        navigate(from, { replace: true }); 
+        const { user } = res;
+
+        // Check if email is verified
+        if (!user.isVerified) {
+          navigate("/email-verification-required");
+          return;
+        }
+
+        // Check for teacher profile completion
+        if (user.role === "teacher") {
+          if (!user.profileCompleted) {
+            navigate("/teacher/complete-profile");
+            return;
+          }
+          if (user.profileApprovalStatus === "pending") {
+            navigate("/teacher/approval-pending");
+            return;
+          }
+          if (user.profileApprovalStatus === "rejected") {
+            setError("Hồ sơ của bạn đã bị từ chối. Vui lòng liên hệ admin.");
+            return;
+          }
+        }
+
+        // Redirect to dashboard if all checks pass
+        navigate(from, { replace: true });
+      } else if (res.requiresVerification) {
+        navigate("/email-verification-required");
       } else {
         setError(res.message || "Đăng nhập thất bại");
       }
@@ -78,7 +105,7 @@ const Login = () => {
 
       <p className={styles.switchText}>
         Chưa có tài khoản?{" "}
-        {}
+        { }
         <Link to="/register" className={styles.link}>
           Đăng ký ngay!
         </Link>
