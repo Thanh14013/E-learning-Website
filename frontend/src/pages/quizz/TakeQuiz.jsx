@@ -210,7 +210,7 @@ const TakeQuiz = () => {
     return (
       <div className="take-quiz-loading">
         <div className="loading-spinner"></div>
-        <p>Đang tải quiz...</p>
+        <p>Loading quiz...</p>
       </div>
     );
   }

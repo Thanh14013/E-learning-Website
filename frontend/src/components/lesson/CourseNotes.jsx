@@ -111,7 +111,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
     };
 
     if (loading) {
-        return <Loading size="medium" text="Đang tải ghi chú..." />;
+        return <Loading size="medium" text="Loading ghi chú..." />;
     }
 
     return (

@@ -301,7 +301,7 @@ const LessonDetail = () => {
         return (
             <div className={styles.loadingContainer}>
                 <div className={styles.spinner}></div>
-                <p>Đang tải bài học...</p>
+                <p>Loading bài học...</p>
             </div>
         );
     }

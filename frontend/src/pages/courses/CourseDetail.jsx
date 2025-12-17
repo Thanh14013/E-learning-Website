@@ -295,7 +295,7 @@ const CourseDetailPage = () => {
     }
   };
 
-  if (loading) return <div className="container" style={{ padding: 'var(--spacing-5)' }}>Đang tải...</div>;
+  if (loading) return <div className="container" style={{ padding: 'var(--spacing-5)' }}>Loading...</div>;
   if (!course) return <div className="container" style={{ padding: 'var(--spacing-5)' }}>Không tìm thấy khóa học.</div>;
 
   return (
@@ -311,7 +311,7 @@ const CourseDetailPage = () => {
               <StarIcon />
               <span className={styles.count}>({course.totalReviews || 0} ratings)</span>
             </div>
-            <span>Dạy bởi {course.teacherId?.fullName || 'Unknown'}</span>
+            <span> {course.teacherId?.fullName || 'Unknown'}</span>
           </div>
         </div>
       </header>

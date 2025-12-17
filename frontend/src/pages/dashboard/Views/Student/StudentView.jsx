@@ -39,7 +39,9 @@ const CourseCarousel = ({ courses }) => {
       setCanScrollLeft(!isAtStart);
       setCanScrollRight(isScrollable && !isAtEnd);
     }
-  };
+  }, []);
+
+  const scroll = useCallback((direction) => {
     const el = scrollContainerRef.current;
     if (el) {
       const scrollAmount = el.clientWidth * 0.8;

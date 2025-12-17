@@ -469,7 +469,7 @@ const CourseEditor = () => {
     return (
       <div className={styles.container}>
         <div className={styles.loadingWrapper}>
-          <Loading size="large" text="Đang tải dữ liệu..." />
+          <Loading size="large" text="Loading dữ liệu..." />
         </div>
       </div>
     );

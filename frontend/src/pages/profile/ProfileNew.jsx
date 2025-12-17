@@ -205,7 +205,7 @@ const Profile = () => {
     );
 
     if (!user) {
-        return <Loading fullScreen text="Đang tải thông tin..." />;
+        return <Loading fullScreen text="Loading thông tin..." />;
     }
 
     return (

@@ -158,7 +158,7 @@ const QuizReview = () => {
     return (
       <div className="quiz-review-loading">
         <div className="loading-spinner"></div>
-        <p>Đang tải kết quả quiz...</p>
+        <p>Loading kết quả quiz...</p>
       </div>
     );
   }

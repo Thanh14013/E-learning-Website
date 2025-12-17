@@ -452,7 +452,7 @@ const CourseManagement = () => {
       <div className={styles.pageContainer}>
         <div className={styles.loadingWrapper}>
           <div className={styles.spinner}></div>
-          <p>Đang tải khóa học...</p>
+          <p>Loading khóa học...</p>
         </div>
       </div>
     );

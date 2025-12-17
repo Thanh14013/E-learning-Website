@@ -63,7 +63,7 @@ export default function StudentAnalytics() {
     };
 
     if (loading) {
-        return <div className={styles.loading}>Đang tải dữ liệu...</div>;
+        return <div className={styles.loading}>Loading dữ liệu...</div>;
     }
 
     if (!student || !analytics) {

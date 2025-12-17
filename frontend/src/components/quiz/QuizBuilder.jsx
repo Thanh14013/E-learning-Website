@@ -159,7 +159,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
     };
 
     if (loading) {
-        return <div className={styles.loading}>Đang tải...</div>;
+        return <div className={styles.loading}>Loading...</div>;
     }
 
     return (

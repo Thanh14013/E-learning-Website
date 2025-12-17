@@ -115,7 +115,7 @@ const AvatarUpload = ({ isOpen, onClose }) => {
                 Hủy
             </Button>
             <Button variant="primary" onClick={handleUpload} disabled={uploading || !selectedFile}>
-                {uploading ? 'Đang tải lên...' : 'Tải lên'}
+                {uploading ? 'Loading lên...' : 'Tải lên'}
             </Button>
         </>
     );
@@ -171,7 +171,7 @@ const AvatarUpload = ({ isOpen, onClose }) => {
 
                 {uploading && (
                     <div className="avatar-uploading-overlay">
-                        <Loading size="large" text="Đang tải ảnh lên..." />
+                        <Loading size="large" text="Loading ảnh lên..." />
                     </div>
                 )}
             </div>

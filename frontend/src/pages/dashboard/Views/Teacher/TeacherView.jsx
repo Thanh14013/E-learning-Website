@@ -414,7 +414,7 @@ const TeacherView = () => {
     return (
       <div className={styles.loadingWrapper}>
         <div className={styles.spinner}></div>
-        <p>Đang tải dữ liệu...</p>
+        <p>Loading dữ liệu...</p>
       </div>
     );
   }
