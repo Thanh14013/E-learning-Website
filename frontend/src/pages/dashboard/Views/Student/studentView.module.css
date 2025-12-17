@@ -177,4 +177,5 @@
   font-size: 0.8rem; 
   color: var(--text-secondary); 
   margin-top: 4px; 
+  text-align: right;
 }
