@@ -50,26 +50,21 @@
      - verificationToken: random 32-byte hex string
      - createdAt: timestamp hiện tại
    - Tạo document trong **collection userProfiles** liên kết với userId
-   - Gửi email xác thực đến địa chỉ email của student qua SendGrid
    - Tạo JWT access token và refresh token
    - Lưu refresh token vào user document
 6. Backend trả về response:
    ```json
    {
-     "message": "Registration successful. Please check your email to verify your account.",
+     "message": "Registration successful.",
      "user": {
        "_id": "user_id",
        "fullName": "Nguyen Van A",
        "email": "student@example.com",
        "role": "student",
        "avatar": "",
-       "isVerified": false,
+       "isVerified": true,
        "profileCompleted": false,
        "profileApprovalStatus": null
-     },
-     "tokens": {
-       "accessToken": "jwt_token",
-       "refreshToken": "refresh_token"
      }
    }
    ```
