@@ -107,7 +107,7 @@ const TakeQuiz = () => {
       setLoading(false);
     } catch (err) {
       console.error('Failed to start quiz:', err);
-      setError('Không thể bắt đầu bài quiz. Vui lòng thử lại.');
+      setError('Unable to start quiz. Please try again.');
       setLoading(false);
     }
   };
@@ -202,7 +202,7 @@ const TakeQuiz = () => {
       });
     } catch (err) {
       console.error('Failed to submit quiz:', err);
-      setError('Không thể nộp bài. Vui lòng thử lại.');
+      setError('Unable to submit quiz. Please try again.');
     }
   };
 
@@ -220,7 +220,7 @@ const TakeQuiz = () => {
       <div className="take-quiz-error">
         <p>{error}</p>
         <button onClick={() => navigate('/quizzes')} className="back-btn">
-          Quay lại
+          Back
         </button>
       </div>
     );
@@ -229,9 +229,9 @@ const TakeQuiz = () => {
   if (!quiz || !questions.length) {
     return (
       <div className="take-quiz-error">
-        <p>Không tìm thấy quiz hoặc câu hỏi.</p>
+        <p>Quiz or questions not found.</p>
         <button onClick={() => navigate('/quizzes')} className="back-btn">
-          Quay lại
+          Back
         </button>
       </div>
     );
@@ -247,7 +247,7 @@ const TakeQuiz = () => {
         <div className="quiz-info">
           <h1>{quiz.title}</h1>
           <p className="quiz-subtitle">
-            Câu hỏi {currentQuestionIndex + 1} / {questions.length}
+            Question {currentQuestionIndex + 1} / {questions.length}
           </p>
         </div>
 
@@ -282,7 +282,7 @@ const TakeQuiz = () => {
                   isAnswered ? 'answered' : ''
                 } ${isBookmarked ? 'bookmarked' : ''}`}
                 onClick={() => setCurrentQuestionIndex(index)}
-                title={`Câu ${index + 1}${isAnswered ? ' - Đã trả lời' : ''}`}
+                title={`Question ${index + 1}${isAnswered ? ' - Answered' : ''}`}
               >
                 {index + 1}
                 {isBookmarked && ' 🔖'}
@@ -292,13 +292,13 @@ const TakeQuiz = () => {
         </div>
         <div className="nav-legend">
           <span className="legend-item">
-            <span className="legend-dot answered"></span> Đã trả lời
+            <span className="legend-dot answered"></span> Answered
           </span>
           <span className="legend-item">
-            <span className="legend-dot active"></span> Đang xem
+            <span className="legend-dot active"></span> Viewing
           </span>
           <span className="legend-item">
-            <span className="legend-dot bookmarked"></span> Đã đánh dấu
+            <span className="legend-dot bookmarked"></span> Bookmarked
           </span>
         </div>
       </div>
@@ -322,7 +322,7 @@ const TakeQuiz = () => {
       {/* Submit Button */}
       <div className="take-quiz-footer">
         <div className="answered-count">
-          Đã trả lời: {Object.keys(answers).filter(key => 
+          Answered: {Object.keys(answers).filter(key => 
             answers[key] !== undefined && answers[key] !== ''
           ).length} / {questions.length}
         </div>
@@ -331,7 +331,7 @@ const TakeQuiz = () => {
           onClick={handleSubmitQuiz}
           disabled={!attemptId}
         >
-          Nộp bài
+          Submit
         </button>
       </div>
 

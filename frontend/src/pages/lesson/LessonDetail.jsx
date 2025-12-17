@@ -119,7 +119,7 @@ const LessonDetail = () => {
             } catch (error) {
                 console.error('Failed to fetch lesson data:', error);
                 if (error.response?.status === 403) {
-                    toast.error('Bạn cần ghi danh khóa học để xem bài học này');
+                    toast.error('You must enroll in the course to view this lesson');
                     navigate(`/courses/${courseId}`);
                 }
             } finally {
@@ -148,24 +148,24 @@ const LessonDetail = () => {
                 
                 // Start a new attempt if not already started and not completed
                 if (!activeAttemptIds[quizId] && !completedQuizzes.has(quizId)) {
-                    try {
-                        const attemptRes = await api.post(`/quizzes/${quizId}/start`);
+                        try {
+                        const attemptRes = await api.post(`/quizzes/${quiz._id}/start`);
                         setActiveAttemptIds(prev => ({
                             ...prev,
-                            [quizId]: attemptRes.data.attemptId
+                            [quiz._id]: attemptRes.data.attemptId
                         }));
                         console.log('✅ Started quiz attempt:', attemptRes.data.attemptId);
                     } catch (err) {
                         console.error('Failed to start attempt:', err);
-                        toast.error(err.response?.data?.message || 'Không thể bắt đầu quiz');
+                        toast.error(err.response?.data?.message || 'Unable to start quiz');
                     }
                 }
-            } else {
-                toast.error('Quiz này chưa có câu hỏi');
-            }
+                } else {
+                toast.error('This quiz has no questions yet');
+                }
         } catch (error) {
             console.error('Failed to fetch quiz questions:', error);
-            toast.error(error.response?.data?.message || 'Không thể tải câu hỏi');
+            toast.error(error.response?.data?.message || 'Unable to load questions');
         }
     };
 
@@ -208,12 +208,12 @@ const LessonDetail = () => {
         // Nếu không có quiz nào, cho phép hoàn thành
         if (quizzes.length === 0) return { canComplete: true, message: '' };
 
-        // Kiểm tra xem đã làm hết tất cả quiz chưa (dựa trên completedQuizzes)
+        // Check whether all quizzes are completed (based on completedQuizzes)
         const incompletedCount = quizzes.length - completedQuizzes.size;
         if (incompletedCount > 0) {
             return {
                 canComplete: false,
-                message: `Bạn cần hoàn thành tất cả ${quizzes.length} quiz (còn ${incompletedCount} quiz chưa làm hoặc chưa đạt)`
+                message: `You need to complete all ${quizzes.length} quizzes (there are ${incompletedCount} quizzes incomplete or not passed)`
             };
         }
 
@@ -244,7 +244,7 @@ const LessonDetail = () => {
         try {
             const res = await api.post(`/progress/complete/${lessonId}`);
             console.log('✅ Mark Complete Response:', res.data);
-            toast.success('🎉 Chúc mừng! Bạn đã hoàn thành bài học!');
+            toast.success('🎉 Congratulations! You completed the lesson!');
             
             // Update UI immediately
             setIsCompleted(true);
@@ -282,7 +282,7 @@ const LessonDetail = () => {
             }, 1500);
         } catch (error) {
             console.error('Failed to mark complete:', error);
-            toast.error(error.response?.data?.message || 'Không thể đánh dấu hoàn thành');
+            toast.error(error.response?.data?.message || 'Unable to mark as complete');
         }
     };
 
@@ -301,7 +301,7 @@ const LessonDetail = () => {
         return (
             <div className={styles.loadingContainer}>
                 <div className={styles.spinner}></div>
-                <p>Loading bài học...</p>
+                <p>Loading lesson...</p>
             </div>
         );
     }
@@ -318,12 +318,14 @@ const LessonDetail = () => {
     const currentIndex = allLessons.findIndex(l => l._id === lessonId);
     const hasPrev = currentIndex > 0;
     const hasNext = currentIndex < allLessons.length - 1;
+    const primaryResource = lesson.resources?.[0];
+    const relatedResources = lesson.resources?.slice(1) || [];
 
     return (
         <div className={styles.lessonPage}>
             {/* Breadcrumb */}
             <div className={styles.breadcrumb}>
-                <Link to="/courses">Khóa học</Link>
+                <Link to="/courses">Courses</Link>
                 <span>/</span>
                 <Link to={`/courses/${courseId}`}>{course?.title}</Link>
                 <span>/</span>
@@ -344,7 +346,7 @@ const LessonDetail = () => {
                                 src={lesson.videoUrl}
                                 poster={lesson.thumbnail}
                             >
-                                Trình duyệt của bạn không hỗ trợ video.
+                                Your browser does not support the video.
                             </video>
                         </div>
                     )}
@@ -360,7 +362,80 @@ const LessonDetail = () => {
                     {/* Lesson Content */}
                     <div className={styles.lessonContent}>
                         <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
+
+                        {primaryResource && (
+                            <div className={styles.overviewResources}>
+                                <div className={styles.overviewDownload}>
+                                    <div>
+                                        <p className={styles.overviewLabel}>Overview Document</p>
+                                        <p className={styles.overviewName}>{primaryResource.name}</p>
+                                    </div>
+                                    <a
+                                        href={primaryResource.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        download
+                                        className={styles.overviewDownloadBtn}
+                                    >
+                                        ⬇ Download
+                                    </a>
+                                </div>
+
+                                {relatedResources.length > 0 && (
+                                    <div className={styles.relatedLinks}>
+                                        <span className={styles.overviewLabel}>Related resources</span>
+                                        <div className={styles.linkGrid}>
+                                            {relatedResources.map((resource, idx) => (
+                                                <a
+                                                    key={resource._id || resource.url || idx}
+                                                    href={resource.url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={styles.linkPill}
+                                                >
+                                                    {resource.name || resource.url}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
+
+                    {/* Resources Section */}
+                    {lesson.resources && lesson.resources.length > 0 && (
+                        <div className={styles.resourcesSection}>
+                            <h3>📚 Learning Resources</h3>
+                            <div className={styles.resourcesList}>
+                                {lesson.resources.map((resource, index) => (
+                                    <div key={index} className={styles.resourceItem}>
+                                        <div className={styles.resourceInfo}>
+                                            <span className={styles.resourceIcon}>
+                                                {resource.type === 'pdf' && '📄'}
+                                                {resource.type === 'ppt' && '📊'}
+                                                {resource.type === 'doc' && '📝'}
+                                                {resource.type === 'image' && '🖼️'}
+                                            </span>
+                                            <div className={styles.resourceDetails}>
+                                                <span className={styles.resourceName}>{resource.name}</span>
+                                                <span className={styles.resourceType}>{resource.type.toUpperCase()}</span>
+                                            </div>
+                                        </div>
+                                        <a 
+                                            href={resource.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className={`btn btn-sm btn-primary-student ${styles.downloadBtn}`}
+                                            download
+                                        >
+                                            <span>⬇</span> Download
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Quiz Section */}
                     {quizzes.length > 0 && (
@@ -434,7 +509,7 @@ const LessonDetail = () => {
                                                         <div className={styles.fillBlankInput}>
                                                             <input
                                                                 type="text"
-                                                                placeholder="Nhập câu trả lời..."
+                                                                placeholder="Enter your answer..."
                                                                 value={userAnswers[quiz._id]?.[question._id] || ''}
                                                                 onChange={(e) => handleAnswerSelect(quiz._id, question._id, e.target.value)}
                                                                 className="form-control"
@@ -452,7 +527,7 @@ const LessonDetail = () => {
                                                     const unansweredCount = questions.filter(q => answers[q._id] === undefined).length;
 
                                                     if (unansweredCount > 0) {
-                                                        toast.warn(`Bạn chưa trả lời ${unansweredCount} câu hỏi!`);
+                                                        toast.warn(`You haven't answered ${unansweredCount} questions!`);
                                                         return;
                                                     }
 
@@ -464,7 +539,7 @@ const LessonDetail = () => {
                                                         const attemptId = activeAttemptIds[quiz._id];
                                                         
                                                         if (!attemptId) {
-                                                            toast.error('Vui lòng đóng và mở lại quiz để bắt đầu lại');
+                                                            toast.error('Please close and reopen the quiz to restart');
                                                             return;
                                                         }
                                                         
@@ -518,12 +593,12 @@ const LessonDetail = () => {
                                                         
                                                         if (result.isPassed) {
                                                             setCompletedQuizzes(prev => new Set([...prev, quiz._id]));
-                                                            toast.success(`🎉 Đạt ${result.percentage}%! Bạn đã vượt qua quiz!`);
+                                                            toast.success(`🎉 Scored ${result.percentage}%! You passed the quiz!`);
                                                         } else {
                                                             // Get quiz details to show correct passing score
                                                             const currentQuiz = quizzes.find(q => q._id === quiz._id);
                                                             const passingScore = currentQuiz?.passingScore || 70;
-                                                            toast.error(`❌ Chỉ đạt ${result.percentage}%. Cần ít nhất ${passingScore}% để pass! Đóng và mở lại quiz để thử lại.`);
+                                                            toast.error(`❌ Scored ${result.percentage}%. You need at least ${passingScore}% to pass. Close and reopen the quiz to try again.`);
                                                             // Close quiz to allow retry
                                                             setExpandedQuizId(null);
                                                         }
@@ -553,19 +628,19 @@ const LessonDetail = () => {
                                                                     }
                                                                 } catch (err) {
                                                                     console.error('Auto complete failed:', err);
-                                                                    toast.error('Không thể đánh dấu hoàn thành');
+                                                                    toast.error('Unable to mark as complete');
                                                                 }
                                                             }
                                                         }, 500);
                                                     } catch (error) {
                                                         console.error('Failed to submit quiz:', error);
-                                                        toast.error(error.response?.data?.message || 'Không thể nộp bài');
+                                                        toast.error(error.response?.data?.message || 'Unable to submit quiz');
                                                     }
                                                 }}
                                                 style={{ marginTop: '16px' }}
                                                 disabled={completedQuizzes.has(quiz._id)}
                                             >
-                                                {completedQuizzes.has(quiz._id) ? '✅ Đã hoàn thành' : 'Nộp bài'}
+                                                {completedQuizzes.has(quiz._id) ? '✅ Completed' : 'Submit'}
                                             </button>
 
                                             {quizScores[quiz._id] && (
@@ -579,7 +654,7 @@ const LessonDetail = () => {
                                                 }}>
                                                     <div>📊 Kết quả: {quizScores[quiz._id].correct}/{quizScores[quiz._id].total} câu đúng</div>
                                                     <div>📈 Điểm: {quizScores[quiz._id].percentage.toFixed(1)}%</div>
-                                                    <div>{quizScores[quiz._id].isPassed ? '✅ Đạt yêu cầu' : `❌ Chưa đạt (cần ≥${quiz.passingScore}%)`}</div>
+                                                    <div>{quizScores[quiz._id].isPassed ? '✅ Passed' : `❌ Not passed (needs ≥${quiz.passingScore}%)`}</div>
                                                 </div>
                                             )}
                                         </div>
@@ -591,12 +666,12 @@ const LessonDetail = () => {
 
                     {/* Navigation Buttons */}
                     <div className={styles.lessonNavigation}>
-                        <button
+                            <button
                             className={`btn ${styles.navBtn}`}
                             onClick={() => navigateLesson('prev')}
                             disabled={!hasPrev}
                         >
-                            ← Bài trước
+                            ← Previous lesson
                         </button>
 
                         {user && user.role === 'student' && (
@@ -605,7 +680,7 @@ const LessonDetail = () => {
                                 onClick={handleMarkComplete}
                                 disabled={isCompleted}
                             >
-                                {isCompleted ? '✓ Đã hoàn thành' : 'Đánh dấu hoàn thành'}
+                                {isCompleted ? '✓ Completed' : 'Mark complete'}
                             </button>
                         )}
 
@@ -614,7 +689,7 @@ const LessonDetail = () => {
                             onClick={() => navigateLesson('next')}
                             disabled={!hasNext}
                         >
-                            Bài tiếp theo →
+                            Next lesson →
                         </button>
                     </div>
                 </div>

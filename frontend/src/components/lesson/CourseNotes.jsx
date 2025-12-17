@@ -24,11 +24,11 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
     const fetchNotes = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/courses/${courseId}/lessons/${lessonId}/notes`);
-            setNotes(response.data.notes || []);
-        } catch (error) {
-            console.error('Error fetching notes:', error);
-            toastService.error('Không thể tải ghi chú');
+                const response = await api.get(`/courses/${courseId}/lessons/${lessonId}/notes`);
+                setNotes(response.data.notes || []);
+            } catch (error) {
+                console.error('Error fetching notes:', error);
+                toastService.error('Unable to load notes');
         } finally {
             setLoading(false);
         }
@@ -36,7 +36,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
 
     const handleAddNote = async () => {
         if (!newNote.trim()) {
-            toastService.error('Vui lòng nhập nội dung ghi chú');
+            toastService.error('Please enter note content');
             return;
         }
 
@@ -48,9 +48,9 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
             });
             setNotes([response.data.note, ...notes]);
             setNewNote('');
-            toastService.success('Đã thêm ghi chú');
+            toastService.success('Note added');
         } catch (error) {
-            toastService.error('Không thể thêm ghi chú');
+            toastService.error('Unable to add note');
         } finally {
             setIsAdding(false);
         }
@@ -58,7 +58,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
 
     const handleEditNote = async (noteId) => {
         if (!editContent.trim()) {
-            toastService.error('Vui lòng nhập nội dung ghi chú');
+            toastService.error('Please enter note content');
             return;
         }
 
@@ -69,23 +69,23 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
             setNotes(notes.map((note) => (note._id === noteId ? response.data.note : note)));
             setEditingNoteId(null);
             setEditContent('');
-            toastService.success('Đã cập nhật ghi chú');
+            toastService.success('Note updated');
         } catch (error) {
-            toastService.error('Không thể cập nhật ghi chú');
+            toastService.error('Unable to update note');
         }
     };
 
     const handleDeleteNote = async (noteId) => {
-        if (!window.confirm('Bạn có chắc muốn xóa ghi chú này?')) {
+        if (!window.confirm('Are you sure you want to delete this note?')) {
             return;
         }
 
         try {
             await api.delete(`/courses/${courseId}/lessons/${lessonId}/notes/${noteId}`);
             setNotes(notes.filter((note) => note._id !== noteId));
-            toastService.success('Đã xóa ghi chú');
+            toastService.success('Note deleted');
         } catch (error) {
-            toastService.error('Không thể xóa ghi chú');
+            toastService.error('Unable to delete note');
         }
     };
 
@@ -111,7 +111,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
     };
 
     if (loading) {
-        return <Loading size="medium" text="Loading ghi chú..." />;
+        return <Loading size="medium" text="Loading notes..." />;
     }
 
     return (
@@ -121,7 +121,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                 <div className="notes-add-form">
                     <textarea
                         className="notes-textarea"
-                        placeholder="Nhập ghi chú của bạn..."
+                        placeholder="Enter your note..."
                         value={newNote}
                         onChange={(e) => setNewNote(e.target.value)}
                         rows="3"
@@ -137,7 +137,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                             onClick={handleAddNote}
                             disabled={isAdding}
                         >
-                            {isAdding ? 'Đang thêm...' : 'Thêm ghi chú'}
+                            {isAdding ? 'Adding...' : 'Add note'}
                         </button>
                     </div>
                 </div>
@@ -145,7 +145,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                 {/* Notes List */}
                 <div className="notes-list">
                     {notes.length === 0 ? (
-                        <p className="notes-empty">Chưa có ghi chú nào. Hãy thêm ghi chú đầu tiên!</p>
+                        <p className="notes-empty">No notes yet. Add your first note!</p>
                     ) : (
                         notes.map((note) => (
                             <div key={note._id} className="note-item">
@@ -162,10 +162,10 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                                                 className="btn btn-primary-student btn--small"
                                                 onClick={() => handleEditNote(note._id)}
                                             >
-                                                Lưu
+                                                Save
                                             </button>
                                             <button className="btn btn-secondary btn--small" onClick={cancelEdit}>
-                                                Hủy
+                                                Cancel
                                             </button>
                                         </div>
                                     </div>
@@ -176,7 +176,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                                                 <span className="note-timestamp">{formatTimestamp(note.timestamp)}</span>
                                             )}
                                             <span className="note-date">
-                                                {new Date(note.createdAt).toLocaleDateString('vi-VN')}
+                                                {new Date(note.createdAt).toLocaleDateString('en-US')}
                                             </span>
                                         </div>
                                         <p className="note-content">{note.content}</p>
@@ -186,14 +186,14 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                                                 onClick={() => startEdit(note)}
                                                 aria-label="Edit note"
                                             >
-                                                ✏️ Sửa
+                                                ✏️ Edit
                                             </button>
                                             <button
                                                 className="note-action-btn note-action-btn--delete"
                                                 onClick={() => handleDeleteNote(note._id)}
                                                 aria-label="Delete note"
                                             >
-                                                🗑️ Xóa
+                                                🗑️ Delete
                                             </button>
                                         </div>
                                     </>

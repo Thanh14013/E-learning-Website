@@ -181,6 +181,9 @@
 }
 
 .commentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: var(--spacing-2);
 }
 
@@ -188,6 +191,40 @@
   display: flex;
   gap: var(--spacing-2);
   align-items: center;
+}
+
+.commentActions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.iconButton {
+  background: none;
+  border: none;
+  padding: 0.375rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton:hover {
+  background-color: var(--color-gray-100);
+  color: var(--text-primary);
+}
+
+.iconButton:last-child:hover {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+@media (prefers-color-scheme: dark) {
+  .iconButton:hover {
+    background-color: var(--color-gray-700);
+  }
 }
 
 .commentAvatar {
@@ -277,7 +314,69 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* Edit Form */
+.editForm {
+  background-color: var(--color-gray-50);
+  padding: var(--spacing-2);
+  border-radius: var(--border-radius-md);
+  margin-top: var(--spacing-2);
+}
 
+@media (prefers-color-scheme: dark) {
+  .editForm {
+    background-color: var(--color-gray-800);
+  }
+}
+
+.editForm textarea {
+  width: 100%;
+  padding: var(--spacing-2);
+  border: 2px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 60px;
+  margin-bottom: var(--spacing-2);
+}
+
+.editForm textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.editActions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.editActions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.editActions button:first-child {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.editActions button:first-child:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.editActions button:last-child {
+  background-color: var(--color-gray-200);
+  color: var(--text-primary);
+}
+
+.editActions button:last-child:hover {
+  background-color: var(--color-gray-300);
+}
 .enrollPrompt,
 .loginPrompt {
   text-align: center;

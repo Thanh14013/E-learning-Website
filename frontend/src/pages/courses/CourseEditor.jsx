@@ -55,9 +55,9 @@ const CourseEditor = () => {
 
   const categories = ['Programming', 'Design', 'Business', 'Language', 'Other'];
   const levels = [
-    { value: 'beginner', label: 'Cơ bản' },
-    { value: 'intermediate', label: 'Trung bình' },
-    { value: 'advanced', label: 'Nâng cao' },
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
   ];
 
   // Load course data
@@ -100,7 +100,7 @@ const CourseEditor = () => {
       }
     } catch (error) {
       console.error('Load course error:', error);
-      toastService.error('Không thể tải dữ liệu khóa học');
+      toastService.error('Unable to load course data');
       navigate('/teacher/courses');
     } finally {
       setLoading(false);
@@ -182,12 +182,12 @@ const CourseEditor = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      toastService.error('Vui lòng chọn file ảnh');
+      toastService.error('Please select an image file');
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toastService.error('Kích thước ảnh không được vượt quá 5MB');
+      toastService.error('Image size must not exceed 5MB');
       return;
     }
 
@@ -215,31 +215,31 @@ const CourseEditor = () => {
     try {
       if (editingChapter) {
         await api.put(`/chapters/${editingChapter._id}`, chapterData);
-        toastService.success('Đã cập nhật chương');
+        toastService.success('Chapter updated');
       } else {
         await api.post('/chapters', { ...chapterData, courseId });
-        toastService.success('Đã thêm chương mới');
+        toastService.success('Added new chapter');
       }
       await loadCourseData();
       setShowChapterModal(false);
-    } catch (error) {
+      } catch (error) {
       console.error('Save chapter error:', error);
-      toastService.error('Không thể lưu chương');
+      toastService.error('Unable to save chapter');
     }
   };
 
   const handleDeleteChapter = async (chapterId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa chương này? Tất cả bài học trong chương cũng sẽ bị xóa.')) {
+    if (!window.confirm('Are you sure you want to delete this chapter? All lessons in the chapter will also be deleted.')) {
       return;
     }
 
     try {
       await api.delete(`/chapters/${chapterId}`);
-      toastService.success('Đã xóa chương');
+      toastService.success('Chapter deleted');
       await loadCourseData();
     } catch (error) {
       console.error('Delete chapter error:', error);
-      toastService.error('Không thể xóa chương');
+      toastService.error('Unable to delete chapter');
     }
   };
 
@@ -257,34 +257,34 @@ const CourseEditor = () => {
 
   const handleSaveLesson = async (lessonData) => {
     try {
-      if (editingLesson) {
+        if (editingLesson) {
         await api.put(`/lessons/${editingLesson._id}`, lessonData);
-        toastService.success('Đã cập nhật bài học');
+        toastService.success('Lesson updated');
       } else {
         await api.post('/lessons', { ...lessonData, chapterId: dragOverChapter });
-        toastService.success('Đã thêm bài học mới');
+        toastService.success('Added new lesson');
       }
       await loadCourseData();
       setShowLessonModal(false);
       setDragOverChapter(null);
     } catch (error) {
       console.error('Save lesson error:', error);
-      toastService.error('Không thể lưu bài học');
+      toastService.error('Unable to save lesson');
     }
   };
 
   const handleDeleteLesson = async (lessonId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa bài học này?')) {
+    if (!window.confirm('Are you sure you want to delete this lesson?')) {
       return;
     }
 
     try {
       await api.delete(`/lessons/${lessonId}`);
-      toastService.success('Đã xóa bài học');
+      toastService.success('Lesson deleted');
       await loadCourseData();
     } catch (error) {
       console.error('Delete lesson error:', error);
-      toastService.error('Không thể xóa bài học');
+      toastService.error('Unable to delete lesson');
     }
   };
 
@@ -323,11 +323,11 @@ const CourseEditor = () => {
       const reorderedIds = reordered.map((ch) => ch._id);
       await api.put('/chapters/reorder', { chapters: reorderedIds });
 
-      toastService.success('Đã sắp xếp lại chương');
+      toastService.success('Chapters reordered');
       await loadCourseData();
     } catch (error) {
       console.error('Reorder chapters error:', error);
-      toastService.error('Không thể sắp xếp lại chương');
+      toastService.error('Unable to reorder chapters');
     } finally {
       setDraggedChapter(null);
       setDragOverChapter(null);
@@ -414,11 +414,11 @@ const CourseEditor = () => {
 
       await Promise.all(updatePromises);
 
-      toastService.success('Đã sắp xếp lại bài học');
+      toastService.success('Lessons reordered');
       await loadCourseData();
     } catch (error) {
       console.error('Reorder lesson error:', error);
-      toastService.error('Không thể sắp xếp lại bài học');
+      toastService.error('Unable to reorder lessons');
     } finally {
       setDraggedLesson(null);
     }
@@ -447,11 +447,11 @@ const CourseEditor = () => {
     try {
       setSaving(true);
       await api.put(`/courses/${courseId}/publish`);
-      toastService.success('Đã xuất bản khóa học');
+      toastService.success('Course published');
       await loadCourseData();
     } catch (error) {
       console.error('Publish error:', error);
-      toastService.error(error.response?.data?.message || 'Không thể xuất bản khóa học');
+      toastService.error(error.response?.data?.message || 'Unable to publish course');
     } finally {
       setSaving(false);
     }
@@ -460,7 +460,7 @@ const CourseEditor = () => {
   // Check permissions
   useEffect(() => {
     if (user && user.role !== 'teacher' && user.role !== 'admin') {
-      toastService.error('Chỉ giáo viên mới có thể truy cập trang này');
+      toastService.error('Only teachers can access this page');
       navigate('/dashboard');
     }
   }, [user, navigate]);
@@ -469,7 +469,7 @@ const CourseEditor = () => {
     return (
       <div className={styles.container}>
         <div className={styles.loadingWrapper}>
-          <Loading size="large" text="Loading dữ liệu..." />
+          <Loading size="large" text="Loading data..." />
         </div>
       </div>
     );
@@ -479,8 +479,8 @@ const CourseEditor = () => {
     return (
       <div className={styles.container}>
         <div className={styles.errorMessage}>
-          <h2>Không tìm thấy khóa học</h2>
-          <Button onClick={() => navigate('/teacher/courses')}>Quay lại</Button>
+          <h2>Course not found</h2>
+          <Button onClick={() => navigate('/teacher/courses')}>Back</Button>
         </div>
       </div>
     );
@@ -495,21 +495,21 @@ const CourseEditor = () => {
             className={styles.backButton}
             onClick={() => navigate('/teacher/courses')}
           >
-            ← Quay lại
+            ← Back
           </button>
-          <h1 className={styles.title}>Chỉnh sửa khóa học</h1>
+          <h1 className={styles.title}>Edit Course</h1>
         </div>
         <div className={styles.headerRight}>
           <div className={styles.autoSaveStatus}>
-            {autoSaveStatus === 'saving' && <span>Đang lưu...</span>}
-            {autoSaveStatus === 'saved' && <span className={styles.saved}>Đã lưu</span>}
-            {autoSaveStatus === 'error' && <span className={styles.error}>Lỗi lưu</span>}
+            {autoSaveStatus === 'saving' && <span>Saving...</span>}
+            {autoSaveStatus === 'saved' && <span className={styles.saved}>Saved</span>}
+            {autoSaveStatus === 'error' && <span className={styles.error}>Save error</span>}
           </div>
           <Button variant="outline" onClick={handleSaveDraft} disabled={saving}>
-            Lưu bản nháp
+            Save draft
           </Button>
           <Button variant="primary" onClick={handlePublish} disabled={saving || course.isPublished}>
-            {course.isPublished ? 'Đã xuất bản' : 'Xuất bản'}
+            {course.isPublished ? 'Published' : 'Publish'}
           </Button>
         </div>
       </div>
@@ -518,15 +518,15 @@ const CourseEditor = () => {
         {/* Left Panel - Course Details */}
         <div className={styles.leftPanel}>
           <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Thông tin khóa học</h2>
+            <h2 className={styles.sectionTitle}>Course Information</h2>
 
             <div className={styles.formGroup}>
-              <Input
+                <Input
                 name="title"
-                label="Tiêu đề khóa học"
+                label="Course title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder="Nhập tiêu đề khóa học"
+                placeholder="Enter course title"
                 required
               />
             </div>
@@ -536,11 +536,11 @@ const CourseEditor = () => {
                 Course Description
                 <span className={styles.required}>*</span>
               </label>
-              <ReactQuill
+                <ReactQuill
                 theme="snow"
                 value={formData.description}
                 onChange={handleDescriptionChange}
-                placeholder="Nhập mô tả chi tiết về khóa học..."
+                placeholder="Enter detailed course description..."
                 className={styles.quillEditor}
               />
             </div>
@@ -548,7 +548,7 @@ const CourseEditor = () => {
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  Danh mục
+                  Category
                   <span className={styles.required}>*</span>
                 </label>
                 <select
@@ -567,7 +567,7 @@ const CourseEditor = () => {
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  Cấp độ
+                  Level
                   <span className={styles.required}>*</span>
                 </label>
                 <select
@@ -586,7 +586,7 @@ const CourseEditor = () => {
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>Ảnh bìa khóa học</label>
+              <label className={styles.label}>Course cover image</label>
               {thumbnailPreview ? (
                 <div className={styles.thumbnailPreview}>
                   <img src={thumbnailPreview} alt="Thumbnail" />
@@ -606,8 +606,8 @@ const CourseEditor = () => {
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <div className={styles.dropzoneIcon}>📷</div>
-                  <p>Click để chọn ảnh</p>
-                  <p className={styles.dropzoneHint}>JPG, PNG, GIF (tối đa 5MB)</p>
+                  <p>Click to choose image</p>
+                  <p className={styles.dropzoneHint}>JPG, PNG, GIF (max 5MB)</p>
                 </div>
               )}
               <input
@@ -625,15 +625,15 @@ const CourseEditor = () => {
         <div className={styles.rightPanel}>
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Cấu trúc khóa học</h2>
+              <h2 className={styles.sectionTitle}>Course structure</h2>
               <Button variant="primary" size="small" onClick={handleAddChapter}>
-                + Thêm chương
+                + Add chapter
               </Button>
             </div>
 
             {chapters.length === 0 ? (
               <div className={styles.emptyState}>
-                <p>Chưa có chương nào. Hãy thêm chương đầu tiên!</p>
+                <p>No chapters yet. Add the first chapter!</p>
               </div>
             ) : (
               <div className={styles.chaptersList}>
@@ -662,21 +662,21 @@ const CourseEditor = () => {
                       <div className={styles.chapterInfo}>
                         <h3 className={styles.chapterTitle}>{chapter.title}</h3>
                         <span className={styles.chapterMeta}>
-                          {chapter.lessons?.length || 0} bài học
+                          {chapter.lessons?.length || 0} lessons
                         </span>
                       </div>
                       <div className={styles.chapterActions}>
                         <button
                           className={styles.actionButton}
                           onClick={() => handleEditChapter(chapter)}
-                          title="Chỉnh sửa"
+                          title="Edit"
                         >
                           ✏️
                         </button>
                         <button
                           className={styles.actionButton}
                           onClick={() => handleDeleteChapter(chapter._id)}
-                          title="Xóa"
+                          title="Delete"
                         >
                           🗑️
                         </button>
@@ -703,11 +703,11 @@ const CourseEditor = () => {
                             <div className={styles.lessonInfo}>
                               <h4 className={styles.lessonTitle}>{lesson.title}</h4>
                               {lesson.videoUrl && (
-                                <span className={styles.lessonBadge}>📹 Có video</span>
+                                <span className={styles.lessonBadge}>📹 Has video</span>
                               )}
                               {lesson.resources?.length > 0 && (
                                 <span className={styles.lessonBadge}>
-                                  📎 {lesson.resources.length} tài liệu
+                                  📎 {lesson.resources.length} resources
                                 </span>
                               )}
                             </div>
@@ -715,14 +715,14 @@ const CourseEditor = () => {
                               <button
                                 className={styles.actionButton}
                                 onClick={() => handleEditLesson(lesson)}
-                                title="Chỉnh sửa"
+                                title="Edit"
                               >
                                 ✏️
                               </button>
                               <button
                                 className={styles.actionButton}
                                 onClick={() => handleDeleteLesson(lesson._id)}
-                                title="Xóa"
+                                title="Delete"
                               >
                                 🗑️
                               </button>
@@ -733,7 +733,7 @@ const CourseEditor = () => {
                           className={styles.addLessonButton}
                           onClick={() => handleAddLesson(chapter._id)}
                         >
-                          + Thêm bài học
+                          + Add lesson
                         </button>
                       </div>
                     )}
@@ -783,7 +783,7 @@ const ChapterModal = ({ chapter, onSave, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
-      toastService.error('Vui lòng nhập tên chương');
+      toastService.error('Please enter chapter name');
       return;
     }
 
@@ -799,28 +799,28 @@ const ChapterModal = ({ chapter, onSave, onClose }) => {
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>{chapter ? 'Chỉnh sửa chương' : 'Thêm chương mới'}</h3>
+          <h3>{chapter ? 'Edit chapter' : 'Add new chapter'}</h3>
           <button className={styles.modalClose} onClick={onClose}>×</button>
         </div>
         <form onSubmit={handleSubmit} className={styles.modalBody}>
           <div className={styles.formGroup}>
             <label className={styles.label}>
-              Tên chương
+              Chapter name
               <span className={styles.required}>*</span>
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nhập tên chương"
+              placeholder="Enter chapter name"
               required
             />
           </div>
           <div className={styles.modalActions}>
             <Button variant="outline" onClick={onClose} disabled={saving}>
-              Hủy
+              Cancel
             </Button>
             <Button variant="primary" type="submit" disabled={saving}>
-              {saving ? 'Đang lưu...' : 'Lưu'}
+              {saving ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </form>
@@ -845,7 +845,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      toastService.error('Vui lòng nhập tên bài học');
+      toastService.error('Please enter lesson title');
       return;
     }
 
@@ -854,7 +854,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
       await onSave(formData);
     } catch (error) {
       console.error('Error saving lesson:', error);
-      toastService.error('Không thể lưu bài học');
+      toastService.error('Unable to save lesson');
     } finally {
       setSaving(false);
     }
@@ -865,17 +865,17 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
     if (!file) return;
 
     if (!file.type.startsWith('video/')) {
-      toastService.error('Vui lòng chọn file video');
+      toastService.error('Please select a video file');
       return;
     }
 
     if (file.size > 500 * 1024 * 1024) {
-      toastService.error('Kích thước video không được vượt quá 500MB');
+      toastService.error('Video size must not exceed 500MB');
       return;
     }
 
     if (!lesson?._id) {
-      toastService.error('Vui lòng lưu bài học trước khi upload video');
+      toastService.error('Please save the lesson before uploading video');
       return;
     }
 
@@ -888,14 +888,14 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      toastService.success('Đã upload video thành công');
+      toastService.success('Video uploaded successfully');
       if (onUploadComplete) {
         await onUploadComplete();
       }
       onClose();
     } catch (error) {
       console.error('Upload video error:', error);
-      toastService.error('Không thể upload video');
+      toastService.error('Unable to upload video');
     } finally {
       setUploadingVideo(false);
     }
@@ -906,7 +906,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
     if (files.length === 0) return;
 
     if (!lesson?._id) {
-      toastService.error('Vui lòng lưu bài học trước khi upload tài liệu');
+      toastService.error('Please save the lesson before uploading resources');
       return;
     }
 
@@ -921,14 +921,14 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      toastService.success(`Đã upload ${files.length} tài liệu thành công`);
+      toastService.success(`Successfully uploaded ${files.length} resources`);
       if (onUploadComplete) {
         await onUploadComplete();
       }
       onClose();
     } catch (error) {
       console.error('Upload resources error:', error);
-      toastService.error('Không thể upload tài liệu');
+      toastService.error('Unable to upload resources');
     } finally {
       setUploadingResources(false);
     }
@@ -938,13 +938,13 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>{lesson ? 'Chỉnh sửa bài học' : 'Thêm bài học mới'}</h3>
+          <h3>{lesson ? 'Edit lesson' : 'Add new lesson'}</h3>
           <button className={styles.modalClose} onClick={onClose}>×</button>
         </div>
         <form onSubmit={handleSubmit} className={styles.modalBody}>
           <div className={styles.formGroup}>
             <label className={styles.label}>
-              Tên bài học
+              Lesson title
               <span className={styles.required}>*</span>
             </label>
             <Input
@@ -952,7 +952,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
               }
-              placeholder="Nhập tên bài học"
+              placeholder="Enter lesson title"
               required
             />
           </div>
@@ -965,7 +965,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
               onChange={(value) =>
                 setFormData((prev) => ({ ...prev, content: value }))
               }
-              placeholder="Nhập nội dung bài học..."
+              placeholder="Enter lesson content..."
               className={styles.quillEditor}
             />
           </div>
@@ -979,7 +979,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
                   setFormData((prev) => ({ ...prev, isPreview: e.target.checked }))
                 }
               />
-              <span>Cho phép xem trước (Preview)</span>
+              <span>Allow preview (Preview)</span>
             </label>
           </div>
 
@@ -1001,15 +1001,15 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
                   onClick={() => videoInputRef.current?.click()}
                   disabled={uploadingVideo}
                 >
-                  {uploadingVideo ? 'Đang upload...' : 'Chọn video'}
+                  {uploadingVideo ? 'Uploading...' : 'Choose video'}
                 </Button>
                 {lesson.videoUrl && (
-                  <p className={styles.uploadedFile}>✓ Đã có video</p>
+                  <p className={styles.uploadedFile}>✓ Video available</p>
                 )}
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Upload tài liệu</label>
+                <label className={styles.label}>Upload resources</label>
                 <input
                   ref={resourceInputRef}
                   type="file"
@@ -1025,23 +1025,23 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
                   onClick={() => resourceInputRef.current?.click()}
                   disabled={uploadingResources}
                 >
-                  {uploadingResources ? 'Đang upload...' : 'Chọn tài liệu'}
+                  {uploadingResources ? 'Uploading...' : 'Choose resources'}
                 </Button>
                 {lesson.resources?.length > 0 && (
                   <p className={styles.uploadedFile}>
-                    ✓ Đã có {lesson.resources.length} tài liệu
+                    ✓ {lesson.resources.length} resources available
                   </p>
                 )}
               </div>
             </>
           )}
 
-          <div className={styles.modalActions}>
+            <div className={styles.modalActions}>
             <Button variant="outline" onClick={onClose} disabled={saving}>
-              Hủy
+              Cancel
             </Button>
             <Button variant="primary" type="submit" disabled={saving}>
-              {saving ? 'Đang lưu...' : 'Lưu'}
+              {saving ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </form>

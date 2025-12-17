@@ -2,6 +2,7 @@ import LiveSession from "../models/liveSession.model.js";
 import Course from "../models/course.model.js";
 import User from "../models/user.model.js";
 import { sendNotificationToCourse } from "../socket/index.js";
+import { seedLiveSessions } from "../utils/seedSessions.js";
 
 /**
  * @route   POST /api/sessions
@@ -553,6 +554,101 @@ export const getMySessions = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while fetching sessions",
+    });
+  }
+};
+
+/**
+ * @route   GET /api/sessions/my-enrolled-sessions
+ * @desc    Get all sessions from enrolled courses for calendar (Student)
+ * @access  Private (Student)
+ * @query startDate, endDate - Filter sessions by date range
+ */
+export const getEnrolledCourseSessions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { startDate, endDate } = req.query;
+
+    // Get user's enrolled courses
+    const user = await User.findById(userId).select('enrolledCourses');
+    if (!user || !user.enrolledCourses || user.enrolledCourses.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No enrolled courses found',
+        data: []
+      });
+    }
+
+    const enrolledCourseIds = user.enrolledCourses;
+
+    // Build filter
+    const filter = {
+      courseId: { $in: enrolledCourseIds },
+      status: { $in: ['scheduled', 'live'] } // Only show upcoming and live sessions
+    };
+
+    // Add date range filter if provided
+    if (startDate || endDate) {
+      filter.scheduledAt = {};
+      if (startDate) {
+        filter.scheduledAt.$gte = new Date(startDate);
+      }
+      if (endDate) {
+        filter.scheduledAt.$lte = new Date(endDate);
+      }
+    }
+
+    // Get sessions
+    const sessions = await LiveSession.find(filter)
+      .populate('courseId', 'title thumbnail')
+      .populate('hostId', 'fullName avatar')
+      .sort({ scheduledAt: 1 })
+      .lean();
+
+    // Group sessions by date for easier calendar rendering
+    const sessionsByDate = {};
+    sessions.forEach(session => {
+      const dateKey = session.scheduledAt.toISOString().split('T')[0]; // YYYY-MM-DD
+      if (!sessionsByDate[dateKey]) {
+        sessionsByDate[dateKey] = [];
+      }
+      sessionsByDate[dateKey].push(session);
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Sessions fetched successfully',
+      data: sessions,
+      sessionsByDate
+    });
+  } catch (error) {
+    console.error('Get enrolled sessions error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error while fetching sessions',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * @route   POST /api/sessions/seed-demo
+ * @desc    Seed demo live sessions for testing calendar
+ * @access  Private (Teacher/Admin)
+ */
+export const seedDemoSessions = async (_req, res) => {
+  try {
+    const created = await seedLiveSessions();
+    return res.status(201).json({
+      success: true,
+      message: 'Demo sessions seeded successfully',
+      createdCount: created?.length || 0,
+    });
+  } catch (error) {
+    console.error('Seed demo sessions error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to seed demo sessions',
     });
   }
 };

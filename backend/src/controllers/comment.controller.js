@@ -54,13 +54,16 @@ export const createComment = async (req, res) => {
       });
     }
 
-    // TODO: Validate that user is enrolled in the course when Course model is available
-    /*
-    const course = await Course.findById(discussion.courseId);
+    // Validate enrollment/ownership
+    const Course = (await import("../models/course.model.js")).default;
+    const course = await Course.findById(discussion.courseId).select(
+      "teacherId enrolledStudents"
+    );
+
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found.',
+        message: "Course not found.",
       });
     }
 
@@ -69,13 +72,12 @@ export const createComment = async (req, res) => {
     );
     const isTeacher = course.teacherId.toString() === userId.toString();
 
-    if (!isEnrolled && !isTeacher && req.user.role !== 'admin') {
+    if (!isEnrolled && !isTeacher && req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: 'You must be enrolled in this course to comment.',
+        message: "You must be enrolled in this course to comment.",
       });
     }
-    */
 
     // If parentId is provided, verify parent comment exists
     let parentComment = null;
@@ -257,8 +259,20 @@ export const updateComment = async (req, res) => {
       });
     }
 
-    // Check ownership
-    if (comment.userId.toString() !== userId.toString()) {
+    // Check ownership or course teacher/admin
+    const discussion = await Discussion.findById(comment.discussionId).select(
+      "courseId userId"
+    );
+    const Course = (await import("../models/course.model.js")).default;
+    const course = discussion
+      ? await Course.findById(discussion.courseId).select("teacherId")
+      : null;
+
+    const isOwner = comment.userId.toString() === userId.toString();
+    const isAdmin = req.user.role === "admin";
+    const isTeacher = course && course.teacherId.toString() === userId.toString();
+
+    if (!isOwner && !isTeacher && !isAdmin) {
       return res.status(403).json({
         success: false,
         message: "You do not have permission to update this comment.",
@@ -337,9 +351,17 @@ export const deleteComment = async (req, res) => {
       });
     }
 
-    // Check ownership (owner or teacher or admin)
+    // Check ownership (owner or course teacher or admin)
+    const discussion = await Discussion.findById(comment.discussionId).select(
+      "courseId"
+    );
+    const Course = (await import("../models/course.model.js")).default;
+    const course = discussion
+      ? await Course.findById(discussion.courseId).select("teacherId")
+      : null;
+
     const isOwner = comment.userId.toString() === userId.toString();
-    const isTeacher = req.user.role === "teacher";
+    const isTeacher = course && course.teacherId.toString() === userId.toString();
     const isAdmin = req.user.role === "admin";
 
     if (!isOwner && !isTeacher && !isAdmin) {

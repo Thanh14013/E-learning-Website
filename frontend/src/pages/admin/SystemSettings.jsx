@@ -81,7 +81,7 @@ const SystemSettings = () => {
 
     useEffect(() => {
         if (user?.role !== 'admin') {
-            toastService.error('Bạn không có quyền truy cập');
+            toastService.error('You do not have access');
             navigate('/dashboard');
             return;
         }
@@ -102,7 +102,7 @@ const SystemSettings = () => {
             console.warn('[SystemSettings] API chưa được implement');
         } catch (error) {
             console.error('[SystemSettings] Error loading:', error);
-            toastService.error('Không thể tải cài đặt hệ thống');
+            toastService.error('Unable to load system settings');
         } finally {
             setLoading(false);
         }
@@ -117,10 +117,10 @@ const SystemSettings = () => {
             //     toastService.success('Cài đặt đã được lưu');
             // }
 
-            toastService.warning('Chức năng này chưa được kết nối với backend');
+            toastService.warning('This feature is not connected to the backend');
         } catch (error) {
             console.error('[SystemSettings] Error saving:', error);
-            toastService.error('Không thể lưu cài đặt');
+            toastService.error('Unable to save settings');
         } finally {
             setSaving(false);
         }

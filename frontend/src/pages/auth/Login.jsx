@@ -26,7 +26,7 @@ const Login = () => {
         const { user } = res;
 
         // Check for teacher profile completion
-        if (user.role === "teacher") {
+          if (user.role === "teacher") {
           if (!user.profileCompleted) {
             navigate("/teacher/complete-profile");
             return;
@@ -36,7 +36,7 @@ const Login = () => {
             return;
           }
           if (user.profileApprovalStatus === "rejected") {
-            setError("Hồ sơ của bạn đã bị từ chối. Vui lòng liên hệ admin.");
+            setError("Your profile has been rejected. Please contact the administrator.");
             return;
           }
         }
@@ -44,10 +44,10 @@ const Login = () => {
         // Redirect to dashboard if all checks pass
         navigate(from, { replace: true });
       } else {
-        setError(res.message || "Đăng nhập thất bại");
+        setError(res.message || "Login failed");
       }
     } catch (err) {
-      setError("Đã xảy ra lỗi hệ thống");
+      setError("A system error occurred");
     } finally {
       setLoading(false);
     }

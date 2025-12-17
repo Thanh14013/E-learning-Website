@@ -143,10 +143,10 @@ export default function StudentHeader() {
                               </div>
                             </div>
                             <div className={styles.notifActions}>
-                              {!n.isRead && (
+                                {!n.isRead && (
                                 <button
                                   className={styles.actionBtn}
-                                  title="Đánh dấu đã đọc"
+                                  title="Mark as read"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     markRead && markRead(n._id);
@@ -157,13 +157,13 @@ export default function StudentHeader() {
                               )}
                               <button
                                 className={styles.actionBtn}
-                                title="Xóa"
+                                title="Delete"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   deleteNotification && deleteNotification(n._id);
                                 }}
                               >
-                                ✕
+                                🗑
                               </button>
                             </div>
                           </div>

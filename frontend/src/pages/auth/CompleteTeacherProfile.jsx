@@ -28,13 +28,13 @@ const CompleteTeacherProfile = () => {
         if (file) {
             // Validate file type
             if (file.type !== "application/pdf") {
-                setError("Chỉ chấp nhận file PDF");
+                setError("Only PDF files are accepted");
                 setCvFile(null);
                 return;
             }
             // Validate file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
-                setError("File không được vượt quá 5MB");
+                setError("File must not exceed 5MB");
                 setCvFile(null);
                 return;
             }
@@ -55,12 +55,12 @@ const CompleteTeacherProfile = () => {
             !formData.expertise ||
             !formData.qualifications
         ) {
-            setError("Vui lòng điền đầy đủ thông tin");
+            setError("Please fill in all required fields");
             return;
         }
 
         if (!cvFile) {
-            setError("Vui lòng upload CV của bạn");
+            setError("Please upload your CV");
             return;
         }
 
@@ -93,7 +93,7 @@ const CompleteTeacherProfile = () => {
             console.error("Error completing profile:", err);
             setError(
                 err.response?.data?.message ||
-                "Có lỗi xảy ra khi gửi thông tin. Vui lòng thử lại."
+                "An error occurred while submitting. Please try again."
             );
         } finally {
             setLoading(false);
@@ -105,14 +105,14 @@ const CompleteTeacherProfile = () => {
             <div className={styles.formContainer}>
                 <h1 className={styles.title}>Complete Your Teacher Profile</h1>
                 <p className={styles.subtitle}>
-                    Vui lòng điền đầy đủ thông tin để hoàn tất đăng ký giáo viên
+                    Please complete all information to finish teacher registration
                 </p>
 
                 {error && <p className={styles.error}>{error}</p>}
 
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Số điện thoại *</label>
+                        <label className={styles.label}>Phone *</label>
                         <input
                             type="tel"
                             name="phone"
@@ -132,45 +132,45 @@ const CompleteTeacherProfile = () => {
                             value={formData.address}
                             onChange={handleChange}
                             className={styles.input}
-                            placeholder="123 Đường ABC, Quận XYZ, TP.HCM"
+                            placeholder="123 Example St, City, Country"
                             required
                         />
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Giới thiệu bản thân *</label>
+                        <label className={styles.label}>Short Bio *</label>
                         <textarea
                             name="bio"
                             value={formData.bio}
                             onChange={handleChange}
                             className={styles.textarea}
-                            placeholder="Giới thiệu ngắn về bản thân..."
+                            placeholder="Briefly introduce yourself..."
                             rows="4"
                             required
                         />
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Chuyên môn *</label>
+                        <label className={styles.label}>Expertise *</label>
                         <textarea
                             name="expertise"
                             value={formData.expertise}
                             onChange={handleChange}
                             className={styles.textarea}
-                            placeholder="Lĩnh vực chuyên môn của bạn (ví dụ: Lập trình Web, Machine Learning...)"
+                            placeholder="Your areas of expertise (e.g., Web Development, Machine Learning...)"
                             rows="3"
                             required
                         />
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Bằng cấp & Chứng chỉ *</label>
+                        <label className={styles.label}>Qualifications & Certificates *</label>
                         <textarea
                             name="qualifications"
                             value={formData.qualifications}
                             onChange={handleChange}
                             className={styles.textarea}
-                            placeholder="Liệt kê các bằng cấp, chứng chỉ có liên quan..."
+                            placeholder="List relevant degrees and certificates..."
                             rows="3"
                             required
                         />
@@ -186,7 +186,7 @@ const CompleteTeacherProfile = () => {
                             required
                         />
                         {cvFile && (
-                            <p className={styles.fileName}>File đã chọn: {cvFile.name}</p>
+                            <p className={styles.fileName}>Selected file: {cvFile.name}</p>
                         )}
                     </div>
 
@@ -195,7 +195,7 @@ const CompleteTeacherProfile = () => {
                         className={styles.button}
                         disabled={loading}
                     >
-                        {loading ? "Đang gửi..." : "Nộp hồ sơ"}
+                        {loading ? "Submitting..." : "Submit profile"}
                     </button>
                 </form>
             </div>

@@ -243,3 +243,121 @@
     margin-top: 4px; 
     text-align: right;
   }
+
+  /* Progress Section Styles */
+  .progressSection {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--color-gray-200);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .progressSection {
+      border-top-color: var(--color-gray-700);
+    }
+  }
+
+  .progressInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .progressText {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  .progressPercent {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-student-primary);
+  }
+
+  .progressBar {
+    height: 8px;
+    background-color: var(--color-gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+  }
+
+  /* Statistics Section */
+  .statisticsSection {
+    margin-top: 48px;
+    padding: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .statisticsSection {
+      border-color: var(--color-gray-700);
+    }
+  }
+
+  .statisticsSection h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+  }
+
+  .statsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .statsGrid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .statCard {
+    padding: 20px;
+    background: var(--bg-primary);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--border-radius-md);
+    text-align: center;
+    transition: var(--transition-base);
+  }
+
+  .statCard:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-student-primary);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .statCard {
+      border-color: var(--color-gray-700);
+      background: var(--color-gray-800);
+    }
+  }
+
+  .statLabel {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+
+  .statValue {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }

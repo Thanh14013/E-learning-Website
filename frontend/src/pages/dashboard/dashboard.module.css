@@ -216,3 +216,248 @@
 .addEventButton:hover {
   background-color: var(--color-teacher-primary-hover);
 }
+
+/* Calendar Session Indicators */
+.day.hasSession {
+  position: relative;
+  font-weight: 600;
+  color: var(--color-student-primary);
+}
+
+.sessionDot {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background-color: var(--color-student-primary);
+  border-radius: 50%;
+}
+
+/* Session Popup */
+.sessionPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popupOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.popupContent {
+  position: relative;
+  background-color: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.popupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.popupHeader h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.closeBtn:hover {
+  background-color: var(--color-gray-100);
+}
+
+.sessionsList {
+  overflow-y: auto;
+  padding: var(--spacing-3);
+}
+
+.sessionItem {
+  display: flex;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sessionItem:hover {
+  border-color: var(--color-student-primary);
+  background-color: var(--color-gray-50);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.sessionTime {
+  font-weight: 700;
+  color: var(--color-student-primary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.sessionDetails {
+  flex: 1;
+}
+
+.sessionTitle {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  font-size: 0.95rem;
+}
+
+.sessionCourse {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.sessionHost {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Dashboard Stats Grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-2);
+}
+
+.statItem {
+  text-align: center;
+  padding: var(--spacing-3);
+  background-color: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s;
+}
+
+.statItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-student-primary);
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Compact Stats Grid for Course Statistics */
+.compactStatsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+.compactStatItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-2);
+  background-color: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+  transition: all 0.2s;
+}
+
+.compactStatItem:hover {
+  background-color: var(--color-gray-100);
+  transform: translateX(4px);
+}
+
+.compactStatValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.compactStatLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .popupHeader {
+    border-bottom-color: var(--color-gray-700);
+  }
+  
+  .closeBtn:hover {
+    background-color: var(--color-gray-700);
+  }
+  
+  .sessionItem {
+    border-color: var(--color-gray-700);
+  }
+  
+  .sessionItem:hover {
+    background-color: var(--color-gray-700);
+  }
+  
+  .statItem {
+    background-color: var(--color-gray-700);
+  }
+  
+  .compactStatItem {
+    background-color: var(--color-gray-700);
+  }
+  
+  .compactStatItem:hover {
+    background-color: var(--color-gray-600);
+  }
+}

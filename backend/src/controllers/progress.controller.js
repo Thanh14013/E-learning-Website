@@ -247,6 +247,98 @@ export const markLessonCompleted = async (req, res) => {
 };
 
 /**
+ * @route   GET /api/progress/dashboard-stats
+ * @desc    Get dashboard statistics for student (total courses passed/failed, lessons, avg progress)
+ * @access  Private (Student)
+ */
+export const getDashboardStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get user's enrolled courses
+    const user = await User.findById(userId).select('enrolledCourses');
+    if (!user || !user.enrolledCourses || user.enrolledCourses.length === 0) {
+      return res.json({
+        success: true,
+        data: {
+          totalCourses: 0,
+          coursePassed: 0,
+          courseFailed: 0,
+          totalLessonsCompleted: 0,
+          averageProgress: 0
+        }
+      });
+    }
+
+    const enrolledCourseIds = user.enrolledCourses;
+
+    // Get all courses with their lessons
+    const coursesStats = await Promise.all(
+      enrolledCourseIds.map(async (courseId) => {
+        // Get all chapters for this course
+        const chapters = await Chapter.find({ courseId }).select('_id');
+        const chapterIds = chapters.map(c => c._id);
+
+        // Get all lessons
+        const totalLessons = await Lesson.countDocuments({ 
+          chapterId: { $in: chapterIds } 
+        });
+
+        // Get completed lessons
+        const completedLessons = await Progress.countDocuments({
+          userId,
+          courseId,
+          isCompleted: true
+        });
+
+        const progressPercentage = totalLessons > 0 
+          ? Math.round((completedLessons / totalLessons) * 100) 
+          : 0;
+
+        // Consider passed if >= 80% completion
+        const isPassed = progressPercentage >= 80;
+
+        return {
+          courseId,
+          totalLessons,
+          completedLessons,
+          progressPercentage,
+          isPassed
+        };
+      })
+    );
+
+    // Calculate statistics
+    const totalCourses = coursesStats.length;
+    const coursePassed = coursesStats.filter(c => c.isPassed).length;
+    const courseFailed = totalCourses - coursePassed;
+    const totalLessonsCompleted = coursesStats.reduce((sum, c) => sum + c.completedLessons, 0);
+    const averageProgress = totalCourses > 0
+      ? Math.round(coursesStats.reduce((sum, c) => sum + c.progressPercentage, 0) / totalCourses)
+      : 0;
+
+    return res.json({
+      success: true,
+      data: {
+        totalCourses,
+        coursePassed,
+        courseFailed,
+        totalLessonsCompleted,
+        averageProgress,
+        courseDetails: coursesStats
+      }
+    });
+  } catch (error) {
+    console.error('Get dashboard stats error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error when fetching dashboard stats',
+      error: error.message
+    });
+  }
+};
+
+/**
  * @route   GET /api/progress/course/:courseId
  * @desc    Get course progress for current student
  * @access  Private (Student)

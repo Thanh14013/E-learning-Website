@@ -126,17 +126,76 @@ app.use(notFoundHandler);
 // Global error handler - Catch all errors
 app.use(errorHandler);
 
-// Start server (use httpServer instead of app for Socket.IO)
-httpServer.listen(port, () => {
-  console.log(`✅ Server running on port ${port}`);
-  console.log(`✅ Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`✅ Health check: http://localhost:${port}/health`);
-  console.log(`✅ Socket.IO enabled on ws://localhost:${port}`);
-  console.log(`   - /discussion namespace: Real-time course discussions`);
-  console.log(`   - /session namespace: WebRTC video sessions`);
-  console.log(`   - /notification namespace: Real-time notifications`);
-  console.log(`   - /progress namespace: Learning progress tracking`);
-  console.log(
-    `✅ Rate limiting disabled: ${process.env.DISABLE_RATE_LIMIT === "true"}`
-  );
+// Global process error handlers to prevent silent crashes
+process.on("uncaughtException", (error) => {
+  console.error("❌ Uncaught Exception:", error);
+  process.exit(1); // Exit with failure code to trigger nodemon restart
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("❌ Unhandled Rejection at:", promise, "reason:", reason);
+  process.exit(1);
+});
+
+// Start server with port retry logic (handles EADDRINUSE errors)
+async function startServer(startPort, maxAttempts = 10) {
+  let currentPort = startPort;
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    try {
+      await new Promise((resolve, reject) => {
+        const server = httpServer.listen(currentPort, () => {
+          console.log(`✅ Server running on port ${currentPort}`);
+          console.log(
+            `✅ Environment: ${process.env.NODE_ENV || "development"}`
+          );
+          console.log(
+            `✅ Health check: http://localhost:${currentPort}/health`
+          );
+          console.log(`✅ Socket.IO enabled on ws://localhost:${currentPort}`);
+          console.log(
+            `   - /discussion namespace: Real-time course discussions`
+          );
+          console.log(`   - /session namespace: WebRTC video sessions`);
+          console.log(`   - /notification namespace: Real-time notifications`);
+          console.log(`   - /progress namespace: Learning progress tracking`);
+          console.log(
+            `✅ Rate limiting disabled: ${process.env.DISABLE_RATE_LIMIT === "true"}`
+          );
+          resolve();
+        });
+
+        server.on("error", (err) => {
+          if (err.code === "EADDRINUSE") {
+            reject(err);
+          } else {
+            console.error("❌ Server error:", err);
+            process.exit(1);
+          }
+        });
+      });
+      break; // Success, exit retry loop
+    } catch (err) {
+      if (err.code === "EADDRINUSE" && attempts < maxAttempts - 1) {
+        console.log(
+          `⚠️  Port ${currentPort} is busy, trying ${currentPort + 1}...`
+        );
+        currentPort++;
+        attempts++;
+        await new Promise((resolve) => setTimeout(resolve, 200)); // Small delay before retry
+      } else {
+        console.error(
+          `❌ Failed to start server after ${attempts + 1} attempts`
+        );
+        throw err;
+      }
+    }
+  }
+}
+
+// Start the server
+startServer(Number(port)).catch((err) => {
+  console.error("❌ Fatal error starting server:", err);
+  process.exit(1);
 });

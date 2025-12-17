@@ -12,7 +12,7 @@ import { ERROR_CODES } from "./errorMessages";
  */
 export const validateEmail = (email) => {
   if (!email || email.trim() === "") {
-    return { isValid: false, error: "Email là bắt buộc" };
+    return { isValid: false, error: "Email is required" };
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,48 +40,48 @@ export const validatePassword = (password, options = {}) => {
   } = options;
 
   if (!password || password.trim() === "") {
-    return { isValid: false, error: "Mật khẩu là bắt buộc" };
+    return { isValid: false, error: "Password is required" };
   }
 
   if (password.length < minLength) {
     return {
       isValid: false,
-      error: `Mật khẩu phải có ít nhất ${minLength} ký tự`,
+      error: `Password must be at least ${minLength} characters`,
     };
   }
 
   if (password.length > maxLength) {
     return {
       isValid: false,
-      error: `Mật khẩu không được vượt quá ${maxLength} ký tự`,
+      error: `Password must not exceed ${maxLength} characters`,
     };
   }
 
   if (requireUppercase && !/[A-Z]/.test(password)) {
     return {
       isValid: false,
-      error: "Mật khẩu phải chứa ít nhất một chữ cái viết hoa",
+      error: "Password must contain at least one uppercase letter",
     };
   }
 
   if (requireLowercase && !/[a-z]/.test(password)) {
     return {
       isValid: false,
-      error: "Mật khẩu phải chứa ít nhất một chữ cái viết thường",
+      error: "Password must contain at least one lowercase letter",
     };
   }
 
   if (requireNumber && !/\d/.test(password)) {
     return {
       isValid: false,
-      error: "Mật khẩu phải chứa ít nhất một chữ số",
+      error: "Password must contain at least one digit",
     };
   }
 
   if (requireSpecialChar && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     return {
       isValid: false,
-      error: "Mật khẩu phải chứa ít nhất một ký tự đặc biệt",
+      error: "Password must contain at least one special character",
     };
   }
 
@@ -96,7 +96,7 @@ export const validatePassword = (password, options = {}) => {
  */
 export const validatePasswordConfirmation = (password, confirmPassword) => {
   if (!confirmPassword || confirmPassword.trim() === "") {
-    return { isValid: false, error: "Vui lòng xác nhận mật khẩu" };
+    return { isValid: false, error: "Please confirm your password" };
   }
 
   if (password !== confirmPassword) {
@@ -112,17 +112,17 @@ export const validatePasswordConfirmation = (password, confirmPassword) => {
  * @param {string} fieldName - Name of the field
  * @returns {object} { isValid: boolean, error: string|null }
  */
-export const validateRequired = (value, fieldName = "Trường này") => {
+export const validateRequired = (value, fieldName = "This field") => {
   if (value === null || value === undefined) {
-    return { isValid: false, error: `${fieldName} là bắt buộc` };
+    return { isValid: false, error: `${fieldName} is required` };
   }
 
   if (typeof value === "string" && value.trim() === "") {
-    return { isValid: false, error: `${fieldName} là bắt buộc` };
+    return { isValid: false, error: `${fieldName} is required` };
   }
 
   if (Array.isArray(value) && value.length === 0) {
-    return { isValid: false, error: `${fieldName} không được để trống` };
+    return { isValid: false, error: `${fieldName} cannot be empty` };
   }
 
   return { isValid: true, error: null };
@@ -140,10 +140,10 @@ export const validateLength = (
   value,
   minLength,
   maxLength,
-  fieldName = "Trường này"
+  fieldName = "This field"
 ) => {
   if (!value) {
-    return { isValid: false, error: `${fieldName} là bắt buộc` };
+    return { isValid: false, error: `${fieldName} is required` };
   }
 
   const length = value.toString().length;
@@ -151,14 +151,14 @@ export const validateLength = (
   if (minLength && length < minLength) {
     return {
       isValid: false,
-      error: `${fieldName} phải có ít nhất ${minLength} ký tự`,
+      error: `${fieldName} must be at least ${minLength} characters`,
     };
   }
 
   if (maxLength && length > maxLength) {
     return {
       isValid: false,
-      error: `${fieldName} không được vượt quá ${maxLength} ký tự`,
+      error: `${fieldName} must not exceed ${maxLength} characters`,
     };
   }
 
@@ -172,7 +172,7 @@ export const validateLength = (
  */
 export const validatePhone = (phone) => {
   if (!phone || phone.trim() === "") {
-    return { isValid: false, error: "Số điện thoại là bắt buộc" };
+    return { isValid: false, error: "Phone number is required" };
   }
 
   // Vietnamese phone number format: 10 digits starting with 0
@@ -191,14 +191,14 @@ export const validatePhone = (phone) => {
  */
 export const validateUrl = (url) => {
   if (!url || url.trim() === "") {
-    return { isValid: false, error: "URL là bắt buộc" };
+    return { isValid: false, error: "URL is required" };
   }
 
   try {
     new URL(url);
     return { isValid: true, error: null };
   } catch {
-    return { isValid: false, error: "URL không hợp lệ" };
+    return { isValid: false, error: "Invalid URL" };
   }
 };
 
@@ -210,27 +210,27 @@ export const validateUrl = (url) => {
  * @param {string} fieldName - Name of the field
  * @returns {object} { isValid: boolean, error: string|null }
  */
-export const validateRange = (value, min, max, fieldName = "Giá trị") => {
+export const validateRange = (value, min, max, fieldName = "Value") => {
   if (value === null || value === undefined || value === "") {
-    return { isValid: false, error: `${fieldName} là bắt buộc` };
+    return { isValid: false, error: `${fieldName} is required` };
   }
 
   const numValue = Number(value);
   if (isNaN(numValue)) {
-    return { isValid: false, error: `${fieldName} phải là số` };
+    return { isValid: false, error: `${fieldName} must be a number` };
   }
 
   if (min !== null && numValue < min) {
     return {
       isValid: false,
-      error: `${fieldName} phải lớn hơn hoặc bằng ${min}`,
+      error: `${fieldName} must be greater than or equal to ${min}`,
     };
   }
 
   if (max !== null && numValue > max) {
     return {
       isValid: false,
-      error: `${fieldName} phải nhỏ hơn hoặc bằng ${max}`,
+      error: `${fieldName} must be less than or equal to ${max}`,
     };
   }
 
@@ -243,9 +243,9 @@ export const validateRange = (value, min, max, fieldName = "Giá trị") => {
  * @param {string} fieldName - Name of the field
  * @returns {object} { isValid: boolean, error: string|null }
  */
-export const validateDate = (date, fieldName = "Ngày") => {
+export const validateDate = (date, fieldName = "Date") => {
   if (!date) {
-    return { isValid: false, error: `${fieldName} là bắt buộc` };
+    return { isValid: false, error: `${fieldName} is required` };
   }
 
   const dateObj = new Date(date);
@@ -264,14 +264,14 @@ export const validateDate = (date, fieldName = "Ngày") => {
  */
 export const validateFileSize = (file, maxSizeMB = 10) => {
   if (!file) {
-    return { isValid: false, error: "Vui lòng chọn file" };
+    return { isValid: false, error: "Please select a file" };
   }
 
   const maxSizeBytes = maxSizeMB * 1024 * 1024;
   if (file.size > maxSizeBytes) {
     return {
       isValid: false,
-      error: `Kích thước file không được vượt quá ${maxSizeMB}MB`,
+      error: `File size must not exceed ${maxSizeMB}MB`,
     };
   }
 
@@ -286,7 +286,7 @@ export const validateFileSize = (file, maxSizeMB = 10) => {
  */
 export const validateFileType = (file, allowedTypes = []) => {
   if (!file) {
-    return { isValid: false, error: "Vui lòng chọn file" };
+    return { isValid: false, error: "Please select a file" };
   }
 
   if (allowedTypes.length === 0) {

@@ -97,6 +97,84 @@
   font-size: 1rem;
 }
 
+.overviewResources {
+  margin-top: var(--spacing-4);
+  padding: var(--spacing-3);
+  border: 1px dashed var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  background: var(--color-gray-50);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.overviewDownload {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex-wrap: wrap;
+}
+
+.overviewLabel {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.overviewName {
+  margin: 4px 0 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.overviewDownloadBtn {
+  background: var(--color-primary);
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.overviewDownloadBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.relatedLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.linkGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+}
+
+.linkPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.linkPill:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
 .lessonContent h2,
 .lessonContent h3 {
   margin-top: var(--spacing-4);
@@ -424,6 +502,81 @@
   }
 }
 
+/* Resources Section */
+.resourcesSection {
+  padding: var(--spacing-4);
+  border-top: 1px solid var(--color-gray-200);
+  background: var(--color-gray-50);
+}
+
+.resourcesSection h3 {
+  margin: 0 0 var(--spacing-3) 0;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.resourcesList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.resourceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-3);
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius);
+  transition: all 0.2s;
+}
+
+.resourceItem:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.resourceInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex: 1;
+}
+
+.resourceIcon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.resourceDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.resourceName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.resourceType {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.downloadBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
   .lessonPage {
@@ -465,5 +618,14 @@
 
   .lessonContent code {
     background: var(--color-gray-700);
+  }
+
+  .resourcesSection {
+    background: var(--color-gray-800);
+  }
+
+  .resourceItem {
+    background: var(--color-gray-700);
+    border-color: var(--color-gray-600);
   }
 }

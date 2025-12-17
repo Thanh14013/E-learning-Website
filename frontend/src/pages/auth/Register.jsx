@@ -32,7 +32,7 @@ export function Register() {
     e.preventDefault();
     setError("");
     if (formData.password !== formData.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp.");
+      setError("Password confirmation does not match.");
       return;
     }
 
@@ -58,7 +58,7 @@ export function Register() {
         // Successful registration: redirect to login (no auto-login)
         // Show a single, clear success toast
         import("../../services/toastService").then(({ default: toast }) => {
-          toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+          toast.success("Registration successful! Please log in.");
         });
         navigate("/login");
       } else {
@@ -77,14 +77,14 @@ export function Register() {
             });
           }
           setFieldErrors(fieldErrs);
-          setError(res.message || "Vui lòng kiểm tra các trường.");
+          setError(res.message || "Please check the fields.");
         } else {
-          setError(res.message || "Đăng ký thất bại. Vui lòng thử lại.");
+          setError(res.message || "Registration failed. Please try again.");
         }
       }
     } catch (err) {
       console.error("Registration error:", err);
-      setError("Đã xảy ra lỗi. Vui lòng thử lại sau.");
+      setError("An error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }

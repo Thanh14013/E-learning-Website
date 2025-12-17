@@ -10,17 +10,17 @@ import styles from './CourseManagement.module.css';
 const StatusBadge = ({ status }) => {
   const statusConfig = {
     published: {
-      label: 'Đã xuất bản',
+      label: 'Published',
       className: styles.statusPublished,
       icon: '✓',
     },
     draft: {
-      label: 'Bản nháp',
+      label: 'Draft',
       className: styles.statusDraft,
       icon: '📝',
     },
     unpublished: {
-      label: 'Chưa xuất bản',
+      label: 'Unpublished',
       className: styles.statusUnpublished,
       icon: '⏸',
     },
@@ -45,14 +45,14 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
     e.preventDefault();
     e.stopPropagation();
 
-    if (window.confirm(`Bạn có chắc chắn muốn xóa khóa học "${course.title || course.name}"?`)) {
+    if (window.confirm(`Are you sure you want to delete the course "${course.title || course.name}"?`)) {
       try {
         await api.delete(`/courses/${course._id || course.id}`);
-        toastService.success('Đã xóa khóa học thành công');
+        toastService.success('Course deleted successfully');
         onDelete?.(course._id || course.id);
       } catch (error) {
         console.error('Failed to delete course:', error);
-        toastService.error('Không thể xóa khóa học. Vui lòng thử lại.');
+        toastService.error('Unable to delete course. Please try again.');
       }
     }
   };
@@ -105,7 +105,7 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
           <div className={styles.statItem}>
             <span className={styles.statIcon}>👥</span>
             <span className={styles.statValue}>{studentCount}</span>
-            <span className={styles.statLabel}>Học sinh</span>
+            <span className={styles.statLabel}>Students</span>
           </div>
           {course.rating && (
             <div className={styles.statItem}>
@@ -114,7 +114,7 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
                 {course.rating.average?.toFixed(1) || '0.0'}
               </span>
               <span className={styles.statLabel}>
-                ({course.rating.count || 0} đánh giá)
+                ({course.rating.count || 0} reviews)
               </span>
             </div>
           )}
@@ -138,13 +138,13 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
               e.preventDefault();
               onPreview?.(course);
             }}
-            title="Xem trước"
+            title="Preview"
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
             </svg>
-            Xem trước
+            Preview
           </button>
 
           <button
@@ -153,12 +153,12 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
               e.preventDefault();
               onEdit?.(course);
             }}
-            title="Chỉnh sửa"
+            title="Edit"
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
             </svg>
-            Chỉnh sửa
+            Edit
           </button>
 
           <button
@@ -167,23 +167,23 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
               e.preventDefault();
               onAnalytics?.(course);
             }}
-            title="Phân tích"
+            title="Analytics"
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
-            Phân tích
+            Analytics
           </button>
 
           <button
             className={`${styles.actionBtn} ${styles.deleteBtn}`}
             onClick={handleDelete}
-            title="Xóa"
+            title="Delete"
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            Xóa
+            Delete
           </button>
         </div>
       </div>
@@ -320,12 +320,12 @@ const CourseManagement = () => {
       await Promise.all(
         selectedCourses.map((id) => api.put(`/courses/${id}/publish`))
       );
-      toastService.success(`Đã xuất bản ${selectedCourses.length} khóa học`);
+      toastService.success(`Published ${selectedCourses.length} courses`);
       setSelectedCourses([]);
       setShowBulkActions(false);
       window.location.reload();
     } catch {
-      toastService.error('Có lỗi xảy ra khi xuất bản khóa học');
+      toastService.error('An error occurred while publishing courses');
     } finally {
       setLoading(false);
     }
@@ -334,7 +334,7 @@ const CourseManagement = () => {
   const handleBulkDelete = async () => {
     if (selectedCourses.length === 0) return;
 
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedCourses.length} khóa học?`)) {
+    if (!window.confirm(`Are you sure you want to delete ${selectedCourses.length} courses?`)) {
       return;
     }
 
@@ -343,12 +343,12 @@ const CourseManagement = () => {
       await Promise.all(
         selectedCourses.map((id) => api.delete(`/courses/${id}`))
       );
-      toastService.success(`Đã xóa ${selectedCourses.length} khóa học`);
+      toastService.success(`Deleted ${selectedCourses.length} courses`);
       setSelectedCourses([]);
       setShowBulkActions(false);
       window.location.reload();
     } catch {
-      toastService.error('Có lỗi xảy ra khi xóa khóa học');
+      toastService.error('An error occurred while deleting courses');
     } finally {
       setLoading(false);
     }
@@ -362,7 +362,7 @@ const CourseManagement = () => {
   // Check if user is a teacher
   useEffect(() => {
     if (user && user.role !== 'teacher' && user.role !== 'admin') {
-      toastService.error('Chỉ giáo viên mới có thể truy cập trang này');
+      toastService.error('Only teachers can access this page');
       navigate('/dashboard');
     }
   }, [user, navigate]);
@@ -383,25 +383,25 @@ const CourseManagement = () => {
 
       // CSV Header
       csvData.push([
-        'Tiêu đề',
-        'Mô tả',
-        'Trạng thái',
-        'Số học viên',
-        'Danh mục',
-        'Cấp độ',
-        'Ngày tạo'
+        'Title',
+        'Description',
+        'Status',
+        'Students',
+        'Category',
+        'Level',
+        'Created Date'
       ]);
 
       // Course data rows
       displayedCourses.forEach(course => {
         const title = (course.title || course.name || '').replace(/"/g, '""'); // Escape quotes
         const description = (course.description || '').replace(/"/g, '""').substring(0, 100); // Limit length
-        const status = course.isPublished ? 'Đã xuất bản' : 'Bản nháp';
+        const status = course.isPublished ? 'Published' : 'Draft';
         const studentCount = course.enrolledStudents?.length || 0;
         const category = course.category?.name || course.category || 'N/A';
         const level = course.level || 'N/A';
         const createdDate = course.createdAt
-          ? new Date(course.createdAt).toLocaleDateString('vi-VN')
+          ? new Date(course.createdAt).toLocaleDateString('en-US')
           : 'N/A';
 
         csvData.push([
@@ -435,10 +435,10 @@ const CourseManagement = () => {
       link.click();
       document.body.removeChild(link);
 
-      toastService.success(`Đã xuất ${displayedCourses.length} khóa học thành công`);
+      toastService.success(`Exported ${displayedCourses.length} courses successfully`);
     } catch (error) {
       console.error('[CourseManagement] Export error:', error);
-      toastService.error('Không thể xuất dữ liệu. Vui lòng thử lại.');
+      toastService.error('Unable to export data. Please try again.');
     }
   };
 
@@ -452,7 +452,7 @@ const CourseManagement = () => {
       <div className={styles.pageContainer}>
         <div className={styles.loadingWrapper}>
           <div className={styles.spinner}></div>
-          <p>Loading khóa học...</p>
+          <p>Loading courses...</p>
         </div>
       </div>
     );
@@ -463,9 +463,9 @@ const CourseManagement = () => {
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerContent}>
-          <h1 className={styles.pageTitle}>Quản lý khóa học</h1>
+          <h1 className={styles.pageTitle}>Course Management</h1>
           <p className={styles.pageSubtitle}>
-            Quản lý và theo dõi các khóa học của bạn
+            Manage and track your courses
           </p>
         </div>
         <div className={styles.headerActions}>
@@ -476,7 +476,7 @@ const CourseManagement = () => {
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            Xuất dữ liệu
+            Export data
           </button>
           <button
             className={styles.createBtn}
@@ -485,7 +485,7 @@ const CourseManagement = () => {
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Tạo khóa học mới
+            Create new course
           </button>
         </div>
       </div>
@@ -495,13 +495,13 @@ const CourseManagement = () => {
         <div className={styles.bulkActionsBar}>
           <div className={styles.bulkActionsInfo}>
             <span className={styles.bulkActionsCount}>
-              Đã chọn {selectedCourses.length} khóa học
+              Selected {selectedCourses.length} courses
             </span>
             <button
               className={styles.bulkActionsClear}
               onClick={() => setSelectedCourses([])}
             >
-              Bỏ chọn tất cả
+              Deselect all
             </button>
           </div>
           <div className={styles.bulkActionsButtons}>
@@ -513,7 +513,7 @@ const CourseManagement = () => {
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              Xuất bản
+              Publish
             </button>
             <button
               className={`${styles.bulkActionBtn} ${styles.bulkActionBtnDanger}`}
@@ -523,7 +523,7 @@ const CourseManagement = () => {
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Xóa
+              Delete
             </button>
           </div>
         </div>
@@ -535,10 +535,10 @@ const CourseManagement = () => {
           <svg className={styles.searchIcon} width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <input
+            <input
             type="text"
             className={styles.searchInput}
-            placeholder="Tìm kiếm khóa học..."
+            placeholder="Search courses..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -552,7 +552,7 @@ const CourseManagement = () => {
               onChange={handleSelectAll}
               className={styles.selectAllCheckbox}
             />
-            <span>Chọn tất cả</span>
+            <span>Select all</span>
           </label>
         </div>
 
@@ -562,9 +562,9 @@ const CourseManagement = () => {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="all">Tất cả trạng thái</option>
-            <option value="published">Đã xuất bản</option>
-            <option value="draft">Bản nháp</option>
+            <option value="all">All statuses</option>
+            <option value="published">Published</option>
+            <option value="draft">Draft</option>
           </select>
 
           <select
@@ -572,7 +572,7 @@ const CourseManagement = () => {
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
-            <option value="all">Tất cả danh mục</option>
+            <option value="all">All categories</option>
             {categories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
@@ -585,11 +585,11 @@ const CourseManagement = () => {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="updated">Cập nhật gần đây</option>
-            <option value="created">Ngày tạo</option>
-            <option value="students">Số học sinh</option>
-            <option value="rating">Đánh giá</option>
-            <option value="title">Tên A-Z</option>
+            <option value="updated">Recently updated</option>
+            <option value="created">Created date</option>
+            <option value="students">Students</option>
+            <option value="rating">Rating</option>
+            <option value="title">Title A-Z</option>
           </select>
         </div>
       </div>
@@ -600,7 +600,7 @@ const CourseManagement = () => {
           <div className={styles.statIcon}>📚</div>
           <div className={styles.statContent}>
             <div className={styles.statValue}>{myCourses?.length || 0}</div>
-            <div className={styles.statLabel}>Tổng khóa học</div>
+            <div className={styles.statLabel}>Total courses</div>
           </div>
         </div>
         <div className={styles.statCard}>
@@ -609,7 +609,7 @@ const CourseManagement = () => {
             <div className={styles.statValue}>
               {myCourses?.filter((c) => c.isPublished).length || 0}
             </div>
-            <div className={styles.statLabel}>Đã xuất bản</div>
+            <div className={styles.statLabel}>Published</div>
           </div>
         </div>
         <div className={styles.statCard}>
@@ -618,7 +618,7 @@ const CourseManagement = () => {
             <div className={styles.statValue}>
               {myCourses?.filter((c) => !c.isPublished).length || 0}
             </div>
-            <div className={styles.statLabel}>Bản nháp</div>
+            <div className={styles.statLabel}>Drafts</div>
           </div>
         </div>
         <div className={styles.statCard}>
@@ -627,7 +627,7 @@ const CourseManagement = () => {
             <div className={styles.statValue}>
               {myCourses?.reduce((sum, c) => sum + (c.enrolledStudents?.length || 0), 0) || 0}
             </div>
-            <div className={styles.statLabel}>Tổng học sinh</div>
+            <div className={styles.statLabel}>Total students</div>
           </div>
         </div>
       </div>
@@ -638,17 +638,17 @@ const CourseManagement = () => {
           <div className={styles.emptyIcon}>📚</div>
           <h3 className={styles.emptyTitle}>
             {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
-              ? 'Không tìm thấy khóa học'
-              : 'Chưa có khóa học nào'}
+              ? 'No courses found'
+              : 'No courses yet'}
           </h3>
           <p className={styles.emptyDescription}>
             {searchTerm || statusFilter !== 'all' || categoryFilter !== 'all'
-              ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'
-              : 'Bắt đầu tạo khóa học đầu tiên của bạn ngay bây giờ'}
+              ? 'Try changing filters or search keywords'
+              : 'Start by creating your first course now'}
           </p>
           {(!searchTerm && statusFilter === 'all' && categoryFilter === 'all') && (
             <button className={styles.emptyActionBtn} onClick={handleCreateCourse}>
-              Tạo khóa học mới
+              Create new course
             </button>
           )}
         </div>

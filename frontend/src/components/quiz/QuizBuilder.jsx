@@ -59,7 +59,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
             setQuestions(quiz.questions || []);
         } catch (error) {
             console.error('Error loading quiz:', error);
-            toastService.error('Không thể tải quiz');
+            toastService.error('Unable to load quiz');
         } finally {
             setLoading(false);
         }
@@ -72,12 +72,12 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
     const handleSaveQuiz = async () => {
         // Validation
         if (!quizData.title.trim()) {
-            toastService.error('Vui lòng nhập tiêu đề quiz');
+            toastService.error('Please enter quiz title');
             return;
         }
 
         if (questions.length === 0) {
-            toastService.error('Vui lòng thêm ít nhất 1 câu hỏi');
+            toastService.error('Please add at least 1 question');
             return;
         }
 
@@ -87,7 +87,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
             if (quizId) {
                 // Update existing quiz
                 await api.put(`/quizzes/${quizId}`, quizData);
-                toastService.success('Đã cập nhật quiz thành công');
+                toastService.success('Quiz updated successfully');
             } else {
                 // Create new quiz
                 const response = await api.post('/quizzes', quizData);
@@ -98,7 +98,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
                     await api.post(`/questions/quiz/${newQuizId}`, question);
                 }
 
-                toastService.success('Đã tạo quiz thành công');
+                toastService.success('Quiz created successfully');
             }
 
             if (onClose) {
@@ -108,7 +108,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
             }
         } catch (error) {
             console.error('Error saving quiz:', error);
-            toastService.error('Lỗi khi lưu quiz');
+            toastService.error('Error saving quiz');
         } finally {
             setSaving(false);
         }
@@ -125,9 +125,9 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
     };
 
     const handleDeleteQuestion = (index) => {
-        if (window.confirm('Bạn có chắc muốn xóa câu hỏi này?')) {
+        if (window.confirm('Are you sure you want to delete this question?')) {
             setQuestions(prev => prev.filter((_, i) => i !== index));
-            toastService.success('Đã xóa câu hỏi');
+            toastService.success('Question deleted');
         }
     };
 
@@ -137,11 +137,11 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
             setQuestions(prev => prev.map((q, i) =>
                 i === editingQuestion.index ? questionData : q
             ));
-            toastService.success('Đã cập nhật câu hỏi');
+            toastService.success('Question updated');
         } else {
             // Add new question
             setQuestions(prev => [...prev, questionData]);
-            toastService.success('Đã thêm câu hỏi');
+            toastService.success('Question added');
         }
         setShowQuestionModal(false);
     };
@@ -165,32 +165,32 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
     return (
         <div className={styles.quizBuilder}>
             <div className={styles.header}>
-                <h2>{quizId ? 'Chỉnh sửa Quiz' : 'Tạo Quiz mới'}</h2>
+                <h2>{quizId ? 'Edit Quiz' : 'Create New Quiz'}</h2>
                 <div className={styles.headerActions}>
                     <Button variant="secondary" onClick={onClose || (() => navigate(-1))}>
-                        Hủy
+                        Cancel
                     </Button>
                     <Button onClick={handleSaveQuiz} disabled={saving}>
-                        {saving ? 'Đang lưu...' : 'Lưu Quiz'}
+                        {saving ? 'Saving...' : 'Save Quiz'}
                     </Button>
                 </div>
             </div>
 
             {/* Quiz Metadata */}
             <div className={styles.section}>
-                <h3>Thông tin Quiz</h3>
+                <h3>Quiz Information</h3>
                 <div className={styles.formGrid}>
                     <div className={styles.formGroup}>
-                        <label>Tiêu đề Quiz *</label>
+                        <label>Quiz Title *</label>
                         <Input
                             value={quizData.title}
                             onChange={(e) => handleQuizDataChange('title', e.target.value)}
-                            placeholder="Nhập tiêu đề quiz"
+                            placeholder="Enter quiz title"
                         />
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>Thời gian (phút)</label>
+                        <label>Duration (minutes)</label>
                         <Input
                             type="number"
                             min="1"
@@ -201,7 +201,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>Điểm đạt (%)</label>
+                        <label>Passing Score (%)</label>
                         <Input
                             type="number"
                             min="0"
@@ -212,7 +212,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>Số lần làm bài</label>
+                        <label>Attempts Allowed</label>
                         <Input
                             type="number"
                             min="1"
@@ -229,7 +229,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
                                 checked={quizData.isPublished}
                                 onChange={(e) => handleQuizDataChange('isPublished', e.target.checked)}
                             />
-                            <span>Công khai quiz</span>
+                            <span>Make quiz public</span>
                         </label>
                     </div>
                 </div>
@@ -238,13 +238,13 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
             {/* Questions List */}
             <div className={styles.section}>
                 <div className={styles.sectionHeader}>
-                    <h3>Câu hỏi ({questions.length})</h3>
-                    <Button onClick={handleAddQuestion}>+ Thêm câu hỏi</Button>
+                    <h3>Questions ({questions.length})</h3>
+                    <Button onClick={handleAddQuestion}>+ Add question</Button>
                 </div>
 
                 {questions.length === 0 ? (
                     <div className={styles.emptyState}>
-                        <p>Chưa có câu hỏi nào. Hãy thêm câu hỏi đầu tiên!</p>
+                        <p>No questions yet. Add your first question!</p>
                     </div>
                 ) : (
                     <div className={styles.questionsList}>
@@ -254,7 +254,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
                                 <div className={styles.questionContent}>
                                     <h4>{question.question}</h4>
                                     <span className={styles.questionType}>{getQuestionTypeLabel(question.type)}</span>
-                                    <span className={styles.questionPoints}>{question.points || 1} điểm</span>
+                                    <span className={styles.questionPoints}>{question.points || 1} pts</span>
                                 </div>
                                 <div className={styles.questionActions}>
                                     <button onClick={() => handleMoveQuestion(index, 'up')} disabled={index === 0}>
@@ -325,17 +325,17 @@ function QuestionModal({ question, onSave, onClose }) {
 
     const handleSubmit = () => {
         if (!questionData.question.trim()) {
-            toastService.error('Vui lòng nhập câu hỏi');
+            toastService.error('Please enter a question');
             return;
         }
 
         if (questionData.type === 'multiple_choice') {
             if (questionData.options.some(opt => !opt.trim())) {
-                toastService.error('Vui lòng điền đầy đủ các đáp án');
+                toastService.error('Please fill in all options');
                 return;
             }
             if (!questionData.correctAnswer) {
-                toastService.error('Vui lòng chọn đáp án đúng');
+                toastService.error('Please select the correct answer');
                 return;
             }
         }
@@ -346,28 +346,28 @@ function QuestionModal({ question, onSave, onClose }) {
     return (
         <Modal isOpen onClose={onClose}>
             <div className={styles.questionModal}>
-                <h3>{question ? 'Chỉnh sửa câu hỏi' : 'Thêm câu hỏi mới'}</h3>
+                <h3>{question ? 'Edit Question' : 'Add New Question'}</h3>
 
                 <div className={styles.formGroup}>
-                    <label>Loại câu hỏi</label>
+                    <label>Question Type</label>
                     <select
                         value={questionData.type}
                         onChange={(e) => handleChange('type', e.target.value)}
                         className={styles.select}
                     >
-                        <option value="multiple_choice">Trắc nghiệm</option>
-                        <option value="true_false">Đúng/Sai</option>
-                        <option value="essay">Tự luận</option>
-                        <option value="fill_blank">Điền vào chỗ trống</option>
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                        <option value="essay">Essay</option>
+                        <option value="fill_blank">Fill in the blank</option>
                     </select>
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label>Câu hỏi *</label>
+                    <label>Question *</label>
                     <textarea
                         value={questionData.question}
                         onChange={(e) => handleChange('question', e.target.value)}
-                        placeholder="Nhập câu hỏi..."
+                        placeholder="Enter the question..."
                         rows="3"
                         className={styles.textarea}
                     />
@@ -387,7 +387,7 @@ function QuestionModal({ question, onSave, onClose }) {
                 {/* Multiple Choice Options */}
                 {questionData.type === 'multiple_choice' && (
                     <div className={styles.formGroup}>
-                        <label>Đáp án</label>
+                        <label>Options</label>
                         {questionData.options.map((option, index) => (
                             <div key={index} className={styles.optionRow}>
                                 <input
@@ -396,10 +396,10 @@ function QuestionModal({ question, onSave, onClose }) {
                                     checked={questionData.correctAnswer === option}
                                     onChange={() => handleChange('correctAnswer', option)}
                                 />
-                                <Input
+                                    <Input
                                     value={option}
                                     onChange={(e) => handleOptionChange(index, e.target.value)}
-                                    placeholder={`Đáp án ${index + 1}`}
+                                    placeholder={`Option ${index + 1}`}
                                 />
                                 {questionData.options.length > 2 && (
                                     <button onClick={() => handleRemoveOption(index)} className={styles.removeBtn}>
@@ -409,7 +409,7 @@ function QuestionModal({ question, onSave, onClose }) {
                             </div>
                         ))}
                         <Button variant="secondary" onClick={handleAddOption} size="small">
-                            + Thêm đáp án
+                            + Add option
                         </Button>
                     </div>
                 )}
@@ -423,9 +423,9 @@ function QuestionModal({ question, onSave, onClose }) {
                             onChange={(e) => handleChange('correctAnswer', e.target.value)}
                             className={styles.select}
                         >
-                            <option value="">-- Chọn --</option>
-                            <option value="true">Đúng</option>
-                            <option value="false">Sai</option>
+                            <option value="">-- Select --</option>
+                                <option value="true">True</option>
+                                <option value="false">False</option>
                         </select>
                     </div>
                 )}
@@ -437,13 +437,13 @@ function QuestionModal({ question, onSave, onClose }) {
                         <Input
                             value={questionData.correctAnswer}
                             onChange={(e) => handleChange('correctAnswer', e.target.value)}
-                            placeholder="Nhập đáp án đúng..."
+                            placeholder="Enter correct answer..."
                         />
                     </div>
                 )}
 
                 <div className={styles.formGroup}>
-                    <label>Giải thích (tùy chọn)</label>
+                    <label>Explanation (optional)</label>
                     <textarea
                         value={questionData.explanation}
                         onChange={(e) => handleChange('explanation', e.target.value)}
@@ -454,8 +454,8 @@ function QuestionModal({ question, onSave, onClose }) {
                 </div>
 
                 <div className={styles.modalActions}>
-                    <Button variant="secondary" onClick={onClose}>Hủy</Button>
-                    <Button onClick={handleSubmit}>Lưu</Button>
+                    <Button variant="secondary" onClick={onClose}>Cancel</Button>
+                    <Button onClick={handleSubmit}>Save</Button>
                 </div>
             </div>
         </Modal>
@@ -464,10 +464,10 @@ function QuestionModal({ question, onSave, onClose }) {
 
 function getQuestionTypeLabel(type) {
     const labels = {
-        multiple_choice: 'Trắc nghiệm',
-        true_false: 'Đúng/Sai',
-        essay: 'Tự luận',
-        fill_blank: 'Điền chỗ trống'
+        multiple_choice: 'Multiple Choice',
+        true_false: 'True/False',
+        essay: 'Essay',
+        fill_blank: 'Fill in the blank'
     };
     return labels[type] || type;
 }

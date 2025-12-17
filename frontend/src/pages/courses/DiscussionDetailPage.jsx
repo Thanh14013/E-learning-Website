@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import CommentItem from '../../components/course/CommentItem.jsx';
 import CommentForm from '../../components/course/CommentForm.jsx';
 import styles from './DiscussionDetail.module.css';
+import extraStyles from './DiscussionDetailExtra.module.css';
 
 const formatTimeAgo = (dateString) => {
   const now = new Date();
@@ -28,11 +29,15 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
     loading,
     fetchDiscussionDetail,
     toggleLikeDiscussion,
+    updateDiscussion,
     deleteDiscussion,
     createComment
   } = useDiscussions();
 
   const [isLiked, setIsLiked] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -44,12 +49,25 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
   useEffect(() => {
     if (currentDiscussion?.discussion && user) {
       setIsLiked(currentDiscussion.discussion.likes?.includes(user._id) || false);
+      setEditTitle(currentDiscussion.discussion.title || '');
+      setEditContent(currentDiscussion.discussion.content || '');
     }
   }, [currentDiscussion, user]);
 
   const handleLike = () => {
     toggleLikeDiscussion(discussionId);
     setIsLiked(!isLiked);
+  };
+
+  const handleEdit = async () => {
+    if (!editTitle.trim() || !editContent.trim()) return;
+    try {
+      await updateDiscussion(discussionId, { title: editTitle.trim(), content: editContent.trim() });
+      setShowEditForm(false);
+      fetchDiscussionDetail(discussionId);
+    } catch (error) {
+      console.error('Edit failed:', error);
+    }
   };
 
   const handleDelete = async () => {
@@ -136,9 +154,51 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
 
               {canEdit && (
                 <div className={styles.actions}>
-                  <button className="btn btn-ghost" title="Edit">Edit</button>
-                  <button className="btn btn-ghost" title="Delete" onClick={() => setShowDeleteConfirm(true)}>Delete</button>
-                </div>
+                  <button className="btn btn-ghost" title="Edit" onClick={() => setShowEditForm(!showEditForm)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    </svg>
+                    Edit
+                  </button>
+          {!showEditForm ? (
+            <div className={styles.discussionBody}>
+              <div className="prose-content">
+                {discussion.content.split('\n').map((paragraph, idx) => (
+                  <p key={idx}>{paragraph}</p>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className={extraStyles.editForm}>
+              <div className={extraStyles.formGroup}>
+                <label>Title</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className={extraStyles.editInput}
+                />
+              </div>
+              <div className={extraStyles.formGroup}>
+                <label>Content</label>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className={extraStyles.editTextarea}
+                  rows="8"
+                />
+              </div>
+              <div className={extraStyles.editActions}>
+                <button className="btn btn-primary" onClick={handleEdit}>Save Changes</button>
+                <button className="btn btn-outline" onClick={() => {
+                  setShowEditForm(false);
+                  setEditTitle(discussion.title);
+                  setEditContent(discussion.content);
+                }}>Cancel</button>
+              </div>
+            </div>
+          )}</div>
               )}
             </div>
           </div>

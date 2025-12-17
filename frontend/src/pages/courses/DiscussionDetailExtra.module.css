@@ -1,0 +1,74 @@
+/* Edit Form Styles */
+.editForm {
+  background-color: var(--color-gray-50);
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius-md);
+  margin: var(--spacing-2) 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .editForm {
+    background-color: var(--color-gray-800);
+  }
+}
+
+.formGroup {
+  margin-bottom: var(--spacing-3);
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: var(--spacing-1);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.editInput {
+  width: 100%;
+  padding: var(--spacing-2);
+  border: 2px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: var(--transition-base);
+}
+
+.editInput:focus {
+  outline: none;
+  border-color: var(--color-student-primary);
+}
+
+.editTextarea {
+  width: 100%;
+  padding: var(--spacing-2);
+  border: 2px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 200px;
+  line-height: 1.6;
+  transition: var(--transition-base);
+}
+
+.editTextarea:focus {
+  outline: none;
+  border-color: var(--color-student-primary);
+}
+
+.editActions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-top: var(--spacing-2);
+}
+
+@media (max-width: 768px) {
+  .editActions {
+    flex-direction: column;
+  }
+  
+  .editActions button {
+    width: 100%;
+  }
+}

@@ -24,7 +24,7 @@ export const CourseProvider = ({ children }) => {
 
         // Nếu người dùng đã đăng nhập, fetch thêm các khóa học của họ
         if (user) {
-          console.log("CONTEXT: User đã đăng nhập, fetching my-courses...");
+          console.log("CONTEXT: User is logged in, fetching my-courses...");
           const myCoursesEndpoint = user.role === 'student'
             ? '/courses/enrolled'
             : '/courses/my-courses';

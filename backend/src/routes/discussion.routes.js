@@ -14,6 +14,11 @@ import {
   isStudentOrTeacher,
   isTeacherOrAdmin,
 } from "../middleware/authorize.js";
+import {
+  validateObjectId,
+  validatePagination,
+  validateCourseIdParam,
+} from "../middleware/validator.js";
 
 /**
  * Discussion Routes
@@ -36,7 +41,15 @@ router.post("/", authenticate, isStudentOrTeacher, createDiscussion);
  * @access Public
  * @query page, limit, search, sortBy, order
  */
-router.get("/course/:courseId", getDiscussionsByCourse);
+// Prepare to add validation
+// Future validation logic can be added here
+
+router.get(
+  "/course/:courseId",
+  validateCourseIdParam,
+  validatePagination,
+  getDiscussionsByCourse
+);
 
 /**
  * GET /api/discussions/:id
@@ -51,28 +64,28 @@ router.get("/:id", getDiscussionDetail);
  * @access Protected - Owner, Teacher, or Admin
  * @body { title?, content? }
  */
-router.put("/:id", authenticate, updateDiscussion);
+router.put("/:id", authenticate, validateObjectId, updateDiscussion);
 
 /**
  * DELETE /api/discussions/:id
  * Delete a discussion and all its comments
  * @access Protected - Owner, Teacher, or Admin
  */
-router.delete("/:id", authenticate, deleteDiscussion);
+router.delete("/:id", authenticate, validateObjectId, deleteDiscussion);
 
 /**
  * PUT /api/discussions/:id/like
  * Toggle like on a discussion
  * @access Protected - Authenticated users
  */
-router.put("/:id/like", authenticate, likeDiscussion);
+router.put("/:id/like", authenticate, validateObjectId, likeDiscussion);
 
 /**
  * PUT /api/discussions/:id/pin
  * Pin or unpin a discussion (Teacher/Admin only)
  * @access Protected - Teacher or Admin only
  */
-router.put("/:id/pin", authenticate, isTeacherOrAdmin, pinDiscussion);
+router.put("/:id/pin", authenticate, isTeacherOrAdmin, validateObjectId, pinDiscussion);
 
 /**
  * POST /api/discussions/:id/comment
@@ -80,6 +93,6 @@ router.put("/:id/pin", authenticate, isTeacherOrAdmin, pinDiscussion);
  * @access Protected - Authenticated users
  * @body { content, parentId? }
  */
-router.post("/:id/comment", authenticate, createComment);
+router.post("/:id/comment", authenticate, validateObjectId, createComment);
 
 export default router;

@@ -29,18 +29,18 @@ const TeacherApprovalPending = () => {
                         <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
                 </div>
-                <h1 className={styles.title}>Hồ Sơ Đang Được Xét Duyệt</h1>
+                <h1 className={styles.title}>Profile Under Review</h1>
                 <p className={styles.message}>
-                    Cảm ơn bạn đã nộp hồ sơ giáo viên!
+                    Thank you for submitting your teacher application!
                 </p>
                 <p className={styles.subMessage}>
-                    Hồ sơ của bạn đang được xem xét bởi đội ngũ quản trị. Quá trình này có thể mất từ <strong>24-48 giờ</strong>.
+                    Your profile is being reviewed by our admin team. This may take <strong>24-48 hours</strong>.
                 </p>
                 <p className={styles.subMessage}>
-                    Chúng tôi sẽ gửi email thông báo cho bạn ngay khi hồ sơ được phê duyệt hoặc từ chối.
+                    We'll email you once your profile is approved or rejected.
                 </p>
                 <button onClick={handleBackToHome} className={styles.button}>
-                    Về trang chủ
+                    Back to home
                 </button>
             </div>
         </div>

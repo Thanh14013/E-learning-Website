@@ -13,28 +13,28 @@ const SaveStatusIndicator = ({ status, isOnline, lastSaveTime, className = '' })
       case 'saving':
         return {
           icon: '⏳',
-          text: 'Đang lưu...',
+          text: 'Saving...',
           className: 'status-saving',
           color: '#F59E0B'
         };
       case 'saved':
         return {
           icon: '✓',
-          text: 'Đã lưu',
+          text: 'Saved',
           className: 'status-saved',
           color: '#10B981'
         };
       case 'error':
         return {
           icon: '⚠️',
-          text: isOnline ? 'Lỗi lưu' : 'Mất kết nối',
+          text: isOnline ? 'Save error' : 'Offline',
           className: 'status-error',
           color: '#EF4444'
         };
       case 'syncing':
         return {
           icon: '🔄',
-          text: 'Đang đồng bộ...',
+          text: 'Syncing...',
           className: 'status-syncing',
           color: '#3B82F6'
         };
@@ -65,12 +65,12 @@ const SaveStatusIndicator = ({ status, isOnline, lastSaveTime, className = '' })
     const minutes = Math.floor(seconds / 60);
 
     if (minutes < 1) {
-      return `vừa xong`;
+      return `just now`;
     } else if (minutes < 60) {
-      return `${minutes} phút trước`;
+      return `${minutes} minutes ago`;
     } else {
       const hours = Math.floor(minutes / 60);
-      return `${hours} giờ trước`;
+      return `${hours} hours ago`;
     }
   };
 
@@ -92,8 +92,8 @@ const SaveStatusIndicator = ({ status, isOnline, lastSaveTime, className = '' })
         )}
         {status === 'error' && !isOnline && (
           <span className="save-status-warning">
-            Câu trả lời sẽ được lưu khi kết nối lại
-          </span>
+              Answers will be saved when connection is restored
+            </span>
         )}
       </div>
     </div>

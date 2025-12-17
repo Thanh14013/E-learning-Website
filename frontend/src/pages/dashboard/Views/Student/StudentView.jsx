@@ -124,7 +124,32 @@ const CourseCarousel = ({ courses }) => {
 const StudentView = () => {
   const { myCourses, loading } = useCourses();
   const [currentPage, setCurrentPage] = useState(1);
-  const coursesPerPage = 4;
+  const [courseProgress, setCourseProgress] = useState({});
+  const coursesPerPage = 6;
+
+  // Extract progress from myCourses (already included from backend)
+  useEffect(() => {
+    if (myCourses && myCourses.length > 0) {
+      const progressData = {};
+      myCourses.forEach(course => {
+        if (course.progress) {
+          progressData[course._id] = {
+            completedLessons: course.progress.completedLessons || 0,
+            totalLessons: course.progress.totalLessons || 0,
+            progressPercentage: course.progress.percentage || 0
+          };
+        } else {
+          // Fallback nếu progress không có
+          progressData[course._id] = {
+            completedLessons: 0,
+            totalLessons: 0,
+            progressPercentage: 0
+          };
+        }
+      });
+      setCourseProgress(progressData);
+    }
+  }, [myCourses]);
 
   if (loading) {
     return <p>Loading your courses...</p>;
@@ -142,9 +167,48 @@ const StudentView = () => {
       {myCourses && myCourses.length > 0 ? (
         <>
           <div className={styles.coursesGrid}>
-            {currentCourses.map(course => (
-              <CourseCard key={course._id} course={course} />
-            ))}
+            {currentCourses.map(course => {
+              const progress = courseProgress[course._id] || {
+                completedLessons: 0,
+                totalLessons: 0,
+                progressPercentage: 0,
+              };
+              return (
+                <div key={course._id} className={styles.courseCard}>
+                  <div className={styles.courseCardImage}>
+                    {course.thumbnail ? (
+                      <img src={course.thumbnail} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <div style={{ backgroundColor: '#667eea', width: '100%', height: '100%' }}></div>
+                    )}
+                  </div>
+                  <div className={styles.courseCardContent}>
+                    <h4><a href={`/courses/${course._id}`}>{course.title}</a></h4>
+                    <div className={styles.courseRating}>
+                      <span className={styles.starIcon}>⭐</span>
+                      <span>{course.rating?.toFixed(1) || '0.0'}</span>
+                      <span className={styles.reviewCount}>({course.totalReviews || 0} reviews)</span>
+                    </div>
+                    <div className={styles.progressSection}>
+                      <div className={styles.progressInfo}>
+                        <span className={styles.progressText}>
+                          {progress.completedLessons} / {progress.totalLessons} lessons
+                        </span>
+                        <span className={styles.progressPercent}>
+                          {progress.progressPercentage}%
+                        </span>
+                      </div>
+                      <div className={styles.progressBar}>
+                        <div 
+                          className={styles.progressFill} 
+                          style={{ width: `${progress.progressPercentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
           
           {totalPages > 1 && (

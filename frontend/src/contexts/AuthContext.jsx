@@ -52,18 +52,18 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("accessToken", tokens.accessToken);
 
-      toastService.success(`Chào mừng ${userData.fullName}!`);
+      toastService.success(`Welcome ${userData.fullName}!`);
       return { success: true, user: userData };
     } catch (err) {
       const parsedError = handleApiError(err, "Login");
 
       // Show specific error toast based on status code
       if (parsedError.statusCode === 401) {
-        toastService.error("Email hoặc mật khẩu không đúng!");
+        toastService.error("Email or password is incorrect!");
       } else if (parsedError.statusCode === 404) {
-        toastService.error("Tài khoản không tồn tại!");
+        toastService.error("Account does not exist!");
       } else if (parsedError.type !== 'NETWORK') {
-        toastService.error(parsedError.message || "Đăng nhập thất bại!");
+        toastService.error(parsedError.message || "Login failed!");
       }
 
       return { success: false, message: parsedError.message };
@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("user");
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      toastService.info("Đã đăng xuất thành công");
+      toastService.info("Logged out successfully");
     }
   };
   const value = {
@@ -120,7 +120,7 @@ export const AuthProvider = ({ children }) => {
   if (loading) {
     return (
       <div style={{ textAlign: "center", marginTop: "50px" }}>
-        <p>Đang kiểm tra đăng nhập...</p>
+        <p>Verifying login...</p>
       </div>
     );
   }

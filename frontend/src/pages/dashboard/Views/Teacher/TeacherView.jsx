@@ -44,17 +44,17 @@ const CourseCard = ({ course, analytics }) => {
           <div className={styles.statItem}>
             <span className={styles.statIcon}>👥</span>
             <span className={styles.statValue}>{studentCount}</span>
-            <span className={styles.statLabel}>Học sinh</span>
+            <span className={styles.statLabel}>Students</span>
           </div>
           <div className={styles.statItem}>
             <span className={styles.statIcon}>✓</span>
             <span className={styles.statValue}>{completionRate}%</span>
-            <span className={styles.statLabel}>Hoàn thành</span>
+            <span className={styles.statLabel}>Completion</span>
           </div>
           <div className={styles.statItem}>
             <span className={styles.statIcon}>⭐</span>
             <span className={styles.statValue}>{avgScore.toFixed(1)}</span>
-            <span className={styles.statLabel}>Điểm TB</span>
+            <span className={styles.statLabel}>Avg Score</span>
           </div>
         </div>
         <div className={styles.courseActions}>
@@ -62,13 +62,13 @@ const CourseCard = ({ course, analytics }) => {
             to={`/courses/${course._id || course.id}/manage`}
             className={styles.manageBtn}
           >
-            Quản lý
+            Manage
           </Link>
           <Link
             to={`/courses/${course._id || course.id}/analytics`}
             className={styles.analyticsBtn}
           >
-            Phân tích
+            Analytics
           </Link>
         </div>
       </div>
@@ -124,7 +124,7 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
   if (!Array.isArray(courses) || courses.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <p>Bạn chưa có khóa học nào. <Link to="/courses/create">Tạo khóa học mới</Link></p>
+        <p>You have no courses. <Link to="/courses/create">Create a new course</Link></p>
       </div>
     );
   }
@@ -184,25 +184,25 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
 const QuickStats = ({ stats }) => {
   const statItems = [
     {
-      label: 'Tổng khóa học',
+      label: 'Total courses',
       value: stats.totalCourses || 0,
       icon: '📚',
       color: 'var(--color-teacher-primary)',
     },
     {
-      label: 'Tổng học sinh',
+      label: 'Total students',
       value: stats.totalStudents || 0,
       icon: '👥',
       color: 'var(--color-info)',
     },
     {
-      label: 'Đang chấm',
+      label: 'Pending grading',
       value: stats.pendingQuizzes || 0,
       icon: '📝',
       color: 'var(--color-warning)',
     },
     {
-      label: 'Thảo luận mới',
+      label: 'New discussions',
       value: stats.newDiscussions || 0,
       icon: '💬',
       color: 'var(--color-success)',
@@ -231,7 +231,7 @@ const RecentActivity = ({ activities }) => {
   if (!activities || activities.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <p>Chưa có hoạt động gần đây</p>
+        <p>No recent activity</p>
       </div>
     );
   }
@@ -268,7 +268,7 @@ const PendingQuizzes = ({ quizzes }) => {
   if (!quizzes || quizzes.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <p>Không có bài kiểm tra nào cần chấm</p>
+        <p>No quizzes to grade</p>
       </div>
     );
   }
@@ -281,16 +281,16 @@ const PendingQuizzes = ({ quizzes }) => {
             <h4 className={styles.quizTitle}>{quiz.quizTitle}</h4>
             <p className={styles.quizCourse}>{quiz.courseName}</p>
             <p className={styles.quizStudent}>
-              Học sinh: <strong>{quiz.studentName}</strong>
+              Student: <strong>{quiz.studentName}</strong>
             </p>
           </div>
           <div className={styles.quizActions}>
             <Link
               to={`/quiz/${quiz.quizId}/grade/${quiz.attemptId}`}
               className={styles.gradeBtn}
-            >
-              Chấm bài
-            </Link>
+              >
+                Grade
+              </Link>
           </div>
         </div>
       ))}
@@ -303,7 +303,7 @@ const NewDiscussions = ({ discussions }) => {
   if (!discussions || discussions.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <p>Không có thảo luận mới</p>
+        <p>No new discussions</p>
       </div>
     );
   }
@@ -322,9 +322,9 @@ const NewDiscussions = ({ discussions }) => {
             <p className={styles.discussionMeta}>
               {discussion.authorName} • {discussion.courseName} • {discussion.timestamp}
             </p>
-            {discussion.commentCount > 0 && (
+                {discussion.commentCount > 0 && (
               <p className={styles.discussionComments}>
-                {discussion.commentCount} bình luận mới
+                {discussion.commentCount} new comments
               </p>
             )}
           </div>
@@ -414,7 +414,7 @@ const TeacherView = () => {
     return (
       <div className={styles.loadingWrapper}>
         <div className={styles.spinner}></div>
-        <p>Loading dữ liệu...</p>
+        <p>Loading data...</p>
       </div>
     );
   }
@@ -423,16 +423,16 @@ const TeacherView = () => {
     <div className={styles.teacherDashboard}>
       {/* Quick Stats Section */}
       <section className={styles.section}>
-        <h3 className={styles.sectionTitle}>Thống kê nhanh</h3>
+        <h3 className={styles.sectionTitle}>Quick Stats</h3>
         <QuickStats stats={stats} />
       </section>
 
       {/* My Courses Section */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Khóa học của tôi ({myCourses?.length || 0})</h3>
+          <h3 className={styles.sectionTitle}>My Courses ({myCourses?.length || 0})</h3>
           <Link to="/courses/create" className={styles.createCourseBtn}>
-            + Tạo khóa học mới
+            + Create new course
           </Link>
         </div>
         <CourseCarousel
@@ -445,7 +445,7 @@ const TeacherView = () => {
       <div className={styles.twoColumnLayout}>
         {/* Recent Student Activity */}
         <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Hoạt động học sinh gần đây</h3>
+          <h3 className={styles.sectionTitle}>Recent student activity</h3>
           <RecentActivity activities={recentActivities} />
         </section>
 

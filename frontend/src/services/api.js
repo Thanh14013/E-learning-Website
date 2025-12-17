@@ -45,7 +45,7 @@ api.interceptors.response.use(
       localStorage.removeItem("user");
 
       // Show toast notification
-      toastService.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      toastService.error("Session expired. Please log in again.");
 
       // Redirect to login after a short delay
       setTimeout(() => {

@@ -23,7 +23,7 @@ export default function StudentAnalytics() {
 
     useEffect(() => {
         if (user?.role !== 'teacher' && user?.role !== 'admin') {
-            toastService.error('Bạn không có quyền truy cập');
+            toastService.error('You do not have access');
             navigate('/dashboard');
             return;
         }
@@ -46,7 +46,7 @@ export default function StudentAnalytics() {
 
         } catch (error) {
             console.error('Error fetching student analytics:', error);
-            toastService.error('Không thể tải dữ liệu phân tích');
+            toastService.error('Unable to load analytics data');
         } finally {
             setLoading(false);
         }
@@ -59,15 +59,15 @@ export default function StudentAnalytics() {
     };
 
     const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('vi-VN');
+        return new Date(dateString).toLocaleDateString('en-US');
     };
 
     if (loading) {
-        return <div className={styles.loading}>Loading dữ liệu...</div>;
+        return <div className={styles.loading}>Loading data...</div>;
     }
 
     if (!student || !analytics) {
-        return <div className={styles.error}>Không tìm thấy dữ liệu</div>;
+        return <div className={styles.error}>No data found</div>;
     }
 
     return (
@@ -75,15 +75,15 @@ export default function StudentAnalytics() {
             {/* Header */}
             <div className={styles.header}>
                 <Button variant="secondary" onClick={() => navigate(-1)}>
-                    ← Quay lại
+                    ← Back
                 </Button>
                 <div className={styles.timeRangeSelector}>
-                    <label>Khoảng thời gian:</label>
+                    <label>Time range:</label>
                     <select value={timeRange} onChange={(e) => setTimeRange(e.target.value)}>
-                        <option value="7">7 ngày qua</option>
-                        <option value="30">30 ngày qua</option>
-                        <option value="90">90 ngày qua</option>
-                        <option value="all">Tất cả</option>
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="all">All</option>
                     </select>
                 </div>
             </div>
@@ -103,7 +103,7 @@ export default function StudentAnalytics() {
                     <h2>{student.fullName}</h2>
                     <p>{student.email}</p>
                     <p className={styles.enrolledDate}>
-                        Ghi danh: {formatDate(student.enrolledAt)}
+                        Enrolled: {formatDate(student.enrolledAt)}
                     </p>
                 </div>
             </div>
@@ -114,9 +114,9 @@ export default function StudentAnalytics() {
                     <div className={styles.statIcon}>📊</div>
                     <div className={styles.statContent}>
                         <h3>{analytics.progress.completionRate}%</h3>
-                        <p>Tiến độ hoàn thành</p>
+                        <p>Completion rate</p>
                         <span className={styles.statDetail}>
-                            {analytics.progress.completedLessons}/{analytics.progress.totalLessons} bài học
+                            {analytics.progress.completedLessons}/{analytics.progress.totalLessons} lessons
                         </span>
                     </div>
                 </div>
@@ -125,9 +125,9 @@ export default function StudentAnalytics() {
                     <div className={styles.statIcon}>⏱️</div>
                     <div className={styles.statContent}>
                         <h3>{formatTime(analytics.progress.totalWatchTime)}</h3>
-                        <p>Tổng thời gian học</p>
+                        <p>Total watch time</p>
                         <span className={styles.statDetail}>
-                            TB: {analytics.progress.averageWatchTime}m/bài
+                            Avg: {analytics.progress.averageWatchTime}m/lesson
                         </span>
                     </div>
                 </div>
@@ -136,7 +136,7 @@ export default function StudentAnalytics() {
                     <div className={styles.statIcon}>📝</div>
                     <div className={styles.statContent}>
                         <h3>{analytics.quizzes.averageScore}%</h3>
-                        <p>Điểm trung bình</p>
+                        <p>Average score</p>
                         <span className={styles.statDetail}>
                             {analytics.quizzes.completedQuizzes}/{analytics.quizzes.totalQuizzes} quiz
                         </span>
@@ -147,9 +147,9 @@ export default function StudentAnalytics() {
                     <div className={styles.statIcon}>💬</div>
                     <div className={styles.statContent}>
                         <h3>{analytics.discussions.totalPosts}</h3>
-                        <p>Thảo luận</p>
+                        <p>Discussions</p>
                         <span className={styles.statDetail}>
-                            {analytics.discussions.totalComments} bình luận
+                            {analytics.discussions.totalComments} comments
                         </span>
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export default function StudentAnalytics() {
                             dataKey="completion"
                             stroke="#7c3aed"
                             strokeWidth={2}
-                            name="Tiến độ (%)"
+                            name="Progress (%)"
                         />
                     </LineChart>
                 </ResponsiveContainer>
@@ -178,7 +178,7 @@ export default function StudentAnalytics() {
 
             {/* Quiz Scores Chart */}
             <div className={styles.chartSection}>
-                <h3>Điểm quiz</h3>
+                <h3>Quiz Scores</h3>
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={analytics.quizScoresOverTime}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -186,21 +186,21 @@ export default function StudentAnalytics() {
                         <YAxis domain={[0, 100]} />
                         <Tooltip />
                         <Legend />
-                        <Bar dataKey="score" fill="#7c3aed" name="Điểm (%)" />
+                        <Bar dataKey="score" fill="#7c3aed" name="Score (%)" />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
 
             {/* Quiz Attempts Table */}
             <div className={styles.tableSection}>
-                <h3>Chi tiết các bài quiz</h3>
+                <h3>Quiz Details</h3>
                 <table className={styles.quizTable}>
                     <thead>
                         <tr>
                             <th>Quiz</th>
-                            <th>Điểm</th>
-                            <th>Số lần làm</th>
-                            <th>Ngày hoàn thành</th>
+                            <th>Score</th>
+                            <th>Attempts</th>
+                            <th>Completed Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -212,7 +212,7 @@ export default function StudentAnalytics() {
                                         {attempt.score}%
                                     </span>
                                 </td>
-                                <td>{attempt.attempts} lần</td>
+                                <td>{attempt.attempts} attempts</td>
                                 <td>{formatDate(attempt.completedAt)}</td>
                             </tr>
                         ))}
@@ -223,7 +223,7 @@ export default function StudentAnalytics() {
             {/* Export Button */}
             <div className={styles.exportSection}>
                 <Button onClick={() => exportToCSV(student, analytics)}>
-                    📥 Xuất báo cáo CSV
+                    📥 Export CSV
                 </Button>
             </div>
         </div>
@@ -268,5 +268,5 @@ function exportToCSV(student, analytics) {
     link.download = `student_analytics_${student.fullName}_${Date.now()}.csv`;
     link.click();
 
-    toastService.success('Đã xuất báo cáo thành công');
+    toastService.success('Report exported successfully');
 }

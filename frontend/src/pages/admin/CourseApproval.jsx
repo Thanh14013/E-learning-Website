@@ -78,7 +78,7 @@ const CourseApproval = () => {
 
     useEffect(() => {
         if (user?.role !== 'admin') {
-            toastService.error('Bạn không có quyền truy cập');
+            toastService.error('You do not have access');
             navigate('/dashboard');
             return;
         }
@@ -97,7 +97,7 @@ const CourseApproval = () => {
             }
         } catch (error) {
             console.error('[CourseApproval] Error loading:', error);
-            toastService.error('Không thể tải danh sách khóa học');
+            toastService.error('Unable to load course list');
         } finally {
             setLoading(false);
         }
@@ -123,19 +123,19 @@ const CourseApproval = () => {
                         ? { ...c, approvalStatus: 'approved', approvedAt: new Date() }
                         : c
                 ));
-                toastService.success(`Khóa học "${selectedCourse.title}" đã được duyệt`);
+                toastService.success(`Course "${selectedCourse.title}" has been approved`);
             }
             setShowReviewModal(false);
             setSelectedCourse(null);
         } catch (error) {
             console.error('[CourseApproval] Error approving:', error);
-            toastService.error('Không thể duyệt khóa học');
+            toastService.error('Unable to approve course');
         }
     };
 
     const handleReject = async () => {
         if (!reviewNotes.trim()) {
-            toastService.error('Vui lòng cung cấp lý do từ chối');
+            toastService.error('Please provide a reason for rejection');
             return;
         }
 
@@ -147,13 +147,13 @@ const CourseApproval = () => {
                         ? { ...c, approvalStatus: 'rejected', rejectedAt: new Date(), rejectionReason: reviewNotes }
                         : c
                 ));
-                toastService.success(`Khóa học "${selectedCourse.title}" đã bị từ chối`);
+                toastService.success(`Course "${selectedCourse.title}" has been rejected`);
             }
             setShowReviewModal(false);
             setSelectedCourse(null);
         } catch (error) {
             console.error('[CourseApproval] Error rejecting:', error);
-            toastService.error('Không thể từ chối khóa học');
+            toastService.error('Unable to reject course');
         }
     };
 
@@ -162,7 +162,7 @@ const CourseApproval = () => {
     };
 
     const formatDate = (date) => {
-        return new Date(date).toLocaleDateString('vi-VN', {
+        return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'

@@ -36,9 +36,9 @@ const CreateCourse = () => {
   // Categories and levels
   const categories = ['Programming', 'Design', 'Business', 'Language', 'Other'];
   const levels = [
-    { value: 'beginner', label: 'Cơ bản' },
-    { value: 'intermediate', label: 'Trung bình' },
-    { value: 'advanced', label: 'Nâng cao' },
+    { value: 'beginner', label: 'Beginner' },
+    { value: 'intermediate', label: 'Intermediate' },
+    { value: 'advanced', label: 'Advanced' },
   ];
 
   // Validate form
@@ -46,13 +46,13 @@ const CreateCourse = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Tiêu đề khóa học là bắt buộc';
+      newErrors.title = 'Course title is required';
     } else if (formData.title.trim().length < 3) {
-      newErrors.title = 'Tiêu đề phải có ít nhất 3 ký tự';
+      newErrors.title = 'Title must be at least 3 characters';
     }
 
     if (formData.description && formData.description.length > 2000) {
-      newErrors.description = 'Mô tả không được vượt quá 2000 ký tự';
+      newErrors.description = 'Description must not exceed 2000 characters';
     }
 
     setErrors(newErrors);
@@ -96,13 +96,13 @@ const CreateCourse = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      toastService.error('Vui lòng chọn file ảnh');
+      toastService.error('Please select an image file');
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toastService.error('Kích thước ảnh không được vượt quá 5MB');
+      toastService.error('Image size must not exceed 5MB');
       return;
     }
 
@@ -197,11 +197,11 @@ const CreateCourse = () => {
         });
       }
 
-      toastService.success('Đã lưu khóa học dưới dạng bản nháp');
+      toastService.success('Course saved as draft');
       navigate(`/dashboard`);
     } catch (error) {
       console.error('Create course error:', error);
-      toastService.error(error.response?.data?.message || 'Tạo khóa học thất bại');
+      toastService.error(error.response?.data?.message || 'Failed to create course');
     } finally {
       setLoading(false);
     }
@@ -240,17 +240,17 @@ const CreateCourse = () => {
       // Publish course
       try {
         await api.put(`/courses/${courseId}/publish`);
-        toastService.success('Đã tạo và xuất bản khóa học thành công!');
+        toastService.success('Course created and published successfully!');
         navigate(`/dashboard`);
       } catch (publishError) {
         // If publish fails (e.g., no chapters/lessons), still show success for course creation
-        const publishMessage = publishError.response?.data?.message || 'Không thể xuất bản khóa học';
-        toastService.warning(`Đã tạo khóa học nhưng: ${publishMessage}. Vui lòng thêm chương và bài học trước khi xuất bản.`);
+        const publishMessage = publishError.response?.data?.message || 'Unable to publish course';
+        toastService.warning(`Course created but: ${publishMessage}. Please add chapters and lessons before publishing.`);
         navigate(`/dashboard`);
       }
     } catch (error) {
       console.error('Publish course error:', error);
-      toastService.error(error.response?.data?.message || 'Xuất bản khóa học thất bại');
+      toastService.error(error.response?.data?.message || 'Failed to publish course');
     } finally {
       setLoading(false);
     }
@@ -261,9 +261,9 @@ const CreateCourse = () => {
     return (
       <div className={styles.container}>
         <div className={`${styles.errorMessage} ${styles.errorMessageCentered}`}>
-          <h2>Không có quyền truy cập</h2>
-          <p>Chỉ giáo viên và quản trị viên mới có thể tạo khóa học.</p>
-          <Button onClick={() => navigate('/dashboard')}>Quay lại</Button>
+          <h2>Access denied</h2>
+          <p>Only teachers and administrators can create courses.</p>
+          <Button onClick={() => navigate('/dashboard')}>Back</Button>
         </div>
       </div>
     );
@@ -272,9 +272,9 @@ const CreateCourse = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>Tạo khóa học mới</h1>
+        <h1>Create New Course</h1>
         <p className={styles.stepIndicator}>
-          Bước {currentStep} / {totalSteps}
+          Step {currentStep} / {totalSteps}
         </p>
       </div>
 
@@ -290,15 +290,15 @@ const CreateCourse = () => {
         {/* Step 1: Basic Information */}
         {currentStep === 1 && (
           <div className={styles.stepContent}>
-            <h2>Thông tin cơ bản</h2>
+            <h2>Basic Information</h2>
 
             <div className={styles.formGroup}>
-              <Input
+                <Input
                 name="title"
-                label="Tiêu đề khóa học"
+                label="Course title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder="Nhập tiêu đề khóa học"
+                placeholder="Enter course title"
                 error={errors.title}
                 required
               />
@@ -313,7 +313,7 @@ const CreateCourse = () => {
                 theme="snow"
                 value={formData.description}
                 onChange={handleDescriptionChange}
-                placeholder="Nhập mô tả chi tiết về khóa học..."
+                placeholder="Enter detailed course description..."
                 className={styles.quillEditor}
                 modules={{
                   toolbar: [
@@ -331,7 +331,7 @@ const CreateCourse = () => {
               )}
               {formData.description && (
                 <p className={styles.charCount}>
-                  {formData.description.replace(/<[^>]*>/g, '').length} / 2000 ký tự
+                  {formData.description.replace(/<[^>]*>/g, '').length} / 2000 characters
                 </p>
               )}
             </div>
@@ -339,7 +339,7 @@ const CreateCourse = () => {
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  Danh mục
+                  Category
                   <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <select
@@ -358,7 +358,7 @@ const CreateCourse = () => {
 
               <div className={styles.formGroup}>
                 <label className={styles.label}>
-                  Cấp độ
+                  Level
                   <span className={styles.requiredAsterisk}>*</span>
                 </label>
                 <select
@@ -381,9 +381,9 @@ const CreateCourse = () => {
         {/* Step 2: Thumbnail */}
         {currentStep === 2 && (
           <div className={styles.stepContent}>
-            <h2>Ảnh bìa khóa học</h2>
+            <h2>Course thumbnail</h2>
             <p className={styles.stepDescription}>
-              Tải lên ảnh bìa cho khóa học của bạn. Ảnh bìa sẽ giúp khóa học trở nên hấp dẫn hơn.
+              Upload a thumbnail for your course. A good thumbnail makes your course more appealing.
             </p>
 
             {thumbnailPreview ? (
@@ -413,10 +413,10 @@ const CreateCourse = () => {
               >
                 <div className={styles.dropzoneIcon}>📷</div>
                 <p className={styles.dropzoneText}>
-                  Kéo thả ảnh vào đây hoặc click để chọn
+                  Drag & drop an image here or click to choose
                 </p>
                 <p className={styles.dropzoneHint}>
-                  Định dạng: JPG, PNG, GIF (tối đa 5MB)
+                  Formats: JPG, PNG, GIF (max 5MB)
                 </p>
               </div>
             )}
@@ -436,12 +436,12 @@ const CreateCourse = () => {
         <div className={styles.formActions}>
           {currentStep > 1 && (
             <Button variant="secondary" onClick={handlePrevious} disabled={loading}>
-              Quay lại
+              Back
             </Button>
           )}
           {currentStep < totalSteps ? (
             <Button variant="primary" onClick={handleNext} disabled={loading}>
-              Tiếp theo
+              Next
             </Button>
           ) : (
             <div className={styles.finalActions}>
@@ -450,14 +450,14 @@ const CreateCourse = () => {
                 onClick={handleSaveDraft}
                 disabled={loading}
               >
-                {loading ? 'Đang lưu...' : 'Lưu bản nháp'}
+                {loading ? 'Saving...' : 'Save draft'}
               </Button>
               <Button
                 variant="primary"
                 onClick={handlePublish}
                 disabled={loading}
               >
-                {loading ? 'Đang xuất bản...' : 'Xuất bản'}
+                {loading ? 'Publishing...' : 'Publish'}
               </Button>
             </div>
           )}
@@ -466,7 +466,7 @@ const CreateCourse = () => {
 
       {loading && (
         <div className={styles.loadingOverlay}>
-          <Loading size="large" text="Đang xử lý..." />
+          <Loading size="large" text="Processing..." />
         </div>
       )}
     </div>

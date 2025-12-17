@@ -45,11 +45,11 @@ const Profile = () => {
         const newErrors = {};
 
         if (!formData.fullName.trim()) {
-            newErrors.fullName = 'Vui lòng nhập họ tên';
+            newErrors.fullName = 'Please enter full name';
         }
 
         if (formData.phone && !/^[0-9]{10,11}$/.test(formData.phone)) {
-            newErrors.phone = 'Số điện thoại không hợp lệ';
+            newErrors.phone = 'Invalid phone number';
         }
 
         setErrors(newErrors);
@@ -70,10 +70,10 @@ const Profile = () => {
             setUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
-            toastService.success('Cập nhật thông tin thành công!');
+            toastService.success('Profile updated successfully!');
             setIsEditing(false);
         } catch (error) {
-            toastService.error(error.message || 'Cập nhật thông tin thất bại');
+            toastService.error(error.message || 'Failed to update profile');
         } finally {
             setLoading(false);
         }
@@ -93,18 +93,18 @@ const Profile = () => {
 
     const renderInfoTab = () => (
         <div className="profile-info">
-            <div className="profile-field">
-                <label className="profile-label">Họ và tên</label>
+                <div className="profile-field">
+                <label className="profile-label">Full name</label>
                 {isEditing ? (
                     <Input
                         name="fullName"
                         value={formData.fullName}
                         onChange={handleInputChange}
                         error={errors.fullName}
-                        placeholder="Nhập họ và tên"
+                        placeholder="Enter full name"
                     />
                 ) : (
-                    <p className="profile-value">{formData.fullName || 'Chưa cập nhật'}</p>
+                    <p className="profile-value">{formData.fullName || 'Not updated'}</p>
                 )}
             </div>
 
@@ -114,56 +114,56 @@ const Profile = () => {
             </div>
 
             <div className="profile-field">
-                <label className="profile-label">Vai trò</label>
+                <label className="profile-label">Role</label>
                 <p className="profile-value">
                     <span className={`badge badge-primary-${user?.role || 'student'}`}>
-                        {user?.role === 'student' ? 'Học viên' : user?.role === 'teacher' ? 'Giảng viên' : 'Quản trị viên'}
+                        {user?.role === 'student' ? 'Student' : user?.role === 'teacher' ? 'Teacher' : 'Administrator'}
                     </span>
                 </p>
             </div>
 
             <div className="profile-field">
-                <label className="profile-label">Số điện thoại</label>
+                <label className="profile-label">Phone</label>
                 {isEditing ? (
                     <Input
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
                         error={errors.phone}
-                        placeholder="Nhập số điện thoại"
+                        placeholder="Enter phone number"
                     />
                 ) : (
-                    <p className="profile-value">{formData.phone || 'Chưa cập nhật'}</p>
+                    <p className="profile-value">{formData.phone || 'Not updated'}</p>
                 )}
             </div>
 
             <div className="profile-field">
-                <label className="profile-label">Địa chỉ</label>
+                <label className="profile-label">Address</label>
                 {isEditing ? (
                     <Input
                         name="address"
                         value={formData.address}
                         onChange={handleInputChange}
-                        placeholder="Nhập địa chỉ"
+                        placeholder="Enter address"
                     />
                 ) : (
-                    <p className="profile-value">{formData.address || 'Chưa cập nhật'}</p>
+                    <p className="profile-value">{formData.address || 'Not updated'}</p>
                 )}
             </div>
 
             <div className="profile-field">
-                <label className="profile-label">Giới thiệu</label>
+                <label className="profile-label">About</label>
                 {isEditing ? (
                     <textarea
                         name="bio"
                         value={formData.bio}
                         onChange={handleInputChange}
-                        placeholder="Viết vài dòng về bản thân"
+                        placeholder="Write a few lines about yourself"
                         className="form-input profile-bio-input"
                         rows="4"
                     />
                 ) : (
-                    <p className="profile-value">{formData.bio || 'Chưa cập nhật'}</p>
+                    <p className="profile-value">{formData.bio || 'Not updated'}</p>
                 )}
             </div>
 
@@ -171,16 +171,16 @@ const Profile = () => {
                 {isEditing ? (
                     <>
                         <Button variant="primary" onClick={handleSave} disabled={loading}>
-                            {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
-                        </Button>
-                        <Button variant="secondary" onClick={handleCancel} disabled={loading}>
-                            Hủy
-                        </Button>
+                                {loading ? 'Saving...' : 'Save changes'}
+                            </Button>
+                            <Button variant="secondary" onClick={handleCancel} disabled={loading}>
+                                Cancel
+                            </Button>
                     </>
                 ) : (
-                    <Button variant="primary" onClick={() => setIsEditing(true)}>
-                        Chỉnh sửa thông tin
-                    </Button>
+                        <Button variant="primary" onClick={() => setIsEditing(true)}>
+                            Edit profile
+                        </Button>
                 )}
             </div>
         </div>
@@ -188,24 +188,24 @@ const Profile = () => {
 
     const renderCoursesTab = () => (
         <div className="profile-tab-content">
-            <p className="empty-state">Chức năng đang phát triển</p>
+            <p className="empty-state">Feature under development</p>
         </div>
     );
 
     const renderActivityTab = () => (
         <div className="profile-tab-content">
-            <p className="empty-state">Chức năng đang phát triển</p>
+            <p className="empty-state">Feature under development</p>
         </div>
     );
 
     const renderCertificatesTab = () => (
         <div className="profile-tab-content">
-            <p className="empty-state">Chưa có chứng chỉ nào</p>
+            <p className="empty-state">No certificates yet</p>
         </div>
     );
 
     if (!user) {
-        return <Loading fullScreen text="Loading thông tin..." />;
+        return <Loading fullScreen text="Loading profile..." />;
     }
 
     return (
@@ -233,7 +233,7 @@ const Profile = () => {
                                 <h2 className="profile-name">{user.fullName || user.name}</h2>
                                 <p className="profile-email">{user.email}</p>
                                 <span className={`badge badge-primary-${user.role || 'student'}`}>
-                                    {user.role === 'student' ? 'Học viên' : user.role === 'teacher' ? 'Giảng viên' : 'Quản trị viên'}
+                                    {user.role === 'student' ? 'Student' : user.role === 'teacher' ? 'Teacher' : 'Administrator'}
                                 </span>
                             </div>
                         </Card>
@@ -247,25 +247,25 @@ const Profile = () => {
                                     className={`profile-tab ${activeTab === 'info' ? 'profile-tab--active' : ''}`}
                                     onClick={() => setActiveTab('info')}
                                 >
-                                    Thông tin
+                                    Information
                                 </button>
                                 <button
                                     className={`profile-tab ${activeTab === 'courses' ? 'profile-tab--active' : ''}`}
                                     onClick={() => setActiveTab('courses')}
                                 >
-                                    Khóa học
+                                    Courses
                                 </button>
                                 <button
                                     className={`profile-tab ${activeTab === 'activity' ? 'profile-tab--active' : ''}`}
                                     onClick={() => setActiveTab('activity')}
                                 >
-                                    Hoạt động
+                                    Activity
                                 </button>
                                 <button
                                     className={`profile-tab ${activeTab === 'certificates' ? 'profile-tab--active' : ''}`}
                                     onClick={() => setActiveTab('certificates')}
                                 >
-                                    Chứng chỉ
+                                    Certificates
                                 </button>
                             </div>
 

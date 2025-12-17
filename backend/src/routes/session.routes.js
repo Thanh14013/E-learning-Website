@@ -9,11 +9,14 @@ import {
   joinSession,
   deleteSession,
   getMySessions,
+  getEnrolledCourseSessions,
+  seedDemoSessions,
 } from "../controllers/session.controller.js";
 import { authenticate } from "../middleware/auth.js";
 import { isTeacherOrAdmin } from "../middleware/authorize.js";
 import {
   validateObjectId,
+  validateCourseIdParam,
   validatePagination,
   validateSessionCreation,
   validateSessionUpdate,
@@ -34,6 +37,14 @@ router.post(
   createSession
 );
 
+// Seed demo live sessions (testing)
+router.post(
+  "/seed-demo",
+  authenticate,
+  isTeacherOrAdmin,
+  seedDemoSessions
+);
+
 /**
  * @route   GET /api/sessions/my-sessions
  * @desc    Get sessions hosted by current teacher
@@ -48,13 +59,24 @@ router.get(
 );
 
 /**
+ * @route   GET /api/sessions/my-enrolled-sessions
+ * @desc    Get all sessions from enrolled courses for calendar
+ * @access  Private (Student)
+ */
+router.get(
+  "/my-enrolled-sessions",
+  authenticate,
+  getEnrolledCourseSessions
+);
+
+/**
  * @route   GET /api/sessions/course/:courseId
  * @desc    Get all sessions for a course
  * @access  Public
  */
 router.get(
   "/course/:courseId",
-  validateObjectId,
+  validateCourseIdParam,
   validatePagination,
   getCourseSessions
 );

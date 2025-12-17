@@ -24,7 +24,7 @@ export default function SessionScheduler() {
 
     useEffect(() => {
         if (user?.role !== 'teacher' && user?.role !== 'admin') {
-            toastService.error('Bạn không có quyền truy cập');
+            toastService.error('You do not have access');
             navigate('/dashboard');
             return;
         }
@@ -46,7 +46,7 @@ export default function SessionScheduler() {
 
         } catch (error) {
             console.error('Error fetching data:', error);
-            toastService.error('Không thể tải dữ liệu');
+            toastService.error('Unable to load data');
         } finally {
             setLoading(false);
         }
@@ -63,45 +63,45 @@ export default function SessionScheduler() {
     };
 
     const handleDeleteSession = async (sessionId) => {
-        if (!window.confirm('Bạn có chắc muốn xóa buổi học này?')) {
+        if (!window.confirm('Are you sure you want to delete this session?')) {
             return;
         }
 
         try {
             await api.delete(`/sessions/${sessionId}`);
             setSessions(prev => prev.filter(s => s._id !== sessionId));
-            toastService.success('Đã xóa buổi học');
+            toastService.success('Session deleted');
         } catch (error) {
             console.error('Error deleting session:', error);
-            toastService.error('Không thể xóa buổi học');
+            toastService.error('Unable to delete session');
         }
     };
 
     const handleStartSession = async (sessionId) => {
         try {
             await api.put(`/sessions/${sessionId}/start`);
-            toastService.success('Đã bắt đầu buổi học');
+            toastService.success('Session started');
 
             // Navigate to video room
             navigate(`/sessions/${sessionId}`);
         } catch (error) {
             console.error('Error starting session:', error);
-            toastService.error('Không thể bắt đầu buổi học');
+            toastService.error('Unable to start session');
         }
     };
 
     const handleEndSession = async (sessionId) => {
-        if (!window.confirm('Bạn có chắc muốn kết thúc buổi học?')) {
+        if (!window.confirm('Are you sure you want to end this session?')) {
             return;
         }
 
         try {
             await api.put(`/sessions/${sessionId}/end`);
-            toastService.success('Đã kết thúc buổi học');
+            toastService.success('Session ended');
             fetchData();
         } catch (error) {
             console.error('Error ending session:', error);
-            toastService.error('Không thể kết thúc buổi học');
+            toastService.error('Unable to end session');
         }
     };
 
@@ -131,15 +131,15 @@ export default function SessionScheduler() {
     return (
         <div className={styles.sessionScheduler}>
             <div className={styles.header}>
-                <h2>📅 Lịch Buổi Học Trực Tuyến</h2>
-                <Button onClick={handleCreateSession}>+ Tạo buổi học mới</Button>
+                <h2>📅 Online Session Schedule</h2>
+                <Button onClick={handleCreateSession}>+ Create session</Button>
             </div>
 
             {/* Tabs */}
             <div className={styles.tabs}>
-                <Tab label="Sắp diễn ra" sessions={filterSessionsByStatus('upcoming')} />
-                <Tab label="Đang diễn ra" sessions={filterSessionsByStatus('live')} status="live" />
-                <Tab label="Đã kết thúc" sessions={filterSessionsByStatus('past')} />
+                <Tab label="Upcoming" sessions={filterSessionsByStatus('upcoming')} />
+                <Tab label="Live" sessions={filterSessionsByStatus('live')} status="live" />
+                <Tab label="Past" sessions={filterSessionsByStatus('past')} />
             </div>
 
             {/* Sessions Grid */}
@@ -182,7 +182,7 @@ function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd }) {
     if (sessions.length === 0) {
         return (
             <div className={styles.emptyState}>
-                <p>📭 Chưa có buổi học nào được tạo</p>
+                <p>📭 No sessions created yet</p>
             </div>
         );
     }
@@ -219,7 +219,7 @@ function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd }) {
                             </div>
                             <div className={styles.metaItem}>
                                 <span className={styles.metaIcon}>👥</span>
-                                <span>{session.participants?.length || 0} tham gia</span>
+                                <span>{session.participants?.length || 0} participants</span>
                             </div>
                         </div>
 
@@ -227,13 +227,13 @@ function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd }) {
                             {isUpcoming && (
                                 <>
                                     <Button size="small" onClick={() => onStart(session._id)}>
-                                        Bắt đầu
+                                        Start
                                     </Button>
                                     <Button size="small" variant="secondary" onClick={() => onEdit(session)}>
-                                        Sửa
+                                        Edit
                                     </Button>
                                     <Button size="small" variant="danger" onClick={() => onDelete(session._id)}>
-                                        Xóa
+                                        Delete
                                     </Button>
                                 </>
                             )}
@@ -241,17 +241,17 @@ function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd }) {
                             {isLive && (
                                 <>
                                     <Button size="small" onClick={() => window.open(`/sessions/${session._id}`, '_blank')}>
-                                        Vào phòng
+                                        Join room
                                     </Button>
                                     <Button size="small" variant="danger" onClick={() => onEnd(session._id)}>
-                                        Kết thúc
+                                        End
                                     </Button>
                                 </>
                             )}
 
                             {isPast && (
                                 <Button size="small" variant="secondary" disabled>
-                                    Đã kết thúc
+                                    Ended
                                 </Button>
                             )}
                         </div>
@@ -277,13 +277,13 @@ function SessionModal({ session, courses, onSave, onClose }) {
 
     const handleSubmit = async () => {
         if (!formData.courseId || !formData.title || !formData.scheduledAt) {
-            toastService.error('Vui lòng điền đầy đủ thông tin');
+            toastService.error('Please fill in all required fields');
             return;
         }
 
         const scheduledDate = new Date(formData.scheduledAt);
-        if (scheduledDate <= new Date()) {
-            toastService.error('Thời gian phải trong tương lai');
+            if (scheduledDate <= new Date()) {
+            toastService.error('Scheduled time must be in the future');
             return;
         }
 
@@ -292,16 +292,16 @@ function SessionModal({ session, courses, onSave, onClose }) {
 
             if (session) {
                 await api.put(`/sessions/${session._id}`, formData);
-                toastService.success('Đã cập nhật buổi học');
+                toastService.success('Session updated');
             } else {
                 await api.post('/sessions', formData);
-                toastService.success('Đã tạo buổi học mới');
+                toastService.success('Session created');
             }
 
             onSave();
         } catch (error) {
             console.error('Error saving session:', error);
-            toastService.error('Không thể lưu buổi học');
+            toastService.error('Unable to save session');
         } finally {
             setSaving(false);
         }
@@ -310,16 +310,16 @@ function SessionModal({ session, courses, onSave, onClose }) {
     return (
         <Modal isOpen onClose={onClose}>
             <div className={styles.sessionModal}>
-                <h3>{session ? 'Chỉnh sửa buổi học' : 'Tạo buổi học mới'}</h3>
+                <h3>{session ? 'Edit Session' : 'Create New Session'}</h3>
 
                 <div className={styles.formGroup}>
-                    <label>Khóa học *</label>
+                    <label>Course *</label>
                     <select
                         value={formData.courseId}
                         onChange={(e) => handleChange('courseId', e.target.value)}
                         className={styles.select}
                     >
-                        <option value="">-- Chọn khóa học --</option>
+                        <option value="">-- Select course --</option>
                         {courses.map(course => (
                             <option key={course._id} value={course._id}>
                                 {course.title}
@@ -329,27 +329,27 @@ function SessionModal({ session, courses, onSave, onClose }) {
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label>Tiêu đề *</label>
+                    <label>Title *</label>
                     <Input
                         value={formData.title}
                         onChange={(e) => handleChange('title', e.target.value)}
-                        placeholder="Ví dụ: Buổi ôn tập giữa kỳ"
+                        placeholder="e.g., Midterm review session"
                     />
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label>Mô tả</label>
+                    <label>Description</label>
                     <textarea
                         value={formData.description}
                         onChange={(e) => handleChange('description', e.target.value)}
-                        placeholder="Mô tả ngắn về buổi học..."
+                        placeholder="Short description of the session..."
                         rows="3"
                         className={styles.textarea}
                     />
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label>Thời gian *</label>
+                    <label>Time *</label>
                     <Input
                         type="datetime-local"
                         value={formData.scheduledAt}
@@ -358,9 +358,9 @@ function SessionModal({ session, courses, onSave, onClose }) {
                 </div>
 
                 <div className={styles.modalActions}>
-                    <Button variant="secondary" onClick={onClose}>Hủy</Button>
+                    <Button variant="secondary" onClick={onClose}>Cancel</Button>
                     <Button onClick={handleSubmit} disabled={saving}>
-                        {saving ? 'Đang lưu...' : 'Lưu'}
+                        {saving ? 'Saving...' : 'Save'}
                     </Button>
                 </div>
             </div>
@@ -369,7 +369,7 @@ function SessionModal({ session, courses, onSave, onClose }) {
 }
 
 function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
+    return new Date(dateString).toLocaleDateString('en-US', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
@@ -377,7 +377,7 @@ function formatDate(dateString) {
 }
 
 function formatTime(dateString) {
-    return new Date(dateString).toLocaleTimeString('vi-VN', {
+    return new Date(dateString).toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
     });

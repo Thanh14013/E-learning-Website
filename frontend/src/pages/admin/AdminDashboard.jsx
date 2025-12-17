@@ -137,7 +137,7 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         if (user?.role !== 'admin') {
-            toastService.error('Bạn không có quyền truy cập');
+            toastService.error('You do not have access');
             navigate('/dashboard');
             return;
         }
@@ -156,7 +156,7 @@ const AdminDashboard = () => {
             }
         } catch (error) {
             console.error('[AdminDashboard] Error loading data:', error);
-            toastService.error('Không thể tải dữ liệu dashboard');
+            toastService.error('Unable to load dashboard data');
         } finally {
             setLoading(false);
         }

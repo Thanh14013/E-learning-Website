@@ -132,6 +132,30 @@ const CourseRating = ({ courseId, isEnrolled, currentRating, totalReviews, userR
 // --- COMPONENT CON CHO SIDEBAR ---
 const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
   const { user } = useAuth();
+  const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+
+  useEffect(() => {
+    const loadSessions = async () => {
+      if (!isEnrolled || !course?._id) return;
+      setLoadingSessions(true);
+      try {
+        const res = await api.get(`/sessions/course/${course._id}?status=scheduled&limit=20`);
+        if (res.data?.success) {
+          const data = res.data.data || [];
+          // Sort by date ascending
+          data.sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+          setUpcomingSessions(data.slice(0, 6));
+        }
+      } catch (err) {
+        console.error('Failed to load live sessions', err);
+      } finally {
+        setLoadingSessions(false);
+      }
+    };
+
+    loadSessions();
+  }, [course?._id, isEnrolled]);
 
   return (
     <div className={styles.sidebarCard}>
@@ -163,6 +187,35 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
           <li>📂 {course.category || 'General'}</li>
         </ul>
 
+        {isEnrolled && (
+          <div className={styles.liveSchedule}>
+            <div className={styles.liveScheduleHeader}>
+              <span>📅 Lịch học trực tuyến</span>
+              {loadingSessions && <span className={styles.liveScheduleHint}>Loading...</span>}
+            </div>
+            {(!loadingSessions && upcomingSessions.length === 0) && (
+              <p className={styles.liveScheduleEmpty}>No upcoming live sessions.</p>
+            )}
+            <div className={styles.liveScheduleList}>
+              {upcomingSessions.map((session) => (
+                <div key={session._id} className={styles.liveScheduleItem}>
+                  <div className={styles.liveScheduleDate}>
+                    {new Date(session.scheduledAt).toLocaleDateString('en-US', {
+                      day: '2-digit', month: 'short'
+                    })}
+                  </div>
+                  <div className={styles.liveScheduleInfo}>
+                    <div className={styles.liveScheduleTitle}>{session.title}</div>
+                    <div className={styles.liveScheduleMeta}>
+                      ⏰ {new Date(session.scheduledAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Teacher Info in Sidebar */}
         {course.teacherId && (
           <div className={styles.teacherSection}>
@@ -182,6 +235,81 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+// --- Live Sessions Component ---
+const LiveSessionsSection = ({ courseId }) => {
+  const [sessions, setSessions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const response = await api.get(`/sessions/course/${courseId}?status=scheduled&limit=10`);
+        if (response.data.success) {
+          setSessions(response.data.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch sessions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (courseId) {
+      fetchSessions();
+    }
+  }, [courseId]);
+
+  if (loading) {
+    return (
+      <div className={styles.sectionBox}>
+        <h3>📅 Upcoming Live Sessions</h3>
+        <p style={{ color: 'var(--text-secondary)' }}>Loading sessions...</p>
+      </div>
+    );
+  }
+
+  if (sessions.length === 0) {
+    return null; // Don't show section if no sessions
+  }
+
+  return (
+    <div className={styles.sectionBox}>
+      <h3>📅 Upcoming Live Sessions</h3>
+      <div className={styles.sessionsGrid}>
+        {sessions.map(session => (
+          <div key={session._id} className={styles.sessionCard}>
+            <div className={styles.sessionIcon}>🎥</div>
+            <div className={styles.sessionInfo}>
+              <div className={styles.sessionTitle}>{session.title}</div>
+              <div className={styles.sessionTime}>
+                📆 {new Date(session.scheduledAt).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+                {' '}at{' '}
+                {new Date(session.scheduledAt).toLocaleTimeString('en-US', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </div>
+              {session.description && (
+                <div className={styles.sessionDescription}>{session.description}</div>
+              )}
+              <div className={styles.sessionHost}>
+                Host: {session.hostId?.fullName || 'Instructor'}
+              </div>
+            </div>
+            <div className={styles.sessionBadge}>
+              {session.status === 'live' ? '🔴 Live' : '⏰ Scheduled'}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -254,13 +382,13 @@ const CourseDetailPage = () => {
       }
     };
     fetchCourseData();
-  }, [courseId]);
+  }, [courseId, user, myCourses]);
 
   const isEnrolled = myCourses.some(c => c._id === courseId);
 
   const handleEnroll = async () => {
     if (!user) {
-      toast.error('Vui lòng đăng nhập để tham gia khóa học');
+      toast.error('Please log in to enroll in the course');
       return;
     }
 
@@ -275,7 +403,7 @@ const CourseDetailPage = () => {
       
       // Check if response has success flag
       if (response && response.success !== false) {
-        toast.success(response.message || 'Đăng ký khóa học thành công!');
+      toast.success(response.message || 'Course enrolled successfully!');
         
         // Reload page to show updated enrollment status
         setTimeout(() => {
@@ -288,15 +416,15 @@ const CourseDetailPage = () => {
       console.error('❌ Enrollment failed:', error);
       // Extract error message properly
       const errorMsg = error.response?.data?.message 
-                    || error.message 
-                    || 'Không thể đăng ký khóa học';
+            || error.message 
+            || 'Unable to enroll in course';
       toast.error(errorMsg);
       setIsEnrolling(false);
     }
   };
 
   if (loading) return <div className="container" style={{ padding: 'var(--spacing-5)' }}>Loading...</div>;
-  if (!course) return <div className="container" style={{ padding: 'var(--spacing-5)' }}>Không tìm thấy khóa học.</div>;
+  if (!course) return <div className="container" style={{ padding: 'var(--spacing-5)' }}>Course not found.</div>;
 
   return (
     <div className={styles.pageWrapper}>
@@ -348,7 +476,7 @@ const CourseDetailPage = () => {
           {/* What you'll learn */}
           {course.highlights && course.highlights.length > 0 && (
             <div className={styles.sectionBox}>
-              <h3>Bạn sẽ học được gì?</h3>
+              <h3>What you'll learn</h3>
               <ul className={styles.highlightsGrid}>
                 {course.highlights.map((item, index) => (
                   <li key={index}><CheckIcon /> <span>{item}</span></li>
@@ -365,35 +493,39 @@ const CourseDetailPage = () => {
               </div>
             )
           }
-          {/* Progress Bar - Only for enrolled students */}
+
+          {/* Progress Bar - Only for enrolled students - RIGHT AFTER DESCRIPTION */}
           {isEnrolled && course.progressData && (
-            <div className={styles.progressSection}>
-              <h3>Progress</h3>
+            <div className={styles.sectionBox}>
+              <h3>Your Progress</h3>
               <div className={styles.progressBarContainer}>
                 <div className={styles.progressInfo}>
                   <span className={styles.progressText}>
                     {course.progressData.completedLessons || 0} / {course.progressData.totalLessons || 0} lessons completed
                   </span>
                   <span className={styles.progressPercent}>
-                    {Math.round(
-                      ((course.progressData.completedLessons || 0) / Math.max(1, course.progressData.totalLessons || 1)) * 100
-                    )}%
+                    {course.progressData.progressPercentage || 0}%
                   </span>
                 </div>
                 <div className={styles.progressBar}>
                   <div
                     className={styles.progressFill}
                     style={{
-                      width: `${Math.round(
-                        ((course.progressData.completedLessons || 0) / Math.max(1, course.progressData.totalLessons || 1)) * 100
-                      )}%`
+                      width: `${course.progressData.progressPercentage || 0}%`
                     }}
                   />
                 </div>
               </div>
             </div>
           )}
+
+          {/* Live Sessions - Only for enrolled students */}
+          {isEnrolled && (
+            <LiveSessionsSection courseId={courseId} />
+          )}
+
           {/* Course Content */}
+
           <div className={styles.sectionBox}>
             <h3>Course Content</h3>
             {modules.length > 0 ? (

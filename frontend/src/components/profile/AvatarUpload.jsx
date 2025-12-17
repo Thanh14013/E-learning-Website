@@ -20,13 +20,13 @@ const AvatarUpload = ({ isOpen, onClose }) => {
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
-            toastService.error('Vui lòng chọn file ảnh');
+            toastService.error('Please select an image file');
             return;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            toastService.error('Kích thước ảnh không được vượt quá 5MB');
+            toastService.error('Image size must not exceed 5MB');
             return;
         }
 
@@ -65,7 +65,7 @@ const AvatarUpload = ({ isOpen, onClose }) => {
 
     const handleUpload = async () => {
         if (!selectedFile) {
-            toastService.error('Vui lòng chọn ảnh');
+            toastService.error('Please select an image');
             return;
         }
 
@@ -85,10 +85,10 @@ const AvatarUpload = ({ isOpen, onClose }) => {
             setUser(updatedUser);
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
-            toastService.success('Cập nhật ảnh đại diện thành công!');
+            toastService.success('Avatar updated successfully!');
             handleClose();
         } catch (error) {
-            toastService.error(error.message || 'Cập nhật ảnh đại diện thất bại');
+            toastService.error(error.message || 'Avatar update failed');
         } finally {
             setUploading(false);
         }
@@ -112,10 +112,10 @@ const AvatarUpload = ({ isOpen, onClose }) => {
     const footer = (
         <>
             <Button variant="secondary" onClick={handleClose} disabled={uploading}>
-                Hủy
+                Cancel
             </Button>
             <Button variant="primary" onClick={handleUpload} disabled={uploading || !selectedFile}>
-                {uploading ? 'Loading lên...' : 'Tải lên'}
+                {uploading ? 'Uploading...' : 'Upload'}
             </Button>
         </>
     );
@@ -124,7 +124,7 @@ const AvatarUpload = ({ isOpen, onClose }) => {
         <Modal
             isOpen={isOpen}
             onClose={handleClose}
-            title="Cập nhật ảnh đại diện"
+            title="Update Avatar"
             footer={footer}
             size="medium"
             closeOnOverlayClick={!uploading}
@@ -152,10 +152,10 @@ const AvatarUpload = ({ isOpen, onClose }) => {
                     >
                         <div className="avatar-dropzone-icon">📷</div>
                         <p className="avatar-dropzone-text">
-                            Kéo thả ảnh vào đây hoặc click để chọn
+                            Drag & drop an image here or click to select
                         </p>
                         <p className="avatar-dropzone-hint">
-                            Định dạng: JPG, PNG, GIF (tối đa 5MB)
+                            Formats: JPG, PNG, GIF (max 5MB)
                         </p>
                     </div>
                 )}
@@ -171,7 +171,7 @@ const AvatarUpload = ({ isOpen, onClose }) => {
 
                 {uploading && (
                     <div className="avatar-uploading-overlay">
-                        <Loading size="large" text="Loading ảnh lên..." />
+                        <Loading size="large" text="Uploading image..." />
                     </div>
                 )}
             </div>

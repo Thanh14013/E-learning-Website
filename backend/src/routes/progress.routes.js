@@ -6,6 +6,7 @@ import {
   markLessonCompleted,
   getLessonProgress,
   getCourseProgress,
+  getDashboardStats,
 } from "../controllers/progress.controller.js";
 import { authenticate } from "../middleware/auth.js";
 
@@ -36,6 +37,13 @@ router.post(
   isStudent,
   markLessonCompleted
 );
+
+/**
+ * @route   GET /api/progress/dashboard-stats
+ * @desc    Get dashboard statistics for student
+ * @access  Private (Student)
+ */
+router.get("/dashboard-stats", authenticate, isStudent, getDashboardStats);
 
 /**
  * @route   GET /api/progress/course/:courseId

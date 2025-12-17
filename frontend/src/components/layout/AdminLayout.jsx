@@ -14,7 +14,7 @@ const AdminLayout = () => {
 
     useEffect(() => {
         if (user?.role !== 'admin') {
-            toastService.error('Bạn không có quyền truy cập admin panel');
+            toastService.error('You do not have access to the admin panel');
             navigate('/dashboard');
         }
     }, [user, navigate]);

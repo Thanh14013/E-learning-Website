@@ -53,7 +53,7 @@ const ContentModeration = () => {
             //     toastService.success('Báo cáo đã được duyệt');
             // }
 
-            toastService.warning('Chức năng này chưa được kết nối với backend');
+            toastService.warning('This feature is not connected to the backend');
         } catch (error) {
             console.error('[ContentModeration] Error approving report:', error);
             toastService.error('Failed to approve report');
@@ -74,11 +74,11 @@ const ContentModeration = () => {
                 setReports(reports.map(r =>
                     r._id === reportId ? { ...r, status: 'rejected' } : r
                 ));
-                toastService.success('Báo cáo đã bị từ chối');
+                toastService.success('Report has been rejected');
             }
         } catch (error) {
             console.error('[ContentModeration] Error rejecting report:', error);
-            toastService.error('Không thể từ chối báo cáo');
+            toastService.error('Unable to reject report');
         } finally {
             setActionLoading({ ...actionLoading, [reportId]: null });
         }
@@ -97,10 +97,10 @@ const ContentModeration = () => {
                 await api.delete(`/comments/${report.contentId}`);
             }
             setReports(reports.filter(r => r._id !== report._id));
-            toastService.success('Nội dung đã bị xóa');
+            toastService.success('Content has been deleted');
         } catch (error) {
             console.error('[ContentModeration] Error deleting content:', error);
-            toastService.error('Không thể xóa nội dung');
+            toastService.error('Unable to delete content');
         } finally {
             setActionLoading({ ...actionLoading, [report._id]: null });
         }
@@ -114,10 +114,10 @@ const ContentModeration = () => {
         try {
             setActionLoading({ ...actionLoading, [report._id]: 'ban' });
             await api.put(`/users/${report.author._id}/ban`, { isBanned: true });
-            toastService.success(`Người dùng ${report.author.fullName} đã bị cấm`);
+            toastService.success(`User ${report.author.fullName} has been banned`);
         } catch (error) {
             console.error('[ContentModeration] Error banning user:', error);
-            toastService.error('Không thể cấm người dùng');
+            toastService.error('Unable to ban user');
         } finally {
             setActionLoading({ ...actionLoading, [report._id]: null });
         }

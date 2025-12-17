@@ -148,7 +148,7 @@ class SocketService {
       this.notifyContexts("discussion:created", data);
 
       if (data?.title) {
-        toastService.info(`Thảo luận mới: ${data.title}`);
+        toastService.info(`New discussion: ${data.title}`);
       }
     });
 
@@ -159,7 +159,7 @@ class SocketService {
 
       if (data?.userName && data?.discussionTitle) {
         toastService.info(
-          `${data.userName} đã bình luận trong "${data.discussionTitle}"`
+          `${data.userName} commented in "${data.discussionTitle}"`
         );
       }
     });
@@ -184,7 +184,7 @@ class SocketService {
 
       if (data?.userName && data?.sessionTitle) {
         toastService.info(
-          `${data.userName} đã tham gia "${data.sessionTitle}"`
+          `${data.userName} joined "${data.sessionTitle}"`
         );
       }
     });
@@ -208,8 +208,8 @@ class SocketService {
 
       if (data?.userName) {
         const message = data.isSharing
-          ? `${data.userName} đã bắt đầu chia sẻ màn hình`
-          : `${data.userName} đã dừng chia sẻ màn hình`;
+          ? `${data.userName} started screen sharing`
+          : `${data.userName} stopped screen sharing`;
         toastService.info(message);
       }
     });
@@ -226,7 +226,7 @@ class SocketService {
       this.notifyContexts("session:started", data);
 
       if (data?.title) {
-        toastService.success(`Phiên học "${data.title}" đã bắt đầu`);
+        toastService.success(`Session "${data.title}" has started`);
       }
     });
 
@@ -236,7 +236,7 @@ class SocketService {
       this.notifyContexts("session:ended", data);
 
       if (data?.title) {
-        toastService.info(`Phiên học "${data.title}" đã kết thúc`);
+        toastService.info(`Session "${data.title}" has ended`);
       }
     });
 

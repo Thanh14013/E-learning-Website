@@ -11,6 +11,8 @@ import { notifyDiscussionCreated, notifyDiscussionLiked, notifyDiscussionPinned 
  * Integrates with Socket.IO for real-time updates and notification service
  */
 
+
+
 /**
  * Create a new discussion in a course
  * POST /api/discussions
@@ -54,7 +56,7 @@ export const createDiscussion = async (req, res) => {
 
     // Validate that user is enrolled in the course or is the teacher
     const Course = (await import("../models/course.model.js")).default;
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).select('teacherId enrolledStudents');
     if (!course) {
       return res.status(404).json({
         success: false,
@@ -384,9 +386,11 @@ export const updateDiscussion = async (req, res) => {
     // Check ownership (owner or teacher or admin)
     const isOwner = discussion.userId.toString() === userId.toString();
     const isAdmin = req.user.role === 'admin';
-    
-    // TODO: Check if user is teacher of the course when Course model is available
-    const isTeacher = req.user.role === 'teacher';
+
+    // Determine course teacher
+    const Course = (await import("../models/course.model.js")).default;
+    const course = await Course.findById(discussion.courseId).select('teacherId');
+    const isTeacher = course && course.teacherId.toString() === userId.toString();
 
     if (!isOwner && !isTeacher && !isAdmin) {
       return res.status(403).json({
@@ -491,9 +495,11 @@ export const deleteDiscussion = async (req, res) => {
     // Check ownership (owner or teacher or admin)
     const isOwner = discussion.userId.toString() === userId.toString();
     const isAdmin = req.user.role === 'admin';
-    
-    // TODO: Check if user is teacher of the course when Course model is available
-    const isTeacher = req.user.role === 'teacher';
+
+    // Determine course teacher
+    const Course = (await import("../models/course.model.js")).default;
+    const course = await Course.findById(discussion.courseId).select('teacherId');
+    const isTeacher = course && course.teacherId.toString() === userId.toString();
 
     if (!isOwner && !isTeacher && !isAdmin) {
       return res.status(403).json({

@@ -164,7 +164,7 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount((c) => Math.max(0, c - 1));
     } catch (error) {
       console.error('[NotificationContext] Failed to mark notification as read:', error);
-      toastService.error('Không thể đánh dấu đã đọc');
+      toastService.error('Unable to mark as read');
     }
   };
 
@@ -179,7 +179,7 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(0);
     } catch (error) {
       console.error('[NotificationContext] Failed to mark all notifications as read:', error);
-      toastService.error('Không thể đánh dấu tất cả đã đọc');
+      toastService.error('Unable to mark all as read');
     }
   };
 
@@ -193,7 +193,7 @@ export const NotificationProvider = ({ children }) => {
       setNotifications((prev) => prev.filter((n) => n._id !== id));
     } catch (error) {
       console.error('[NotificationContext] Failed to delete notification:', error);
-      toastService.error('Không thể xóa thông báo');
+      toastService.error('Unable to delete notification');
     }
   };
 

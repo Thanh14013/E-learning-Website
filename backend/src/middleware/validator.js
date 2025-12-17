@@ -168,6 +168,16 @@ export const validateObjectId = [
   validate,
 ];
 
+export const validateCourseIdParam = [
+  param("courseId")
+    .notEmpty()
+    .withMessage("Course ID is required")
+    .isMongoId()
+    .withMessage("Invalid Course ID format"),
+
+  validate,
+];
+
 /**
  * Pagination Validation Rules
  * Validates page and limit query parameters

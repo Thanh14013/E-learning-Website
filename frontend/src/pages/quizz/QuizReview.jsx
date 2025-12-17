@@ -67,7 +67,7 @@ const QuizReview = () => {
       setLoading(false);
     } catch (err) {
       console.error('Failed to load quiz review:', err);
-      setError('Không thể tải kết quả quiz. Vui lòng thử lại.');
+      setError('Unable to load quiz results. Please try again.');
       setLoading(false);
     }
   };
@@ -120,11 +120,11 @@ const QuizReview = () => {
       // window.URL.revokeObjectURL(url);
       
       // For now, show a message (in production, this would download PDF)
-      alert(`Chứng chỉ cho "${quiz.title}" đang được tạo. Tính năng này sẽ được hoàn thiện khi backend sẵn sàng.`);
+      alert(`Certificate for "${quiz.title}" is being generated. This feature will be available when the backend is ready.`);
       console.log('Downloading certificate for quiz:', quizId, 'attempt:', attemptId);
     } catch (err) {
       console.error('Failed to download certificate:', err);
-      alert('Không thể tải chứng chỉ. Vui lòng thử lại sau.');
+      alert('Unable to download certificate. Please try again later.');
     }
   };
 
@@ -133,7 +133,7 @@ const QuizReview = () => {
    */
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -147,7 +147,7 @@ const QuizReview = () => {
    */
   const formatDuration = (minutes) => {
     if (minutes < 60) {
-      return `${minutes} phút`;
+      return `${minutes} min`;
     }
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
@@ -158,7 +158,7 @@ const QuizReview = () => {
     return (
       <div className="quiz-review-loading">
         <div className="loading-spinner"></div>
-        <p>Loading kết quả quiz...</p>
+        <p>Loading quiz results...</p>
       </div>
     );
   }
@@ -168,7 +168,7 @@ const QuizReview = () => {
       <div className="quiz-review-error">
         <p>{error}</p>
         <Button onClick={() => navigate(`/quiz/${quizId}`)}>
-          Quay lại
+          Back
         </Button>
       </div>
     );
@@ -177,9 +177,9 @@ const QuizReview = () => {
   if (!result || !quiz) {
     return (
       <div className="quiz-review-error">
-        <p>Không tìm thấy kết quả quiz.</p>
+        <p>Quiz results not found.</p>
         <Button onClick={() => navigate(`/quiz/${quizId}`)}>
-          Quay lại
+          Back
         </Button>
       </div>
     );
@@ -197,10 +197,10 @@ const QuizReview = () => {
         <div className="review-header-content">
           <div className="breadcrumb">
             <button onClick={() => navigate(`/quiz/${quizId}`)} className="breadcrumb-link">
-              ← Quay lại
+              ← Back
             </button>
             <span className="breadcrumb-separator">/</span>
-            <span className="breadcrumb-current">Kết quả Quiz</span>
+            <span className="breadcrumb-current">Quiz Results</span>
           </div>
 
           <div className="quiz-title-section">
@@ -218,20 +218,20 @@ const QuizReview = () => {
           <div className="score-display">
             <div className="score-circle">
               <div className="score-value">{result.percentage}%</div>
-              <div className="score-label">Điểm số</div>
+              <div className="score-label">Score</div>
             </div>
             <div className="score-details">
               <div className="detail-item">
-                <span className="detail-label">Đúng:</span>
+                <span className="detail-label">Correct:</span>
                 <span className="detail-value">{correctCount}/{questions.length}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Điểm:</span>
+                <span className="detail-label">Points:</span>
                 <span className="detail-value">{earnedPoints}/{totalPoints}</span>
               </div>
               <div className="detail-item">
-                <span className="detail-label">Thời gian:</span>
-                <span className="detail-value">{result.timeUsed || 'N/A'} phút</span>
+                <span className="detail-label">Time:</span>
+                <span className="detail-value">{result.timeUsed || 'N/A'} min</span>
               </div>
             </div>
           </div>
@@ -240,44 +240,44 @@ const QuizReview = () => {
             {result.isPassed ? (
               <div className="status-badge passed">
                 <span className="status-icon">✅</span>
-                <span className="status-text">ĐÃ ĐẠT</span>
+                <span className="status-text">PASSED</span>
               </div>
             ) : (
               <div className="status-badge failed">
                 <span className="status-icon">❌</span>
-                <span className="status-text">CHƯA ĐẠT</span>
+                <span className="status-text">NOT PASSED</span>
               </div>
             )}
             <p className="passing-requirement">
-              Điểm đạt: {quiz.passingScore}% (Cần {Math.ceil((quiz.passingScore / 100) * questions.length)}/{questions.length} câu đúng)
+              Passing score: {quiz.passingScore}% (Need {Math.ceil((quiz.passingScore / 100) * questions.length)}/{questions.length} correct answers)
             </p>
           </div>
 
           {/* Action Buttons */}
           <div className="result-actions">
             {result.isPassed && (
-              <Button
+                <Button
                 variant="primary"
                 onClick={handleDownloadCertificate}
                 className="certificate-btn"
               >
-                📜 Tải Chứng Chỉ
+                📜 Download Certificate
               </Button>
             )}
             {attempts.length < quiz.attemptsAllowed && (
-              <Button
+                <Button
                 variant="secondary"
                 onClick={handleRetakeQuiz}
                 className="retake-btn"
               >
-                🔄 Làm Lại
+                🔄 Retake
               </Button>
             )}
             <Button
               variant="outline"
               onClick={() => navigate(`/quiz/${quizId}`)}
             >
-              Xem Chi Tiết Quiz
+              View Quiz Details
             </Button>
           </div>
         </div>
@@ -286,13 +286,13 @@ const QuizReview = () => {
       {/* Question Navigator */}
       <div className="question-navigator-section">
         <div className="nav-header">
-          <h3>Xem lại từng câu hỏi</h3>
+          <h3>Review Questions</h3>
           <div className="nav-stats">
             <span className="stat-item correct">
-              ✓ {correctCount} đúng
+              ✓ {correctCount} correct
             </span>
             <span className="stat-item incorrect">
-              ✗ {questions.length - correctCount} sai
+              ✗ {questions.length - correctCount} incorrect
             </span>
           </div>
         </div>
@@ -304,7 +304,7 @@ const QuizReview = () => {
                 key={q.id}
                 className={`nav-btn ${isCurrent ? 'active' : ''} ${q.isCorrect ? 'correct' : 'incorrect'}`}
                 onClick={() => setCurrentQuestionIndex(index)}
-                title={`Câu ${index + 1}: ${q.isCorrect ? 'Đúng' : 'Sai'}`}
+                title={`Question ${index + 1}: ${q.isCorrect ? 'Correct' : 'Incorrect'}`}
               >
                 {index + 1}
                 {q.isCorrect ? ' ✓' : ' ✗'}
@@ -341,15 +341,15 @@ const QuizReview = () => {
                 {currentQuestion.isCorrect ? '✓' : '✗'}
               </span>
               <span className="result-text">
-                {currentQuestion.isCorrect ? 'Câu trả lời đúng' : 'Câu trả lời sai'}
+                {currentQuestion.isCorrect ? 'Correct answer' : 'Incorrect answer'}
               </span>
               <span className="result-points">
-                {currentQuestion.pointsEarned}/{currentQuestion.points || 1} điểm
+                {currentQuestion.pointsEarned}/{currentQuestion.points || 1} points
               </span>
             </div>
             {currentQuestion.explanation && (
               <div className="explanation-box">
-                <strong>Giải thích:</strong>
+                <strong>Explanation:</strong>
                 <p>{currentQuestion.explanation}</p>
               </div>
             )}
@@ -363,17 +363,17 @@ const QuizReview = () => {
             onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
             disabled={currentQuestionIndex === 0}
           >
-            ← Câu trước
+            ← Previous
           </Button>
           <div className="nav-info">
-            Câu {currentQuestionIndex + 1} / {questions.length}
+            Question {currentQuestionIndex + 1} / {questions.length}
           </div>
           <Button
             variant="primary"
             onClick={() => setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1))}
             disabled={currentQuestionIndex === questions.length - 1}
           >
-            Câu sau →
+            Next Question →
           </Button>
         </div>
       </div>
@@ -381,7 +381,7 @@ const QuizReview = () => {
       {/* Previous Attempts Section */}
       {attempts.length > 1 && (
         <div className="previous-attempts-section">
-          <h2 className="section-title">Các lần làm trước</h2>
+          <h2 className="section-title">Previous Attempts</h2>
           <div className="attempts-list">
             {attempts
               .filter(a => a.id !== attemptId)
@@ -406,7 +406,7 @@ const QuizReview = () => {
                       size="small"
                       onClick={() => handleViewAttempt(attempt.id)}
                     >
-                      Xem lại
+                      Review
                     </Button>
                   </div>
                 </div>
