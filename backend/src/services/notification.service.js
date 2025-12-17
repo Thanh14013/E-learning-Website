@@ -564,7 +564,7 @@ export const notifyDiscussionCreated = async (
       type: "discussion",
       title: "New Discussion Created",
       content: `${creator.fullName} started a new discussion: "${discussion.title}"`,
-      link: `/courses/${courseId}/discussions/${discussion._id}`,
+      link: `/discussions/${discussion._id}`,
       metadata: {
         courseId,
         discussionId: discussion._id,
@@ -609,7 +609,7 @@ export const notifyCommentCreated = async (
       type: "discussion",
       title: "New Comment on Your Discussion",
       content: `${commenter.fullName} commented on your discussion: "${discussionTitle}"`,
-      link: `/courses/${courseId}/discussions/${comment.discussionId}`,
+      link: `/discussions/${comment.discussionId}`,
       metadata: {
         courseId,
         discussionId: comment.discussionId,
@@ -655,7 +655,7 @@ export const notifyCommentReply = async (
       type: "discussion",
       title: "New Reply to Your Comment",
       content: `${replier.fullName} replied to your comment on "${discussionTitle}"`,
-      link: `/courses/${courseId}/discussions/${reply.discussionId}`,
+      link: `/discussions/${reply.discussionId}`,
       metadata: {
         courseId,
         discussionId: reply.discussionId,
@@ -697,7 +697,7 @@ export const notifyDiscussionLiked = async (
       type: "discussion",
       title: "Discussion Liked",
       content: `${liker.fullName} liked your discussion: "${discussion.title}"`,
-      link: `/courses/${courseId}/discussions/${discussion._id}`,
+      link: `/discussions/${discussion._id}`,
       metadata: {
         courseId,
         discussionId: discussion._id,
@@ -734,7 +734,7 @@ export const notifyDiscussionPinned = async (courseId, discussion, teacher) => {
       type: "discussion",
       title: "Discussion Pinned",
       content: `A discussion has been pinned: "${discussion.title}"`,
-      link: `/courses/${courseId}/discussions/${discussion._id}`,
+      link: `/discussions/${discussion._id}`,
       metadata: {
         courseId,
         discussionId: discussion._id,

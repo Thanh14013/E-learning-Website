@@ -115,6 +115,7 @@ export const createComment = async (req, res) => {
 
     // Get commenter information for notifications
     const commenter = {
+      _id: req.user.id,
       id: req.user.id,
       fullName: req.user.fullName,
     };
@@ -128,7 +129,13 @@ export const createComment = async (req, res) => {
         {
           _id: comment._id,
           discussionId: comment.discussionId,
-          userId: comment.userId,
+          userId: {
+            _id: comment.userId._id,
+            fullName: comment.userId.fullName,
+            email: comment.userId.email,
+            avatar: comment.userId.avatar,
+            role: comment.userId.role
+          },
           content: comment.content,
           parentId: comment.parentId,
           likesCount: comment.likesCount,
@@ -154,13 +161,16 @@ export const createComment = async (req, res) => {
         );
       } else {
         // This is a top-level comment on the discussion
-        await notifyCommentCreated(
-          discussion.courseId.toString(),
-          discussion.userId._id.toString(),
-          comment,
-          commenter,
-          discussion.title
-        );
+        // Only send notification if commenter is not the discussion owner
+        if (discussion.userId._id.toString() !== commenter._id.toString()) {
+          await notifyCommentCreated(
+            discussion.courseId.toString(),
+            discussion.userId._id.toString(),
+            comment,
+            commenter,
+            discussion.title
+          );
+        }
       }
     } catch (notificationError) {
       console.error("Notification error:", notificationError.message);

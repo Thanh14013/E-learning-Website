@@ -1,84 +1,66 @@
 import User from "../models/user.model.js";
 import UserProfile from "../models/userProfile.model.js";
 import crypto from "crypto";
-import { sendVerificationEmail } from "../services/email.services.js";
 import {
-  generateTokenPair,
   verifyRefreshToken,
   generateAccessToken,
+  generateTokenPair,
 } from "../config/jwt.config.js";
-import sendEmail from "../config/sendGrid.config.js";
+import { AppError } from "../middleware/errorHandler.js";
+import { sendEmail } from "../services/email.services.js";
 
 // Check if running in production environment
 const isProduction = process.env.NODE_ENV === "production";
 
 /**
  * POST /api/auth/register
- * @desc Register a new user and send verification email
+ * @desc Register a new user
  * @access Public
  *
  * @body {string} fullName - Full name of the user
  * @body {string} email - Email address of the user
  * @body {string} password - Plain text password
  */
-export const register = async (req, res) => {
+
+export const register = async (req, res, next) => {
   try {
     const { fullName, email, password, role } = req.body;
 
     // Validate input data
     if (!fullName || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please fill in all required fields." });
+      return next(new AppError("Please fill in all required fields.", 400));
     }
 
     // Prevent admin role registration
     if (role === "admin") {
-      return res
-        .status(403)
-        .json({ message: "Admin accounts cannot be registered." });
+      return next(new AppError("Admin accounts cannot be registered.", 403));
     }
 
     // Handle duplicate email error
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: "This email already exists in our system." });
+      return next(
+        new AppError("This email already exists in our system.", 400)
+      );
     }
 
-    // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-
     // create user record with role (only student or teacher)
+    // Mark user as verified by default since email verification flow is removed
     const user = await User.create({
       fullName,
       email,
       password,
       role: role === "teacher" ? "teacher" : "student",
-      verificationToken,
+      isVerified: true,
     });
 
     // create user profile
     await UserProfile.create({ userId: user._id });
 
-    // send verification email
-    await sendVerificationEmail(user.email, user.fullName, verificationToken);
-
-    // Generate JWT tokens using centralized JWT config
-    const { accessToken, refreshToken } = generateTokenPair({
-      id: user._id,
-      role: user.role,
-      email: user.email,
-    });
-
-    // Save refresh token to user record
-    user.refreshToken = refreshToken;
-    await user.save({ validateBeforeSave: false });
-
-    res.status(201).json({
-      message:
-        "Registration successful. Please check your email to verify your account.",
+    // Registration successful — do NOT issue tokens or auto-login
+    const payload = {
+      success: true,
+      message: "Registration successful. Please login.",
       user: {
         _id: user._id,
         fullName: user.fullName,
@@ -89,95 +71,14 @@ export const register = async (req, res) => {
         profileCompleted: user.profileCompleted,
         profileApprovalStatus: user.profileApprovalStatus,
       },
-      tokens: { accessToken, refreshToken },
-    });
+    };
+
+    res.status(201).json(payload);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
-/**
- * POST /api/auth/verify-email
- * @desc Verify user's email address using token
- * @access Public
- *
- * @body {string} token - Email verification token
- */
-export const verifyEmail = async (req, res) => {
-  try {
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({ message: "Invalid verification token." });
-    }
-
-    const user = await User.findOne({ verificationToken: token });
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Token not found or has expired." });
-    }
-
-    user.isVerified = true;
-    user.verificationToken = undefined;
-    await user.save({ validateBeforeSave: false });
-
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully. You can now log in.",
-    });
-  } catch (error) {
-    console.error("Email verification error:", error);
-    res
-      .status(500)
-      .json({ message: "Server error during email verification." });
-  }
-};
-
-/**
- * POST /api/auth/resend-verification
- * @desc Resend email verification link
- * @access Private
- */
-export const resendVerification = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({ message: "Email already verified." });
-    }
-
-    // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    user.verificationToken = verificationToken;
-    await user.save({ validateBeforeSave: false });
-
-    // Send verification email
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-
-    try {
-      // TODO: Implement email sending via sendGrid
-      // await sendVerificationEmail(user.email, verificationUrl);
-
-      res.status(200).json({
-        success: true,
-        message: "Verification email sent successfully.",
-      });
-    } catch (emailError) {
-      console.error("Email sending error:", emailError);
-      res.status(500).json({ message: "Failed to send verification email." });
-    }
-  } catch (error) {
-    console.error("Resend verification error:", error);
-    res
-      .status(500)
-      .json({ message: "Server error while resending verification." });
+    // Log full error with stack for debugging
+    console.error("Register error:", error);
+    // Forward to global error handler to use unified formatting
+    next(error);
   }
 };
 
@@ -309,15 +210,6 @@ export const login = async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password." });
-    }
-
-    // Return verification status without proceeding to login
-    if (!user.isVerified) {
-      return res.status(403).json({
-        message: "Your account has not been verified. Please check your email.",
-        isVerified: false,
-        requiresVerification: true,
-      });
     }
 
     const { accessToken, refreshToken } = generateTokenPair({
@@ -538,7 +430,11 @@ export const forgotPassword = async (req, res) => {
         `;
 
     // Send via SendGrid
-    await sendEmail(user.email, "Password Reset Request", "", { html });
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      html,
+    });
 
     res.status(200).json({
       message:

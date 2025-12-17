@@ -16,88 +16,89 @@ export const ERROR_TYPES = {
 
 // HTTP Status Code Messages
 export const HTTP_STATUS_MESSAGES = {
-  400: "Yêu cầu không hợp lệ. Vui lòng kiểm tra lại thông tin.",
-  401: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
-  403: "Bạn không có quyền truy cập tài nguyên này.",
-  404: "Không tìm thấy tài nguyên yêu cầu.",
-  408: "Yêu cầu đã hết thời gian chờ. Vui lòng thử lại.",
-  409: "Xung đột dữ liệu. Vui lòng làm mới trang và thử lại.",
-  422: "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.",
-  429: "Quá nhiều yêu cầu. Vui lòng thử lại sau.",
-  500: "Lỗi máy chủ. Vui lòng thử lại sau.",
-  502: "Máy chủ không phản hồi. Vui lòng thử lại sau.",
-  503: "Dịch vụ tạm thời không khả dụng. Vui lòng thử lại sau.",
-  504: "Máy chủ không phản hồi kịp thời. Vui lòng thử lại sau.",
+  400: "Bad request. Please check your input.",
+  401: "Your session has expired. Please log in again.",
+  403: "You do not have permission to access this resource.",
+  404: "Requested resource not found.",
+  408: "Request timed out. Please try again.",
+  409: "Data conflict. Please refresh the page and try again.",
+  422: "Invalid data. Please check your input.",
+  429: "Too many requests. Please try again later.",
+  500: "Server error. Please try again later.",
+  502: "Server not responding. Please try again later.",
+  503: "Service temporarily unavailable. Please try again later.",
+  504: "Server timed out. Please try again later.",
 };
 
 // Application Specific Error Codes
 export const ERROR_CODES = {
   // Authentication Errors
-  INVALID_CREDENTIALS: "Email hoặc mật khẩu không đúng.",
-  EMAIL_ALREADY_EXISTS: "Email này đã được đăng ký.",
-  EMAIL_NOT_FOUND: "Email không tồn tại trong hệ thống.",
-  INVALID_TOKEN: "Token không hợp lệ hoặc đã hết hạn.",
-  TOKEN_EXPIRED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
-  ACCOUNT_LOCKED: "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.",
-  ACCOUNT_NOT_VERIFIED:
-    "Tài khoản chưa được xác thực. Vui lòng kiểm tra email.",
+  INVALID_CREDENTIALS: "Email or password is incorrect.",
+  EMAIL_ALREADY_EXISTS: "This email is already registered.",
+  EMAIL_NOT_FOUND: "Email not found.",
+  INVALID_TOKEN: "Invalid or expired token.",
+  TOKEN_EXPIRED: "Your session has expired. Please log in again.",
+  ACCOUNT_LOCKED: "Account is locked. Please contact the administrator.",
+  ACCOUNT_NOT_VERIFIED: "Account not verified. Please check your email.",
 
   // Validation Errors
-  VALIDATION_ERROR: "Dữ liệu không hợp lệ.",
-  REQUIRED_FIELD_MISSING: "Vui lòng điền đầy đủ thông tin bắt buộc.",
-  INVALID_EMAIL_FORMAT: "Định dạng email không hợp lệ.",
+  VALIDATION_ERROR: "Invalid data.",
+  REQUIRED_FIELD_MISSING: "Please fill in all required fields.",
+  INVALID_EMAIL_FORMAT: "Invalid email format.",
   INVALID_PASSWORD_FORMAT:
-    "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số.",
-  PASSWORD_TOO_SHORT: "Mật khẩu phải có ít nhất 8 ký tự.",
-  PASSWORD_TOO_LONG: "Mật khẩu không được vượt quá 128 ký tự.",
-  PASSWORDS_DO_NOT_MATCH: "Mật khẩu xác nhận không khớp.",
-  INVALID_PHONE_NUMBER: "Số điện thoại không hợp lệ.",
-  INVALID_DATE_FORMAT: "Định dạng ngày không hợp lệ.",
+    "Password must be at least 8 characters and include uppercase, lowercase letters, and numbers.",
+  PASSWORD_TOO_SHORT: "Password must be at least 8 characters.",
+  PASSWORD_TOO_LONG: "Password must not exceed 128 characters.",
+  PASSWORDS_DO_NOT_MATCH: "Password confirmation does not match.",
+  INVALID_PHONE_NUMBER: "Invalid phone number.",
+  INVALID_DATE_FORMAT: "Invalid date format.",
 
   // Course Errors
-  COURSE_NOT_FOUND: "Không tìm thấy khóa học.",
-  COURSE_ALREADY_ENROLLED: "Bạn đã đăng ký khóa học này.",
-  COURSE_FULL: "Khóa học đã đầy.",
-  COURSE_NOT_AVAILABLE: "Khóa học hiện không khả dụng.",
-  INSUFFICIENT_PERMISSIONS: "Bạn không có quyền thực hiện thao tác này.",
+  COURSE_NOT_FOUND: "Course not found.",
+  COURSE_ALREADY_ENROLLED: "You are already enrolled in this course.",
+  COURSE_FULL: "Course is full.",
+  COURSE_NOT_AVAILABLE: "Course is currently not available.",
+  INSUFFICIENT_PERMISSIONS:
+    "You do not have permission to perform this action.",
 
   // Lesson Errors
-  LESSON_NOT_FOUND: "Không tìm thấy bài học.",
-  LESSON_LOCKED: "Bài học này chưa được mở khóa.",
-  PREREQUISITE_NOT_COMPLETED: "Bạn cần hoàn thành bài học trước đó.",
+  LESSON_NOT_FOUND: "Lesson not found.",
+  LESSON_LOCKED: "This lesson is locked.",
+  PREREQUISITE_NOT_COMPLETED: "You need to complete the prerequisite lesson.",
 
   // Quiz Errors
-  QUIZ_NOT_FOUND: "Không tìm thấy bài kiểm tra.",
-  QUIZ_ALREADY_SUBMITTED: "Bạn đã nộp bài kiểm tra này.",
-  QUIZ_TIME_EXPIRED: "Thời gian làm bài đã hết.",
-  INVALID_QUIZ_ANSWER: "Câu trả lời không hợp lệ.",
+  QUIZ_NOT_FOUND: "Quiz not found.",
+  QUIZ_ALREADY_SUBMITTED: "You have already submitted this quiz.",
+  QUIZ_TIME_EXPIRED: "Quiz time has expired.",
+  INVALID_QUIZ_ANSWER: "Invalid quiz answer.",
 
   // Upload Errors
-  FILE_TOO_LARGE: "Kích thước file quá lớn. Vui lòng chọn file nhỏ hơn.",
-  INVALID_FILE_TYPE: "Loại file không được hỗ trợ.",
-  UPLOAD_FAILED: "Tải file lên thất bại. Vui lòng thử lại.",
+  FILE_TOO_LARGE: "File size too large. Please choose a smaller file.",
+  INVALID_FILE_TYPE: "Invalid file type.",
+  UPLOAD_FAILED: "File upload failed. Please try again.",
 
   // Network Errors
-  NETWORK_ERROR: "Không có kết nối mạng. Vui lòng kiểm tra kết nối internet.",
-  TIMEOUT_ERROR: "Yêu cầu đã hết thời gian chờ. Vui lòng thử lại.",
-  CONNECTION_REFUSED: "Không thể kết nối đến máy chủ.",
+  NETWORK_ERROR:
+    "No network connection. Please check your internet connection.",
+  TIMEOUT_ERROR: "Request timed out. Please try again.",
+  CONNECTION_REFUSED: "Cannot connect to the server.",
 
   // Generic Errors
-  UNKNOWN_ERROR: "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
-  SERVER_ERROR: "Lỗi máy chủ. Vui lòng thử lại sau.",
-  MAINTENANCE_MODE: "Hệ thống đang bảo trì. Vui lòng thử lại sau.",
+  UNKNOWN_ERROR: "An unknown error occurred. Please try again.",
+  SERVER_ERROR: "Server error. Please try again later.",
+  MAINTENANCE_MODE: "System is under maintenance. Please try again later.",
 };
 
 // Network Error Messages
 export const NETWORK_ERROR_MESSAGES = {
-  ECONNABORTED: "Kết nối bị gián đoạn. Vui lòng thử lại.",
-  ECONNREFUSED: "Không thể kết nối đến máy chủ.",
-  ECONNRESET: "Kết nối bị reset. Vui lòng thử lại.",
-  ETIMEDOUT: "Kết nối đã hết thời gian chờ.",
-  ENETUNREACH: "Không thể kết nối mạng.",
-  ERR_NETWORK: "Lỗi mạng. Vui lòng kiểm tra kết nối internet.",
-  ERR_BAD_REQUEST: "Yêu cầu không hợp lệ.",
-  ERR_BAD_RESPONSE: "Phản hồi từ máy chủ không hợp lệ.",
+  ECONNABORTED: "Connection aborted. Please try again.",
+  ECONNREFUSED: "Cannot connect to the server.",
+  ECONNRESET: "Connection was reset. Please try again.",
+  ETIMEDOUT: "Connection timed out.",
+  ENETUNREACH: "Network unreachable.",
+  ERR_NETWORK: "Network error. Please check your internet connection.",
+  ERR_BAD_REQUEST: "Bad request.",
+  ERR_BAD_RESPONSE: "Bad response from server.",
 };
 
 /**

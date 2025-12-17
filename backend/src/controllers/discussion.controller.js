@@ -45,19 +45,15 @@ export const createDiscussion = async (req, res) => {
     }
 
     // Validate content length
-    if (content.length < 10 || content.length > 5000) {
+    if (content.length < 1 || content.length > 5000) {
       return res.status(400).json({
         success: false,
-        message: 'Content must be between 10 and 5000 characters.',
+        message: 'Content must be between 1 and 5000 characters.',
       });
     }
 
-    // TODO: Validate that user is enrolled in the course or is the teacher
-    // This will be implemented when Course model is available
-    // For now, we'll allow any authenticated user to create discussions
-    
-    // Note: When Course model is available, add this validation:
-    /*
+    // Validate that user is enrolled in the course or is the teacher
+    const Course = (await import("../models/course.model.js")).default;
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({
@@ -75,10 +71,9 @@ export const createDiscussion = async (req, res) => {
     if (!isTeacher && !isEnrolled && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
-        message: 'You must be enrolled in this course or be the teacher to create discussions.',
+        message: 'You must be enrolled in this course to create discussions.',
       });
     }
-    */
 
     // Create discussion
     const discussion = await Discussion.create({
@@ -237,21 +232,14 @@ export const getDiscussionsByCourse = async (req, res) => {
       .skip(skip)
       .limit(limitNum)
       .populate('userId', 'fullName email avatar role')
+      .populate('commentCount')
       .lean();
 
-    // Get comment count for each discussion
-    const discussionsWithCommentCount = await Promise.all(
-      discussions.map(async (discussion) => {
-        const commentCount = await Comment.countDocuments({
-          discussionId: discussion._id,
-        });
-        return {
-          ...discussion,
-          commentCount,
-          likesCount: discussion.likes ? discussion.likes.length : 0,
-        };
-      })
-    );
+    // Add likesCount to each discussion
+    const discussionsWithCommentCount = discussions.map((discussion) => ({
+      ...discussion,
+      likesCount: discussion.likes ? discussion.likes.length : 0,
+    }));
 
     // Calculate pagination metadata
     const totalPages = Math.ceil(totalDiscussions / limitNum);
@@ -294,6 +282,7 @@ export const getDiscussionDetail = async (req, res) => {
     // Find discussion and populate user info
     const discussion = await Discussion.findById(id)
       .populate('userId', 'fullName email avatar role')
+      .populate('commentCount')
       .lean();
 
     if (!discussion) {

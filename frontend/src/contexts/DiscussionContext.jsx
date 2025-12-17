@@ -208,22 +208,127 @@ export const DiscussionProvider = ({ children }) => {
     }
   }, [currentDiscussion, user]);
 
-  // Create comment
+  // Create comment with immediate UI update
   const createComment = useCallback(async (discussionId, content, parentId = null) => {
+    if (!user) {
+      toastService.error('Please login to comment');
+      throw new Error('Not authenticated');
+    }
+
+    // Create new comment object with current user info
+    const newComment = {
+      _id: `temp-${Date.now()}`,
+      discussionId,
+      userId: {
+        _id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        avatar: user.avatar,
+        role: user.role
+      },
+      content: content.trim(),
+      parentId: parentId || null,
+      likesCount: 0,
+      likes: [],
+      replies: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Update UI immediately
+    setCurrentDiscussion(prev => {
+      if (!prev || prev.discussion._id !== discussionId) return prev;
+      
+      const comments = [...(prev.comments || [])];
+      
+      if (!parentId) {
+        // Top-level comment - add to end
+        comments.push(newComment);
+      } else {
+        // Reply - add to parent's replies
+        const addReply = (commentList) => {
+          return commentList.map(comment => {
+            if (comment._id === parentId) {
+              return {
+                ...comment,
+                replies: [...(comment.replies || []), newComment]
+              };
+            }
+            if (comment.replies?.length) {
+              return { ...comment, replies: addReply(comment.replies) };
+            }
+            return comment;
+          });
+        };
+        return {
+          ...prev,
+          comments: addReply(comments),
+          totalComments: (prev.totalComments || 0) + 1
+        };
+      }
+      
+      return {
+        ...prev,
+        comments,
+        totalComments: (prev.totalComments || 0) + 1
+      };
+    });
+
+    // Send to backend in background
     try {
       const response = await api.post(`/discussions/${discussionId}/comment`, {
         content,
         parentId
       });
       
-      toastService.success('Comment posted successfully!');
-      return response.data.data.comment;
+      // Replace temp comment with real one from backend
+      const realComment = response.data.data.comment;
+      
+      setCurrentDiscussion(prev => {
+        if (!prev) return prev;
+        
+        const replaceTemp = (commentList) => {
+          return commentList.map(comment => {
+            if (comment._id === newComment._id) {
+              return { ...realComment, replies: comment.replies || [] };
+            }
+            if (comment.replies?.length) {
+              return { ...comment, replies: replaceTemp(comment.replies) };
+            }
+            return comment;
+          });
+        };
+        
+        return { ...prev, comments: replaceTemp(prev.comments || []) };
+      });
+      
+      return realComment;
     } catch (error) {
+      // Remove failed comment from UI
+      setCurrentDiscussion(prev => {
+        if (!prev) return prev;
+        
+        const removeTemp = (commentList) => {
+          return commentList.filter(c => c._id !== newComment._id).map(comment => {
+            if (comment.replies?.length) {
+              return { ...comment, replies: removeTemp(comment.replies) };
+            }
+            return comment;
+          });
+        };
+        
+        return {
+          ...prev,
+          comments: removeTemp(prev.comments || []),
+          totalComments: Math.max(0, (prev.totalComments || 0) - 1)
+        };
+      });
+      
       const parsedError = handleApiError(error, 'Create Comment');
       toastService.error(parsedError.message);
       throw error;
     }
-  }, []);
+  }, [user]);
 
   // Update comment
   const updateComment = useCallback(async (commentId, content) => {
@@ -364,11 +469,7 @@ export const DiscussionProvider = ({ children }) => {
         )
       );
       
-      // If viewing this discussion, refresh to get new comment
-      if (currentDiscussion?.discussion?._id === data.discussionId) {
-        fetchDiscussionDetail(data.discussionId);
-      }
-      
+      // DON'T refresh - optimistic UI already handled it
       // Show toast if not by current user
       if (data.comment?.userId?._id !== user?.id) {
         toastService.info('New comment posted');

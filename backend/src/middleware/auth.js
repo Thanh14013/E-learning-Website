@@ -44,17 +44,9 @@ export const authenticate = async (req, res, next) => {
       });
     }
 
-    // Check if user is verified
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email before accessing this resource.",
-      });
-    }
-
     // Attach user data to request object
     req.user = {
-      id: user._id,
+      id: user._id.toString(),
       fullName: user.fullName,
       email: user.email,
       role: user.role,
@@ -122,7 +114,7 @@ export const optionalAuthenticate = async (req, res, next) => {
 
     if (user) {
       req.user = {
-        id: user._id,
+        id: user._id.toString(),
         fullName: user.fullName,
         email: user.email,
         role: user.role,

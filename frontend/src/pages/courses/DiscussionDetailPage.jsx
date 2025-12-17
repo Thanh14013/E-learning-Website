@@ -64,7 +64,7 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
   const handleCommentSubmit = async (content) => {
     try {
       await createComment(discussionId, content);
-      fetchDiscussionDetail(discussionId);
+      // No need to fetchDiscussionDetail - optimistic UI handles it
     } catch (error) {
       console.error('Comment failed:', error);
     }
@@ -117,12 +117,12 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
 
             <div className={styles.authorSection}>
               <div className={styles.avatar}>
-                {discussion.userId.fullName.charAt(0).toUpperCase()}
+                {discussion.userId?.fullName?.charAt(0).toUpperCase() || 'A'}
               </div>
               <div className={styles.authorInfo}>
                 <div className={styles.authorName}>
-                  {discussion.userId.fullName}
-                  {discussion.userId.role === 'teacher' && (
+                  {discussion.userId?.fullName || 'Anonymous'}
+                  {discussion.userId?.role === 'teacher' && (
                     <span className={styles.teacherBadge}>Teacher</span>
                   )}
                 </div>

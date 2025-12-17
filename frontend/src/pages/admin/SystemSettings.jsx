@@ -18,14 +18,13 @@ const SystemSettings = () => {
     const [settings, setSettings] = useState({
         // General Settings
         general: {
-            siteName: 'IELTS Hub',
+            siteName: 'MasterDev',
             siteDescription: 'Online Learning Platform for IELTS Preparation',
             supportEmail: 'support@ieltshub.com',
             timezone: 'Asia/Ho_Chi_Minh',
             language: 'vi',
             maintenanceMode: false,
-            registrationEnabled: true,
-            emailVerificationRequired: true
+            registrationEnabled: true
         },
         // Feature Toggles
         features: {
@@ -52,7 +51,7 @@ const SystemSettings = () => {
         // Email Settings
         email: {
             provider: 'sendgrid',
-            fromName: 'IELTS Hub',
+            fromName: 'MasterDev',
             fromEmail: 'noreply@ieltshub.com',
             replyToEmail: 'support@ieltshub.com',
             enableEmailNotifications: true,
@@ -300,22 +299,7 @@ const SystemSettings = () => {
                                 </label>
                             </div>
 
-                            <div className={styles.toggleField}>
-                                <div>
-                                    <div className={styles.toggleLabel}>Email Verification Required</div>
-                                    <div className={styles.toggleDesc}>
-                                        Require users to verify their email
-                                    </div>
-                                </div>
-                                <label className={styles.switch}>
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.general.emailVerificationRequired}
-                                        onChange={() => handleToggle('general', 'emailVerificationRequired')}
-                                    />
-                                    <span className={styles.slider}></span>
-                                </label>
-                            </div>
+
                         </div>
                     )}
 

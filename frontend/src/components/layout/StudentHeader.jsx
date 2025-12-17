@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationContext.jsx";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import styles from "./StudentHeader.module.css";
 import avatarDefault from "../../assets/default-avatar.png";
 
@@ -12,12 +12,12 @@ export default function StudentHeader() {
     notifications,
     unreadCount,
     markRead,
+    markAllRead,
     deleteNotification,
     refresh,
   } = useNotifications() || {};
   const navigate = useNavigate();
 
-  const [searchValue, setSearchValue] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
@@ -63,18 +63,8 @@ export default function StudentHeader() {
     <nav className={styles.StudentHeader}>
       {/* Logo */}
       <NavLink to="/" className={styles.logo}>
-        IELTS Hub
+        MasterDev
       </NavLink>
-
-      {/* SearchBar */}
-      <div className={styles.searchBar}>
-        <input
-          type="text"
-          placeholder="Search courses, lessons..."
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-        />
-      </div>
 
       {/*Bên phải */}
       <div className={styles.rightSection}>
@@ -114,7 +104,14 @@ export default function StudentHeader() {
                     {(notifications || []).length === 0 ? (
                       <div className={styles.notifEmpty}>Không có thông báo</div>
                     ) : (
-                      (notifications || [])
+                      [...(notifications || [])]
+                        .sort((a, b) => {
+                          // Unread notifications first
+                          if (!a.isRead && b.isRead) return -1;
+                          if (a.isRead && !b.isRead) return 1;
+                          // Then by creation date
+                          return new Date(b.createdAt) - new Date(a.createdAt);
+                        })
                         .slice(0, 8)
                         .map((n) => (
                           <div
@@ -173,15 +170,6 @@ export default function StudentHeader() {
                         ))
                     )}
                   </div>
-                  <button
-                    className={styles.viewAllBtn}
-                    onClick={() => {
-                      setNotifOpen(false);
-                      navigate("/notifications");
-                    }}
-                  >
-                    View all →
-                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -221,11 +209,15 @@ export default function StudentHeader() {
                   transition={{ duration: 0.2 }}
                 >
                   <NavLink to="/dashboard" onClick={() => setMenuOpen(false)}>
-                    Dashboard
+                    📊 Dashboard
                   </NavLink>
                   <NavLink to="/profile" onClick={() => setMenuOpen(false)}>
-                    Profile
+                    👤 Profile
                   </NavLink>
+                  <NavLink to="/courses" onClick={() => setMenuOpen(false)}>
+                    📚 Browse Courses
+                  </NavLink>
+                  <div className={styles.divider}></div>
                   <button
                     onClick={() => {
                       logout();
@@ -233,7 +225,7 @@ export default function StudentHeader() {
                       navigate("/");
                     }}
                   >
-                    Logout
+                    🚪 Logout
                   </button>
                 </motion.div>
               )}

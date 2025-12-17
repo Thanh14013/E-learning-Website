@@ -74,6 +74,18 @@ const discussionSchema = new mongoose.Schema(
   }
 );
 
+// Virtual field for comment count
+discussionSchema.virtual('commentCount', {
+  ref: 'Comment',
+  localField: '_id',
+  foreignField: 'discussionId',
+  count: true
+});
+
+// Ensure virtuals are included in JSON output
+discussionSchema.set('toJSON', { virtuals: true });
+discussionSchema.set('toObject', { virtuals: true });
+
 // Compound index for efficient sorting by course and creation time
 discussionSchema.index({ courseId: 1, createdAt: -1 });
 

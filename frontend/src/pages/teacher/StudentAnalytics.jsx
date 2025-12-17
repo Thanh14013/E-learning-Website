@@ -157,7 +157,7 @@ export default function StudentAnalytics() {
 
             {/* Progress Over Time Chart */}
             <div className={styles.chartSection}>
-                <h3>Tiến độ học tập theo thời gian</h3>
+                <h3>Progress Over Time</h3>
                 <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={analytics.progressOverTime}>
                         <CartesianGrid strokeDasharray="3 3" />

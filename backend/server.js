@@ -120,7 +120,6 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/questions", questionRoutes);
-
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
 
@@ -137,4 +136,7 @@ httpServer.listen(port, () => {
   console.log(`   - /session namespace: WebRTC video sessions`);
   console.log(`   - /notification namespace: Real-time notifications`);
   console.log(`   - /progress namespace: Learning progress tracking`);
+  console.log(
+    `✅ Rate limiting disabled: ${process.env.DISABLE_RATE_LIMIT === "true"}`
+  );
 });

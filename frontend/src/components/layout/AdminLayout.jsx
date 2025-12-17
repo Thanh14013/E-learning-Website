@@ -63,7 +63,7 @@ const AdminLayout = () => {
                 <div className={styles.headerContent}>
                     <div className={styles.logo}>
                         <span className={styles.logoIcon}>🎓</span>
-                        <span className={styles.logoText}>IELTS Hub Admin</span>
+                        <span className={styles.logoText}>MasterDev Admin</span>
                     </div>
 
                     <div className={styles.headerRight}>

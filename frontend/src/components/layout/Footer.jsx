@@ -4,7 +4,7 @@ import styles from "./Footer.module.css";
 export function Footer() {
   return (
     <footer className={styles.footer}>
-      <p>© 2025 IELTS Learning Platform</p>
+      <p>© 2025 Coding Learning Platform</p>
     </footer>
   );
 }

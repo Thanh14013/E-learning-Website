@@ -8,8 +8,6 @@ import bcrypt from "bcryptjs";
  * @property {String} fullName - Họ và tên người dùng, bắt buộc.
  * @property {String} role - Vai trò của người dùng ('admin', 'teacher', 'student').
  * @property {String} avatar - URL ảnh đại diện từ Cloudinary.
- * @property {Boolean} isVerified - Trạng thái xác thực email.
- * @property {String} verificationToken - Token để xác thực email.
  * @property {String} resetPasswordToken - Token để reset mật khẩu.
  * @property {Date} resetPasswordExpire - Thời gian hết hạn của token reset mật khẩu.
  * @property {String} refreshToken - Refresh token để duy trì đăng nhập.
@@ -55,7 +53,7 @@ const userSchema = new mongoose.Schema(
     },
     isVerified: {
       type: Boolean,
-      default: false,
+      default: true,
     },
     isBanned: {
       type: Boolean,
@@ -70,13 +68,18 @@ const userSchema = new mongoose.Schema(
       enum: ["pending", "approved", "rejected"],
       default: null,
     },
-    verificationToken: String,
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     refreshToken: {
       type: String,
       select: false,
     },
+    enrolledCourses: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Course",
+      },
+    ],
   },
   {
     // Add timestamps (createdAt, updatedAt)

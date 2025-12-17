@@ -6,6 +6,7 @@ import fs from "fs";
 import mongoose from "mongoose";
 import Course from "../models/course.model.js";
 import Progress from "../models/progress.model.js";
+import bcrypt from "bcryptjs";
 
 /**
  * GET /api/users/profile
@@ -14,7 +15,7 @@ import Progress from "../models/progress.model.js";
  */
 export const getUserProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     const user = await User.findById(userId).select("-password -refreshToken");
 
@@ -57,7 +58,7 @@ export const getUserProfile = async (req, res) => {
  */
 export const updateUserProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { fullName, email, phone, address, bio, dateOfBirth, socialLinks } =
       req.body;
 
@@ -140,7 +141,7 @@ export const updateUserProfile = async (req, res) => {
  */
 export const uploadAvatar = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded." });
@@ -180,8 +181,17 @@ export const uploadAvatar = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     return res.status(200).json({
+      success: true,
       message: "Avatar uploaded successfully.",
-      avatarUrl: imageUrl,
+      data: {
+        avatar: imageUrl,
+        user: {
+          id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          avatar: imageUrl,
+        },
+      },
     });
   } catch (error) {
     console.error("Upload avatar error:", error);
@@ -390,7 +400,7 @@ export const deleteUser = async (req, res) => {
  */
 export const completeTeacherProfile = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { phone, address, bio, expertise, qualifications } = req.body;
 
     // Check if user is a teacher
@@ -478,5 +488,61 @@ export const completeTeacherProfile = async (req, res) => {
     res
       .status(500)
       .json({ message: "Server error while completing teacher profile." });
+  }
+};
+
+/**
+ * PUT /api/users/change-password
+ * @desc Change user password
+ * @access Private
+ *
+ * @body {string} currentPassword - Current password
+ * @body {string} newPassword - New password
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required.",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "New password must be at least 6 characters long.",
+      });
+    }
+
+    // Get user with password field
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Verify current password
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Current password is incorrect.",
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password changed successfully.",
+    });
+  } catch (error) {
+    console.error("Change password error:", error);
+    res.status(500).json({
+      message: "Server error while changing password.",
+    });
   }
 };

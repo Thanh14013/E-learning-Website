@@ -187,6 +187,13 @@
   user-select: none;
 }
 
+/* Field error */
+.fieldError {
+  margin-top: 6px;
+  color: var(--color-danger, #e53e3e);
+  font-size: 13px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .container {

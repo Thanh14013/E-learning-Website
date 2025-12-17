@@ -126,14 +126,15 @@ export const getAllCourses = async (req, res) => {
     // Filtering
     const filter = {};
     if (req.query.category) filter.category = req.query.category;
-    if (req.query.level) filter.level = req.query.level.toLowerCase();
+    if (req.query.level) filter.level = req.query.level; // Don't lowercase - match exact case
     if (req.query.teacher) filter.teacherId = req.query.teacher;
     if (req.query.isPublished !== undefined)
       filter.isPublished = req.query.isPublished === "true";
 
-    // Text search (title/description)
-    if (req.query.q) {
-      filter.$text = { $search: req.query.q };
+    // Text search (title/description) - accept both 'q' and 'search' parameters
+    const searchQuery = req.query.search || req.query.q;
+    if (searchQuery) {
+      filter.$text = { $search: searchQuery };
     }
 
     // Sorting
@@ -218,6 +219,8 @@ export const getCourseDetail = async (req, res) => {
           content: l.isPreview ? l.content : undefined,
           isPreview: l.isPreview,
           order: l.order,
+          duration: l.duration || 0, // Add duration field
+          type: l.type || "video", // Add type field
         })),
     }));
 
@@ -228,11 +231,30 @@ export const getCourseDetail = async (req, res) => {
         )
       : false;
 
-    // If not enrolled → show only preview lessons
-    if (!isEnrolled) {
-      structuredChapters.forEach((ch) => {
-        ch.lessons = ch.lessons.filter((l) => l.isPreview);
-      });
+    // Show all lessons but mark which ones are locked
+    // (Frontend will handle displaying locked icon)
+    structuredChapters.forEach((ch) => {
+      ch.lessons = ch.lessons.map((l) => ({
+        ...l,
+        isLocked: !isEnrolled && !l.isPreview,
+      }));
+    });
+
+    // Fetch discussions for this course
+    const Discussion = (await import("../models/discussion.model.js")).default;
+    const discussions = await Discussion.find({ courseId: id })
+      .populate("userId", "fullName email avatar")
+      .populate("commentCount")
+      .sort({ isPinned: -1, createdAt: -1 })
+      .limit(10)
+      .lean();
+
+    // Check if user has already reviewed this course
+    let userReview = null;
+    if (userId) {
+      userReview = course.reviews.find(
+        (r) => r.userId.toString() === userId.toString()
+      );
     }
 
     return res.status(200).json({
@@ -242,6 +264,8 @@ export const getCourseDetail = async (req, res) => {
         ...course,
         isEnrolled,
         chapters: structuredChapters,
+        discussions: discussions || [],
+        userReview: userReview || null,
       },
     });
   } catch (error) {
@@ -486,11 +510,20 @@ export const enrollCourse = async (req, res) => {
     course.enrolledStudents.push(studentId);
     await course.save();
 
-    // Get student and teacher info for notification
+    // Add course to user's enrolledCourses
     const student = await User.findById(studentId);
+    if (student) {
+      if (!student.enrolledCourses) {
+        student.enrolledCourses = [];
+      }
+      student.enrolledCourses.push(courseId);
+      await student.save();
+    }
+
+    // Get teacher info for notification
     const teacher = await User.findById(course.teacherId);
 
-    // Send enrollment notification
+    // Send enrollment notification to teacher
     if (student && teacher) {
       await notifyEnrollment(
         studentId,
@@ -501,16 +534,35 @@ export const enrollCourse = async (req, res) => {
       );
     }
 
+    // Create notification for student
+    const Notification = (await import('../models/notification.model.js')).default;
+    await Notification.create({
+      userId: studentId,
+      type: 'course',
+      title: 'Course Enrolled!',
+      content: `You successfully enrolled in "${course.title}". Start learning now!`,
+      link: `/courses/${courseId}`,
+      isRead: false,
+    });
+
+    // Emit notification
+    req.io?.of("/notification").to(studentId.toString()).emit("notification:new", {
+      type: 'enrollment',
+      message: `Enrolled in ${course.title}`,
+    });
+
     return res.status(200).json({
       success: true,
-      message: "Successfully enrolled in course",
+      message: "Đăng ký khóa học thành công! Tất cả bài học đã được mở khóa.",
       data: course,
     });
   } catch (error) {
-    console.error("Enroll course error:", error);
+    console.error("❌ Enroll course error:", error);
+    console.error("Stack:", error.stack);
     res.status(500).json({
       success: false,
       message: "Server error while enrolling in course",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
@@ -826,19 +878,7 @@ export const reviewCourse = async (req, res) => {
       });
     }
 
-    // must complete at least 1 lesson
-    const progress = await Progress.find({
-      userId,
-      courseId,
-      completed: true,
-    });
-
-    if (progress.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "You must complete a lesson before reviewing this course.",
-      });
-    }
+    // Remove lesson completion requirement - just enrollment is enough
 
     // prevent duplicate review
     const hasReviewed = course.reviews.some(
@@ -868,11 +908,25 @@ export const reviewCourse = async (req, res) => {
 
     await course.save();
 
+    // Get the newly added review
+    const newReview = course.reviews[course.reviews.length - 1];
+
     return res.status(201).json({
       success: true,
       message: "Review added successfully.",
-      rating: course.rating,
-      totalReviews: course.totalReviews,
+      data: {
+        course: {
+          rating: course.rating,
+          totalReviews: course.totalReviews
+        },
+        review: {
+          _id: newReview._id,
+          userId: newReview.userId,
+          rating: newReview.rating,
+          comment: newReview.comment,
+          createdAt: newReview.createdAt
+        }
+      }
     });
   } catch (error) {
     console.error("Review course error:", error);

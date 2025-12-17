@@ -51,7 +51,26 @@ export const CourseProvider = ({ children }) => {
   }, [user]); // useEffect chỉ cần chạy lại khi user thay đổi
 
   const addCourse = async (courseData) => { };
-  const enrollCourse = async (courseId) => { };
+
+  const enrollCourse = async (courseId) => {
+    try {
+      const response = await api.post(`/courses/${courseId}/enroll`);
+
+      // Refresh myCourses after successful enrollment
+      if (user) {
+        const myCoursesEndpoint = user.role === 'student'
+          ? '/courses/enrolled'
+          : '/courses/my-courses';
+        const myCoursesRes = await api.get(myCoursesEndpoint);
+        setMyCourses(myCoursesRes.data.data || myCoursesRes.data || []);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+      throw error;
+    }
+  };
 
   const value = { allCourses, myCourses, loading, addCourse, enrollCourse };
 

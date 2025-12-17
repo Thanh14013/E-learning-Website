@@ -84,11 +84,22 @@
   }
 }
 
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+
 .sectionBox h3 {
   font-size: 1.5rem;
   margin-top: 0;
   margin-bottom: var(--spacing-3);
   color: var(--text-primary);
+}
+
+.sectionHeader h3 {
+  margin-bottom: 0;
 }
 
 .highlightsGrid {
@@ -152,7 +163,7 @@
   align-items: center;
   padding: 12px var(--spacing-2);
   text-decoration: none;
-  color: var(--text-primary); 
+  color: var(--text-primary);
   transition: background-color 0.2s;
 }
 .lessonItem:hover {
@@ -181,7 +192,7 @@
 .sidebarCard {
   border: 1px solid var(--color-gray-200);
   box-shadow: var(--shadow-lg);
-  background-color: var(--bg-card); 
+  background-color: var(--bg-card);
   border-radius: var(--border-radius-md);
   position: sticky;
   top: 20px;
@@ -204,7 +215,8 @@
 .sidebarContent {
   padding: var(--spacing-3);
 }
-.enrollButton, .enrolledButton {
+.enrollButton,
+.enrolledButton {
   width: 100%;
   font-size: 1rem;
   font-weight: 700;
@@ -233,3 +245,486 @@
   color: var(--text-secondary);
 }
 
+/* Stats Container */
+.statsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-4);
+}
+
+.statCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.statIcon {
+  font-size: 2rem;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+/* Description */
+.description {
+  line-height: 1.7;
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.noContent {
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: var(--spacing-4);
+}
+
+/* Teacher Info */
+.teacherInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  background: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+}
+
+@media (prefers-color-scheme: dark) {
+  .teacherInfo {
+    background: var(--color-gray-800);
+  }
+}
+
+.teacherAvatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatarIcon {
+  font-size: 2.5rem;
+}
+
+.teacherDetails h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+
+.teacherEmail {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0 0 4px 0;
+}
+
+.teacherRole {
+  display: inline-block;
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin: 0;
+}
+
+/* Teacher Section in Sidebar */
+.teacherSection {
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.teacherCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: var(--spacing-2);
+  background: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+}
+
+@media (prefers-color-scheme: dark) {
+  .teacherCard {
+    background: var(--color-gray-800);
+  }
+  .teacherSection {
+    border-top-color: var(--color-gray-700);
+  }
+}
+
+.teacherCard .teacherAvatar {
+  width: 50px;
+  height: 50px;
+}
+
+.teacherCard .avatarIcon {
+  font-size: 1.5rem;
+}
+
+.teacherCard .teacherDetails h5 {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.teacherCard .teacherRole {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+}
+
+/* Lesson Item Styles */
+.previewBadge {
+  background: #10b981;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.noLessons {
+  padding: var(--spacing-2);
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Discussions Section */
+.discussionsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.discussionCard {
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-3);
+  transition: all 0.3s ease;
+}
+
+.discussionCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-primary);
+}
+
+.discussionTitle {
+  margin: 0 0 var(--spacing-2) 0;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.discussionPreview {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: var(--spacing-2);
+}
+
+.discussionFooter {
+  display: flex;
+  align-items: center;
+  margin-top: var(--spacing-2);
+  padding-top: var(--spacing-2);
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.author {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.authorName {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.stats {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+.replies {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.discussionHeader h4 {
+  margin: 0 0 var(--spacing-2) 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.discussionMeta {
+  display: flex;
+  gap: var(--spacing-3);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-2);
+}
+
+.discussionContent {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: var(--spacing-2) 0;
+}
+
+.viewDiscussionLink {
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.2s;
+  padding: 0;
+  font-family: inherit;
+}
+
+.viewDiscussionLink:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.viewAllBtn {
+  width: 100%;
+  margin-top: var(--spacing-2);
+}
+
+.noDiscussions {
+  text-align: center;
+  padding: var(--spacing-5);
+  color: var(--text-secondary);
+}
+
+.noDiscussions p {
+  margin-bottom: var(--spacing-3);
+  font-size: 1.05rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .discussionCard {
+    background: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+  }
+
+  .discussionCard:hover {
+    border-color: var(--color-primary);
+  }
+}
+
+/* Rating Section */
+.ratingSection {
+  background-color: var(--bg-card);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-4);
+  margin-top: var(--spacing-4);
+}
+
+.ratingSection h3 {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-3);
+  color: var(--text-primary);
+}
+
+.currentRating {
+  margin-bottom: var(--spacing-4);
+}
+
+.ratingDisplay {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.ratingNumber {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stars {
+  display: flex;
+  gap: 4px;
+}
+
+.reviewCount {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.ratingForm {
+  border-top: 1px solid var(--color-gray-200);
+  padding-top: var(--spacing-3);
+  margin-top: var(--spacing-3);
+}
+
+.ratingForm h4 {
+  font-size: 1.1rem;
+  margin-bottom: var(--spacing-2);
+  color: var(--text-primary);
+}
+
+.starRating {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--spacing-3);
+}
+
+.starButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.starButton:hover {
+  transform: scale(1.2);
+}
+
+.commentInput {
+  width: 100%;
+  padding: var(--spacing-2);
+  border: 1px solid var(--color-gray-300);
+  border-radius: var(--border-radius-sm);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  margin-bottom: var(--spacing-2);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+}
+
+.commentInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .ratingSection {
+    border-color: var(--color-gray-700);
+  }
+
+  .ratingForm {
+    border-top-color: var(--color-gray-700);
+  }
+
+  .commentInput {
+    border-color: var(--color-gray-600);
+    background-color: var(--color-gray-800);
+  }
+}
+
+/* Progress Section */
+.progressSection {
+  background-color: var(--bg-card);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-4);
+  margin-top: var(--spacing-4);
+}
+
+.progressSection h3 {
+  font-size: 1.3rem;
+  margin-bottom: var(--spacing-3);
+  color: var(--text-primary);
+}
+
+.progressBarContainer {
+  width: 100%;
+}
+
+.progressInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+}
+
+.progressText {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.progressPercent {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-student-primary);
+}
+
+.progressBar {
+  width: 100%;
+  height: 12px;
+  background-color: var(--color-gray-200);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .progressSection {
+    border-color: var(--color-gray-700);
+  }
+
+  .progressBar {
+    background-color: var(--color-gray-700);
+  }
+}

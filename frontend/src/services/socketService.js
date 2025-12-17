@@ -60,7 +60,7 @@ class SocketService {
       this.isConnected = true;
       this.reconnectAttempts = 0;
       console.log("[socketService] CONNECTED:", this.socket.id);
-      toastService.info("Đã kết nối với máy chủ");
+      // Connection events are logged but no toast shown to avoid noisy UI
       this.notifyContexts("connection", { connected: true });
     });
 
@@ -72,7 +72,7 @@ class SocketService {
         // Server disconnected, manual reconnect needed
         this.socket.connect();
       } else {
-        toastService.warning("Mất kết nối với máy chủ");
+        // Do not show connection toasts for disconnects to reduce noise
       }
 
       this.notifyContexts("connection", { connected: false, reason });
@@ -82,9 +82,7 @@ class SocketService {
       this.reconnectAttempts++;
       console.error("[socketService] Connection error:", error.message);
 
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        toastService.error("Không thể kết nối với máy chủ");
-      }
+      // No toast shown here to avoid spamming the user; contexts can react to connection state
     });
 
     this.socket.on("reconnect", (attemptNumber) => {
@@ -93,7 +91,7 @@ class SocketService {
         attemptNumber,
         "attempts"
       );
-      toastService.success("Đã kết nối lại với máy chủ");
+      // No toast shown on reconnect to reduce noise
       this.notifyContexts("connection", { connected: true, reconnected: true });
     });
 
@@ -107,7 +105,7 @@ class SocketService {
 
     this.socket.on("reconnect_failed", () => {
       console.error("[socketService] Reconnect failed after max attempts");
-      toastService.error("Không thể kết nối lại với máy chủ");
+      // No toast here to avoid unnecessary notifications
     });
   }
 

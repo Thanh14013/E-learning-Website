@@ -19,6 +19,7 @@ export function Register() {
   });
 
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -36,13 +37,15 @@ export function Register() {
     }
 
     setLoading(true);
+    setError("");
+    setFieldErrors({});
 
     const dobString = (formData.year && formData.month && formData.day)
       ? `${formData.year}-${formData.month.padStart(2, '0')}-${formData.day.padStart(2, '0')}`
       : null;
 
     try {
-      //Gọi API Register
+      // Call API Register
       const res = await register({
         fullName: formData.name,
         email: formData.email,
@@ -52,14 +55,36 @@ export function Register() {
       });
 
       if (res.success) {
-        //Đăng ký thành công -> Chuyển hướng sang trang xác thực email
-        navigate("/email-verification-required");
+        // Successful registration: redirect to login (no auto-login)
+        // Show a single, clear success toast
+        import("../../services/toastService").then(({ default: toast }) => {
+          toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
+        });
+        navigate("/login");
       } else {
-        setError(res.message || "Đăng ký thất bại. Vui lòng thử lại.");
+        // Show validation errors or a single message
+        if (res.validationErrors) {
+          // res.validationErrors can be array [{field,message}] or object {field: messages}
+          const fieldErrs = {};
+          if (Array.isArray(res.validationErrors)) {
+            res.validationErrors.forEach((e) => {
+              const f = e.field || e.param || "_general";
+              fieldErrs[f] = e.message || "Invalid";
+            });
+          } else if (typeof res.validationErrors === "object") {
+            Object.entries(res.validationErrors).forEach(([k, v]) => {
+              fieldErrs[k] = Array.isArray(v) ? v.join(", ") : String(v);
+            });
+          }
+          setFieldErrors(fieldErrs);
+          setError(res.message || "Vui lòng kiểm tra các trường.");
+        } else {
+          setError(res.message || "Đăng ký thất bại. Vui lòng thử lại.");
+        }
       }
     } catch (err) {
-      console.error(err);
-      setError("Lỗi kết nối server. Vui lòng kiểm tra lại mạng.");
+      console.error("Registration error:", err);
+      setError("Đã xảy ra lỗi. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -82,6 +107,8 @@ export function Register() {
             placeholder="Nguyen Van A"
             required
           />
+          {fieldErrors.fullName && <p className={styles.fieldError}>{fieldErrors.fullName}</p>}
+          {fieldErrors.name && <p className={styles.fieldError}>{fieldErrors.name}</p>}
         </div>
 
         <div className={styles.formGroup}>
@@ -95,12 +122,13 @@ export function Register() {
             placeholder="example@email.com"
             required
           />
+          {fieldErrors.email && <p className={styles.fieldError}>{fieldErrors.email}</p>}
         </div>
 
         {/* Phân Role gv và hs */}
         <div className={styles.formGroup}>
-          <label className={styles.label}>I am a:</label>
           <div className={styles.radioGroup}>
+            <label className={styles.label}>I am a:</label>
             <label className={styles.radioLabel}>
               <input
                 type="radio"
@@ -127,7 +155,7 @@ export function Register() {
         </div>
 
         <div className={styles.formGroup}>
-          <label className={styles.label}>Ngày sinh</label>
+          <label className={styles.label}>Date Of Birth</label>
           <div className={styles.dobGroup}>
             <input
               type="number"
@@ -176,6 +204,7 @@ export function Register() {
               className={styles.input}
               required
             />
+            {fieldErrors.password && <p className={styles.fieldError}>{fieldErrors.password}</p>}
             <button
               type="button"
               className={styles.toggleBtn}
@@ -213,9 +242,9 @@ export function Register() {
       </form>
 
       <p className={styles.switchText}>
-        Đã có tài khoản?{" "}
+        Already have an account?{" "}
         <Link to="/login" className={styles.link}>
-          Đăng nhập ngay!
+          Login now!
         </Link>
       </p>
     </div>

@@ -1,21 +1,15 @@
 import express from "express";
 import {
   register,
-  verifyEmail,
-  resendVerification,
   resetPassword,
   refreshAccessToken,
   login,
   logout,
   forgotPassword,
 } from "../controllers/auth.controller.js";
-import {
-  registerLimiter,
-  emailVerificationLimiter,
-} from "../middleware/rateLimiter.js";
+import { registerLimiter } from "../middleware/rateLimiter.js";
 import {
   validateRegister,
-  validateToken,
   validateRefreshToken,
 } from "../middleware/validator.js";
 import { authenticate } from "../middleware/auth.js";
@@ -24,9 +18,6 @@ const router = express.Router();
 
 // POST /api/auth/register - Register new user with validation and rate limiting
 router.post("/register", registerLimiter, validateRegister, register);
-
-// POST /api/auth/verify-email - Verify email with token in body
-router.post("/verify-email", emailVerificationLimiter, verifyEmail);
 
 // POST /api/auth/refresh-token - Refresh access token with validation
 router.post("/refresh-token", validateRefreshToken, refreshAccessToken);
@@ -43,7 +34,6 @@ router.post("/logout", authenticate, logout);
 // POST /api/auth/forgot-password - Generate password reset token
 router.post("/forgot-password", forgotPassword);
 
-// POST /api/auth/resend-verification - Resend email verification
-router.post("/resend-verification", authenticate, resendVerification);
+// NOTE: email verification/resend endpoints removed as requested
 
 export default router;

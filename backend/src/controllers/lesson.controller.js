@@ -1,7 +1,7 @@
 import Lesson from "../models/lesson.model.js";
 import Chapter from "../models/chapter.model.js";
 import Media from "../models/media.model.js";
-import UserProfile from "../models/userProfile.model.js";
+import User from "../models/user.model.js";
 import { deleteFile, uploadFile } from "../config/cloudinary.config.js";
 import { validateLessonOwnership } from "../middleware/validator.js";
 import fs from "fs";
@@ -286,8 +286,10 @@ export const getLessonDetail = async (req, res) => {
     let canView = false;
 
     if (req.user) {
-      const profile = await UserProfile.findOne({ userId: req.user._id });
-      const isEnrolled = profile?.enrolledCourses.includes(courseId);
+      const user = await User.findById(req.user.id);
+      const isEnrolled = user?.enrolledCourses?.some(
+        (courseObjId) => courseObjId.toString() === courseId.toString()
+      );
 
       if (isEnrolled) canView = true;
     }

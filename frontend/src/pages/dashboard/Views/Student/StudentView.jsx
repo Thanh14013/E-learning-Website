@@ -1,21 +1,31 @@
 import { useRef, useState, useEffect } from 'react';
 import styles from './studentView.module.css';
-import { useCourses } from '../../../../contexts/CoursesContext.jsx'; 
+import { useCourses } from '../../../../contexts/CoursesContext.jsx';
 
 // --- Component CourseCard (cập nhật để dùng _id) ---
 const CourseCard = ({ course }) => (
-    <div className={styles.courseCard}>
-      <div className={styles.courseCardImage} style={{ backgroundColor: course.color }}></div>
-      <div className={styles.courseCardContent}>
-        <h4><a href="#">{course.name}</a></h4>
-        {/* Chúng ta sẽ bỏ progress bar vì dữ liệu thật không có */}
+  <div className={styles.courseCard}>
+    <div className={styles.courseCardImage}>
+      {course.thumbnail ? (
+        <img src={course.thumbnail} alt={course.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        <div style={{ backgroundColor: '#667eea', width: '100%', height: '100%' }}></div>
+      )}
+    </div>
+    <div className={styles.courseCardContent}>
+      <h4><a href={`/courses/${course._id}`}>{course.title}</a></h4>
+      <div className={styles.courseRating}>
+        <span className={styles.starIcon}>⭐</span>
+        <span>{course.rating?.toFixed(1) || '0.0'}</span>
+        <span className={styles.reviewCount}>({course.totalReviews || 0} reviews)</span>
       </div>
     </div>
+  </div>
 );
 
 // --- Component Carousel (SỬA LỖI Ở ĐÂY) ---
 // Nó phải nhận 'courses' như một prop
-const CourseCarousel = ({ courses }) => { 
+const CourseCarousel = ({ courses }) => {
   const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -33,7 +43,7 @@ const CourseCarousel = ({ courses }) => {
       setCanScrollRight(isScrollable && el.scrollLeft < (el.scrollWidth - el.clientWidth));
     }
   };
-  
+
   const handleScroll = (direction) => {
     const el = scrollContainerRef.current;
     if (el) {
@@ -78,7 +88,7 @@ const CourseCarousel = ({ courses }) => {
 
       <div className={styles.scrollWrapper} ref={scrollContainerRef}>
         <div className={styles.courseList}>
-           {/* SỬA LỖI: Dùng prop `courses` và key={course._id} */}
+          {/* SỬA LỖI: Dùng prop `courses` và key={course._id} */}
           {courses.map(course => <CourseCard key={course._id} course={course} />)}
         </div>
       </div>
@@ -92,18 +102,53 @@ const CourseCarousel = ({ courses }) => {
 
 // --- Component chính: StudentView ---
 const StudentView = () => {
-  const { myCourses, loading } = useCourses(); 
-  
+  const { myCourses, loading } = useCourses();
+  const [currentPage, setCurrentPage] = useState(1);
+  const coursesPerPage = 4;
+
   if (loading) {
     return <p>Loading your courses...</p>;
   }
 
+  // Pagination logic
+  const indexOfLastCourse = currentPage * coursesPerPage;
+  const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
+  const currentCourses = myCourses?.slice(indexOfFirstCourse, indexOfLastCourse) || [];
+  const totalPages = Math.ceil((myCourses?.length || 0) / coursesPerPage);
+
   return (
     <div>
-      <h3>My Enrolled Courses ({myCourses.length})</h3>
-      {myCourses && myCourses.length > 0 ? ( // Thêm kiểm tra `myCourses` tồn tại
-         // Dữ liệu thật `myCourses` được truyền vào đây
-         <CourseCarousel courses={myCourses} />
+      <h3>My Enrolled Courses ({myCourses?.length || 0})</h3>
+      {myCourses && myCourses.length > 0 ? (
+        <>
+          <div className={styles.coursesGrid}>
+            {currentCourses.map(course => (
+              <CourseCard key={course._id} course={course} />
+            ))}
+          </div>
+          
+          {totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={styles.paginationBtn}
+              >
+                ← Previous
+              </button>
+              <span className={styles.pageInfo}>
+                Page {currentPage} of {totalPages}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={styles.paginationBtn}
+              >
+                Next →
+              </button>
+            </div>
+          )}
+        </>
       ) : (
         <p>You haven't enrolled in any courses yet. <a href="/courses">Browse courses now!</a></p>
       )}

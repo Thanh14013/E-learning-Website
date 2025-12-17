@@ -67,12 +67,19 @@ api.interceptors.response.use(
 
     // Handle server errors (500+)
     if (error.response?.status >= 500) {
-      toastService.error("Lỗi máy chủ. Vui lòng thử lại sau.");
+      // Log full server response body in dev for easier debugging
+      if (import.meta.env.DEV) {
+        console.debug("Server error response:", error.response?.data);
+      }
+      // Do not show generic server toast here — let UI components decide how to surface errors
     }
 
     // Handle network errors
     if (!error.response) {
-      toastService.error(parsedError.message);
+      // Log network errors in dev, avoid spamming toasts globally
+      if (import.meta.env.DEV) {
+        console.debug("Network error:", error);
+      }
     }
 
     // Return the parsed error for component-level handling

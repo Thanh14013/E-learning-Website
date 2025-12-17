@@ -46,9 +46,15 @@
   transform: translateY(-50%) scale(1.05);
 }
 @media (prefers-color-scheme: dark) {
-    .navButton { border-color: var(--color-gray-600); }
-    .navButton:hover { background-color: var(--color-gray-700); }
-    .navButton svg { stroke: var(--text-primary); }
+  .navButton {
+    border-color: var(--color-gray-600);
+  }
+  .navButton:hover {
+    background-color: var(--color-gray-700);
+  }
+  .navButton svg {
+    stroke: var(--text-primary);
+  }
 }
 
 .navButton:disabled {
@@ -69,9 +75,57 @@
 }
 
 /* COURSE CARD STYLES*/
+/* Grid layout for 2 courses per row */
+.coursesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .coursesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Pagination styles */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.paginationBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-gray-300);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 .courseCard {
-  width: var(--card-width);
-  flex-shrink: 0;
+  width: 100%;
   background-color: var(--bg-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
@@ -83,33 +137,77 @@
 }
 
 @media (prefers-color-scheme: dark) {
-    .courseCard { border-color: var(--color-gray-700); }
+  .courseCard {
+    border-color: var(--color-gray-700);
+  }
 }
 
-.courseCardImage { height: 120px; background-color: var(--color-gray-200); }
-
-.courseCardContent { 
-    padding: var(--spacing-2); 
-    flex-grow: 1; 
-    display: flex; 
-    flex-direction: column; 
-    color: var(--text-secondary);
+.courseCardImage {
+  height: 120px;
+  background-color: var(--color-gray-200);
 }
-.courseCardContent h4 { 
-    font-size: 1rem; 
-    font-weight: 600; 
-    margin: 0 0 4px 0;
-    color: var(--text-primary); 
-}
-.courseCardContent a { 
-    color: var(--text-primary); 
-    text-decoration: none; 
-}
-.courseCardContent a:hover { color: var(--color-student-primary); }
 
-.courseProgress { margin-top: auto; padding-top: var(--spacing-2); }
-.progressBar { height: 8px; background-color: var(--color-gray-200); border-radius: 999px; overflow: hidden; }
-@media (prefers-color-scheme: dark) { .progressBar { background-color: var(--color-gray-700); } }
+.courseCardContent {
+  padding: var(--spacing-2);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-secondary);
+}
+.courseCardContent h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+}
+.courseCardContent a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+.courseCardContent a:hover {
+  color: var(--color-student-primary);
+}
 
-.progressBarFill { height: 100%; background-color: var(--color-success); border-radius: 999px; }
-.progressLabel { font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; }
+.courseRating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.starIcon {
+  font-size: 1rem;
+}
+
+.reviewCount {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.courseProgress {
+  margin-top: auto;
+  padding-top: var(--spacing-2);
+}
+.progressBar {
+  height: 8px;
+  background-color: var(--color-gray-200);
+  border-radius: 999px;
+  overflow: hidden;
+}
+@media (prefers-color-scheme: dark) {
+  .progressBar {
+    background-color: var(--color-gray-700);
+  }
+}
+
+.progressBarFill {
+  height: 100%;
+  background-color: var(--color-success);
+  border-radius: 999px;
+}
+.progressLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}

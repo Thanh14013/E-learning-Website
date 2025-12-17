@@ -34,8 +34,8 @@ const DiscussionForm = ({
     // Content validation
     if (!formData.content.trim()) {
       newErrors.content = 'Content is required';
-    } else if (formData.content.length < 10) {
-      newErrors.content = 'Content must be at least 10 characters';
+    } else if (formData.content.length < 1) {
+      newErrors.content = 'Content must be at least 1 character';
     } else if (formData.content.length > 5000) {
       newErrors.content = 'Content cannot exceed 5000 characters';
     }
@@ -67,19 +67,20 @@ const DiscussionForm = ({
 
     setIsSubmitting(true);
     try {
+      let result;
       if (isEditMode) {
-        await updateDiscussion(discussionData._id, {
+        result = await updateDiscussion(discussionData._id, {
           title: formData.title.trim(),
           content: formData.content.trim()
         });
       } else {
-        await createDiscussion(courseId, {
+        result = await createDiscussion(courseId, {
           title: formData.title.trim(),
           content: formData.content.trim()
         });
       }
       
-      if (onSuccess) onSuccess();
+      if (onSuccess) onSuccess(result);
     } catch (error) {
       console.error('Submit failed:', error);
     } finally {

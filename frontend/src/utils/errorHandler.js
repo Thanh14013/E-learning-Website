@@ -97,19 +97,38 @@ export const extractValidationErrors = (error) => {
  * @returns {string} Formatted error message
  */
 export const formatValidationErrors = (validationErrors) => {
-  if (!validationErrors || typeof validationErrors !== "object") {
+  if (!validationErrors) {
     return ERROR_CODES.VALIDATION_ERROR;
   }
 
-  const errors = Object.entries(validationErrors)
-    .map(([field, messages]) => {
-      const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
-      const errorMessages = Array.isArray(messages) ? messages : [messages];
-      return `${fieldName}: ${errorMessages.join(", ")}`;
-    })
-    .join("\n");
+  // If backend sent an array of error objects [{ field, message }, ...]
+  if (Array.isArray(validationErrors)) {
+    const errors = validationErrors
+      .map((err) => {
+        const field = err.field || err.param || "Field";
+        const message = err.message || JSON.stringify(err);
+        const fieldName =
+          String(field).charAt(0).toUpperCase() + String(field).slice(1);
+        return `${fieldName}: ${message}`;
+      })
+      .join("\n");
+    return errors || ERROR_CODES.VALIDATION_ERROR;
+  }
 
-  return errors || ERROR_CODES.VALIDATION_ERROR;
+  // If validationErrors is an object { field: [messages] }
+  if (typeof validationErrors === "object") {
+    const errors = Object.entries(validationErrors)
+      .map(([field, messages]) => {
+        const fieldName = field.charAt(0).toUpperCase() + field.slice(1);
+        const errorMessages = Array.isArray(messages) ? messages : [messages];
+        return `${fieldName}: ${errorMessages.join(", ")}`;
+      })
+      .join("\n");
+
+    return errors || ERROR_CODES.VALIDATION_ERROR;
+  }
+
+  return ERROR_CODES.VALIDATION_ERROR;
 };
 
 /**

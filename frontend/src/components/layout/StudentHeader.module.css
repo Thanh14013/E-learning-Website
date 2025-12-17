@@ -18,34 +18,6 @@
   cursor: pointer;
 }
 
-/* --- SEARCH BAR --- */
-.searchBar {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-}
-
-.searchBar input {
-  width: 60%;
-  max-width: 400px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--input-border);
-  background: var(--input-bg);
-  color: var(--input-text);
-  transition: 0.2s;
-}
-
-.searchBar input:focus {
-  border-color: var(--color-info);
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-}
-
-.searchBar input::placeholder {
-  color: var(--input-placeholder);
-}
-
 /* --- RIGHT SECTION (ICONS) --- */
 .rightSection {
   display: flex;
@@ -64,8 +36,11 @@
   position: relative;
   cursor: pointer;
   transition: transform 0.2s;
-  padding: 6px;
+  padding: 8px 12px;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bellBtn:hover {
@@ -74,15 +49,23 @@
 }
 
 .bellDot {
-  width: 8px;
-  height: 8px;
-  /* Dùng biến error chuẩn */
-  background: var(--color-error);
-  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  background: #ef4444;
+  border-radius: 10px;
   position: absolute;
-  top: 4px;
-  right: 5px;
-  border: 1px solid var(--bg-card);
+  top: -2px;
+  right: -2px;
+  border: 2px solid var(--bg-card);
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* --- DROPDOWN (NOTIFICATIONS) --- */
@@ -94,36 +77,134 @@
   border: 1px solid var(--input-border);
   border-radius: 8px;
   box-shadow: var(--shadow-lg);
-  width: 280px;
+  width: 360px;
   overflow: hidden;
   z-index: 20;
+}
+
+.notifHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--input-border);
 }
 
 .notifTitle {
   font-weight: bold;
   font-size: 1rem;
   color: var(--text-primary);
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--input-border);
+  margin: 0;
+}
+
+.refreshBtn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.refreshBtn:hover {
+  background: var(--color-gray-100);
+  color: var(--color-student-primary);
+  transform: rotate(180deg);
 }
 
 .notifList {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
 }
 
-.notifItem {
-  padding: 12px 16px;
-  font-size: 0.95rem;
-  border-bottom: 1px solid var(--input-border);
+.notifEmpty {
+  padding: 40px 20px;
+  text-align: center;
   color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.notifItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--input-border);
   background: var(--bg-card);
   transition: 0.2s;
-  cursor: pointer;
+}
+
+.notifItem.unread {
+  background: rgba(59, 130, 246, 0.08);
+  border-left: 3px solid var(--color-student-primary);
+}
+
+.notifItem.unread .notifTitleText::before {
+  content: '●';
+  color: var(--color-student-primary);
+  font-size: 0.6rem;
+  margin-right: 6px;
 }
 
 .notifItem:hover {
   background: var(--color-gray-100);
+}
+
+.notifMain {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+  cursor: pointer;
+}
+
+.notifIcon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.notifContent {
+  flex: 1;
+}
+
+.notifTitleText {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.notifDesc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.notifActions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  background: none;
+  border: none;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.actionBtn:hover {
+  background: var(--color-gray-200);
   color: var(--text-primary);
 }
 
@@ -225,6 +306,12 @@
   color: var(--color-student-primary);
 }
 
+.dropdown .divider {
+  height: 1px;
+  background: var(--input-border);
+  margin: 4px 0;
+}
+
 /* --- LINKS (Guest Mode) --- */
 .links {
   display: flex;
@@ -250,7 +337,7 @@
   }
 
   .notifItem:hover,
-  .dropdown a:hover, 
+  .dropdown a:hover,
   .dropdown button:hover {
     background-color: var(--color-gray-700);
     color: var(--color-white);
@@ -266,11 +353,12 @@
   .StudentHeader {
     padding: 12px 20px;
   }
-  
-  .userName, .arrow {
+
+  .userName,
+  .arrow {
     display: none;
   }
-  
+
   .searchBar input {
     width: 100%;
   }

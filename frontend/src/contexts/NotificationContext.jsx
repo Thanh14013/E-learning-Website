@@ -39,9 +39,9 @@ export const NotificationProvider = ({ children }) => {
    */
   const fetchUnreadCount = async () => {
     try {
-      const data = await notificationService.getUnreadCount();
-      // Backend can return { count } or a number; normalize
-      const count = typeof data === 'number' ? data : data?.count ?? 0;
+      const response = await notificationService.getUnreadCount();
+      // Backend returns { success, data: number }
+      const count = response?.data ?? 0;
       setUnreadCount(count);
     } catch (error) {
       console.error('[NotificationContext] Failed to fetch unread count:', error);
@@ -58,16 +58,23 @@ export const NotificationProvider = ({ children }) => {
     setLoading(true);
 
     try {
-      const data = await notificationService.getNotifications({
+      const response = await notificationService.getNotifications({
         page: pageRef.current,
         limit: limitRef.current,
       });
 
-      // Normalize array; some backends return {items, total}
-      const items = Array.isArray(data) ? data : data?.items ?? [];
-      const total = data?.total;
+      // Backend returns { success, data: [...], metadata }
+      const items = response?.data ?? [];
+      const total = response?.metadata?.total;
 
-      setNotifications((prev) => (opts.reset ? items : [...prev, ...items]));
+      // Sort notifications: unread first, then by createdAt descending
+      const sortedItems = items.sort((a, b) => {
+        if (!a.isRead && b.isRead) return -1;
+        if (a.isRead && !b.isRead) return 1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      setNotifications((prev) => (opts.reset ? sortedItems : [...prev, ...sortedItems]));
       setHasMore(items.length >= limitRef.current && (total ? prevLengthLessThanTotal((opts.reset ? 0 : notifications.length), total) : true));
 
       pageRef.current += 1;

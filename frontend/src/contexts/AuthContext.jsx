@@ -57,18 +57,15 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       const parsedError = handleApiError(err, "Login");
 
-      // Handle unverified email
-      if (err.response?.status === 403 && err.response?.data?.requiresVerification) {
-        return {
-          success: false,
-          requiresVerification: true,
-          message: parsedError.message
-        };
+      // Show specific error toast based on status code
+      if (parsedError.statusCode === 401) {
+        toastService.error("Email hoặc mật khẩu không đúng!");
+      } else if (parsedError.statusCode === 404) {
+        toastService.error("Tài khoản không tồn tại!");
+      } else if (parsedError.type !== 'NETWORK') {
+        toastService.error(parsedError.message || "Đăng nhập thất bại!");
       }
 
-      if (parsedError.type !== 'NETWORK' && parsedError.statusCode !== 401) {
-        toastService.error(parsedError.message);
-      }
       return { success: false, message: parsedError.message };
     }
   };
@@ -77,35 +74,19 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const res = await api.post("/auth/register", userData);
-      const { user, tokens } = res.data;
 
-      const newUser = {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-        isVerified: user.isVerified,
-        profileCompleted: user.profileCompleted,
-        profileApprovalStatus: user.profileApprovalStatus,
-      };
-
-      setUser(newUser);
-      setToken(tokens.accessToken);
-      localStorage.setItem("user", JSON.stringify(newUser));
-      localStorage.setItem("accessToken", tokens.accessToken);
-      if (tokens.refreshToken) {
-        localStorage.setItem("refreshToken", tokens.refreshToken);
-      }
-
-      toastService.success("Đăng ký thành công! Vui lòng kiểm tra email để xác thực.");
-      return { success: true, user: newUser };
+      // Return response to caller (no auto-login)
+      return { success: true, data: res.data };
     } catch (err) {
       const parsedError = handleApiError(err, "Register");
-      if (parsedError.type !== 'NETWORK') {
-        toastService.error(parsedError.message);
-      }
-      return { success: false, message: parsedError.message };
+
+      // Return structured error for the UI to display (do not show generic toasts here)
+      return {
+        success: false,
+        message: parsedError.message,
+        validationErrors: parsedError.validationErrors || err.response?.data?.errors || null,
+        statusCode: parsedError.statusCode || null,
+      };
     }
   };
 

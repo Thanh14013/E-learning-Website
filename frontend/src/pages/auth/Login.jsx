@@ -25,12 +25,6 @@ const Login = () => {
       if (res.success) {
         const { user } = res;
 
-        // Check if email is verified
-        if (!user.isVerified) {
-          navigate("/email-verification-required");
-          return;
-        }
-
         // Check for teacher profile completion
         if (user.role === "teacher") {
           if (!user.profileCompleted) {
@@ -49,8 +43,6 @@ const Login = () => {
 
         // Redirect to dashboard if all checks pass
         navigate(from, { replace: true });
-      } else if (res.requiresVerification) {
-        navigate("/email-verification-required");
       } else {
         setError(res.message || "Đăng nhập thất bại");
       }
@@ -104,10 +96,10 @@ const Login = () => {
       </form>
 
       <p className={styles.switchText}>
-        Chưa có tài khoản?{" "}
+        Don't have an account?{" "}
         { }
         <Link to="/register" className={styles.link}>
-          Đăng ký ngay!
+          Register now!
         </Link>
       </p>
     </div>

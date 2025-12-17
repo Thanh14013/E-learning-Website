@@ -1,0 +1,339 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: var(--spacing-4);
+  overflow-y: auto;
+}
+
+.modalContent {
+  background: white;
+  border-radius: var(--border-radius-lg);
+  width: 100%;
+  max-width: 800px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  margin: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  border-bottom: 2px solid var(--color-gray-200);
+  flex-shrink: 0;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  flex: 1;
+  padding-right: var(--spacing-3);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: var(--color-gray-100);
+}
+
+.closeButton svg {
+  color: var(--text-secondary);
+}
+
+.modalBody {
+  padding: var(--spacing-4);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-5);
+  gap: var(--spacing-3);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--color-gray-200);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.discussionInfo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-3);
+}
+
+.authorInfo {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.authorName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.timestamp {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.pinnedBadge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.discussionContent {
+  background: var(--color-gray-50);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-4);
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.commentsSection {
+  margin-top: var(--spacing-4);
+  padding-top: var(--spacing-4);
+  border-top: 2px solid var(--color-gray-200);
+}
+
+.commentsSection h3 {
+  margin: 0 0 var(--spacing-3) 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.commentsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin-bottom: var(--spacing-4);
+}
+
+.commentItem {
+  background: white;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-3);
+}
+
+.commentHeader {
+  margin-bottom: var(--spacing-2);
+}
+
+.commentAuthor {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+.commentAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--color-gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.commentAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.commentAuthorName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.commentTimestamp {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.commentContent {
+  color: var(--text-primary);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.noComments {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--spacing-4);
+  font-style: italic;
+}
+
+.commentForm {
+  margin-top: var(--spacing-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.commentForm textarea {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 2px solid var(--color-gray-300);
+  border-radius: var(--border-radius-md);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s;
+}
+
+.commentForm textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.commentForm button {
+  align-self: flex-end;
+  padding: var(--spacing-2) var(--spacing-4);
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.commentForm button:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.commentForm button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.enrollPrompt,
+.loginPrompt {
+  text-align: center;
+  padding: var(--spacing-4);
+  background: var(--color-gray-50);
+  border-radius: var(--border-radius-md);
+  margin-top: var(--spacing-4);
+}
+
+.enrollPrompt p,
+.loginPrompt p {
+  margin-bottom: var(--spacing-3);
+  color: var(--text-secondary);
+}
+
+@media (prefers-color-scheme: dark) {
+  .modalContent {
+    background: var(--color-gray-800);
+  }
+
+  .modalHeader {
+    border-bottom-color: var(--color-gray-700);
+  }
+
+  .discussionContent {
+    background: var(--color-gray-700);
+  }
+
+  .commentItem {
+    background: var(--color-gray-700);
+    border-color: var(--color-gray-600);
+  }
+
+  .commentForm textarea {
+    background: var(--color-gray-700);
+    color: var(--text-primary);
+    border-color: var(--color-gray-600);
+  }
+
+  .enrollPrompt,
+  .loginPrompt {
+    background: var(--color-gray-700);
+  }
+}
+
+@media (max-width: 768px) {
+  .modalOverlay {
+    padding: 0;
+  }
+
+  .modalContent {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modalHeader h2 {
+    font-size: 1.25rem;
+  }
+}

@@ -40,8 +40,7 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
     try {
       await createComment(discussionId, content, comment._id);
       setShowReplyForm(false);
-      // Refresh to show new reply
-      fetchDiscussionDetail(discussionId);
+      // Optimistic UI handles the update automatically
     } catch (error) {
       console.error('Reply failed:', error);
     }
@@ -63,7 +62,7 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
       <div className={styles.commentMain}>
         {/* Avatar */}
         <div className={styles.avatar}>
-          {comment.userId.fullName.charAt(0).toUpperCase()}
+          {comment.userId?.fullName?.charAt(0).toUpperCase() || 'A'}
         </div>
 
         {/* Comment Content */}
@@ -71,8 +70,8 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
           {/* Header */}
           <div className={styles.commentHeader}>
             <div className={styles.authorInfo}>
-              <span className={styles.authorName}>{comment.userId.fullName}</span>
-              {comment.userId.role === 'teacher' && (
+              <span className={styles.authorName}>{comment.userId?.fullName || 'Anonymous'}</span>
+              {comment.userId?.role === 'teacher' && (
                 <span className={styles.teacherBadge}>Teacher</span>
               )}
               <span className={styles.dot}>•</span>

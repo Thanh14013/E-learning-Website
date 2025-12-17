@@ -14,7 +14,7 @@ const CourseEditor = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   // State management
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -22,7 +22,7 @@ const CourseEditor = () => {
   const [course, setCourse] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [expandedChapters, setExpandedChapters] = useState(new Set());
-  
+
   // Form data
   const [formData, setFormData] = useState({
     title: '',
@@ -30,41 +30,41 @@ const CourseEditor = () => {
     category: 'Other',
     level: 'beginner',
   });
-  
+
   // Thumbnail
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnailPreview, setThumbnailPreview] = useState(null);
   const fileInputRef = useRef(null);
-  
+
   // Drag and drop
   const [draggedChapter, setDraggedChapter] = useState(null);
   const [draggedLesson, setDraggedLesson] = useState(null);
   const [dragOverChapter, setDragOverChapter] = useState(null);
   const [dragOverLesson, setDragOverLesson] = useState(null);
-  
+
   // Modals
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [showLessonModal, setShowLessonModal] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editingLesson, setEditingLesson] = useState(null);
-  
+
   // Auto-save
   const autoSaveTimerRef = useRef(null);
   const lastSavedRef = useRef(null);
   const savingRef = useRef(false);
-  
+
   const categories = ['Programming', 'Design', 'Business', 'Language', 'Other'];
   const levels = [
     { value: 'beginner', label: 'Cơ bản' },
     { value: 'intermediate', label: 'Trung bình' },
     { value: 'advanced', label: 'Nâng cao' },
   ];
-  
+
   // Load course data
   const loadCourseData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Load course details
       const courseRes = await api.get(`/courses/${courseId}`);
       const courseData = courseRes.data.data || courseRes.data;
@@ -75,25 +75,25 @@ const CourseEditor = () => {
         category: courseData.category || 'Other',
         level: courseData.level || 'beginner',
       });
-      
+
       if (courseData.thumbnail) {
         setThumbnailPreview(courseData.thumbnail);
       }
-      
+
       // Load chapters with lessons
       // The course detail API should return all chapters and lessons for teachers
       const courseDetail = courseRes.data.data || courseRes.data;
       const chaptersData = courseDetail.chapters || [];
-      
+
       // Use chapters from course detail response
       // For teachers, all lessons should be visible
       const chaptersWithLessons = chaptersData.map(ch => ({
         ...ch,
         lessons: (ch.lessons || []).sort((a, b) => a.order - b.order)
       })).sort((a, b) => a.order - b.order);
-      
+
       setChapters(chaptersWithLessons);
-      
+
       // Expand first chapter by default
       if (chaptersWithLessons.length > 0) {
         setExpandedChapters(new Set([chaptersWithLessons[0]._id]));
@@ -106,30 +106,30 @@ const CourseEditor = () => {
       setLoading(false);
     }
   }, [courseId, navigate]);
-  
+
   useEffect(() => {
     loadCourseData();
   }, [loadCourseData]);
-  
+
   // Auto-save functionality
   const handleAutoSave = useCallback(async () => {
     if (!course || savingRef.current) return;
-    
+
     const currentData = JSON.stringify(formData);
     if (currentData === lastSavedRef.current) {
       return; // No changes
     }
-    
+
     try {
       setAutoSaveStatus('saving');
       savingRef.current = true;
       setSaving(true);
-      
+
       await api.put(`/courses/${courseId}`, formData);
-      
+
       lastSavedRef.current = currentData;
       setAutoSaveStatus('saved');
-      
+
       // Upload thumbnail if changed
       if (thumbnailFile) {
         const formDataUpload = new FormData();
@@ -147,70 +147,70 @@ const CourseEditor = () => {
       setSaving(false);
     }
   }, [course, courseId, formData, thumbnailFile]);
-  
+
   useEffect(() => {
     if (!course || loading || savingRef.current) return;
-    
+
     // Clear existing timer
     if (autoSaveTimerRef.current) {
       clearTimeout(autoSaveTimerRef.current);
     }
-    
+
     // Set new timer for auto-save
     autoSaveTimerRef.current = setTimeout(() => {
       handleAutoSave();
     }, 2000); // Auto-save after 2 seconds of inactivity
-    
+
     return () => {
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
   }, [formData, course, loading, saving, handleAutoSave]);
-  
+
   // Handle form changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
+
   const handleDescriptionChange = (value) => {
     setFormData((prev) => ({ ...prev, description: value }));
   };
-  
+
   const handleThumbnailSelect = (file) => {
     if (!file) return;
-    
+
     if (!file.type.startsWith('image/')) {
       toastService.error('Vui lòng chọn file ảnh');
       return;
     }
-    
+
     if (file.size > 5 * 1024 * 1024) {
       toastService.error('Kích thước ảnh không được vượt quá 5MB');
       return;
     }
-    
+
     setThumbnailFile(file);
-    
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setThumbnailPreview(reader.result);
     };
     reader.readAsDataURL(file);
   };
-  
+
   // Chapter management
   const handleAddChapter = () => {
     setEditingChapter(null);
     setShowChapterModal(true);
   };
-  
+
   const handleEditChapter = (chapter) => {
     setEditingChapter(chapter);
     setShowChapterModal(true);
   };
-  
+
   const handleSaveChapter = async (chapterData) => {
     try {
       if (editingChapter) {
@@ -227,12 +227,12 @@ const CourseEditor = () => {
       toastService.error('Không thể lưu chương');
     }
   };
-  
+
   const handleDeleteChapter = async (chapterId) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa chương này? Tất cả bài học trong chương cũng sẽ bị xóa.')) {
       return;
     }
-    
+
     try {
       await api.delete(`/chapters/${chapterId}`);
       toastService.success('Đã xóa chương');
@@ -242,19 +242,19 @@ const CourseEditor = () => {
       toastService.error('Không thể xóa chương');
     }
   };
-  
+
   // Lesson management
   const handleAddLesson = (chapterId) => {
     setEditingLesson(null);
     setDragOverChapter(chapterId);
     setShowLessonModal(true);
   };
-  
+
   const handleEditLesson = (lesson) => {
     setEditingLesson(lesson);
     setShowLessonModal(true);
   };
-  
+
   const handleSaveLesson = async (lessonData) => {
     try {
       if (editingLesson) {
@@ -272,12 +272,12 @@ const CourseEditor = () => {
       toastService.error('Không thể lưu bài học');
     }
   };
-  
+
   const handleDeleteLesson = async (lessonId) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa bài học này?')) {
       return;
     }
-    
+
     try {
       await api.delete(`/lessons/${lessonId}`);
       toastService.success('Đã xóa bài học');
@@ -287,42 +287,42 @@ const CourseEditor = () => {
       toastService.error('Không thể xóa bài học');
     }
   };
-  
+
   // Drag and drop for chapters
   const handleChapterDragStart = (e, chapterId) => {
     setDraggedChapter(chapterId);
     e.dataTransfer.effectAllowed = 'move';
   };
-  
+
   const handleChapterDragOver = (e, chapterId) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverChapter(chapterId);
   };
-  
+
   const handleChapterDrop = async (e, targetChapterId) => {
     e.preventDefault();
-    
+
     if (!draggedChapter || draggedChapter === targetChapterId) {
       setDraggedChapter(null);
       setDragOverChapter(null);
       return;
     }
-    
+
     try {
       const chapterIds = chapters.map((ch) => ch._id);
       const draggedIndex = chapterIds.indexOf(draggedChapter);
       const targetIndex = chapterIds.indexOf(targetChapterId);
-      
+
       // Reorder array
       const reordered = [...chapters];
       const [removed] = reordered.splice(draggedIndex, 1);
       reordered.splice(targetIndex, 0, removed);
-      
+
       // Update order
       const reorderedIds = reordered.map((ch) => ch._id);
       await api.put('/chapters/reorder', { chapters: reorderedIds });
-      
+
       toastService.success('Đã sắp xếp lại chương');
       await loadCourseData();
     } catch (error) {
@@ -333,61 +333,61 @@ const CourseEditor = () => {
       setDragOverChapter(null);
     }
   };
-  
+
   // Drag and drop for lessons
   const handleLessonDragStart = (e, lessonId, chapterId) => {
     setDraggedLesson({ lessonId, chapterId });
     e.dataTransfer.effectAllowed = 'move';
   };
-  
+
   const handleLessonDragOver = (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
   };
-  
+
   const handleLessonDrop = async (e, targetLessonId, targetChapterId) => {
     e.preventDefault();
-    
+
     if (!draggedLesson) return;
-    
+
     const { lessonId: draggedLessonId, chapterId: sourceChapterId } = draggedLesson;
-    
+
     if (draggedLessonId === targetLessonId) {
       setDraggedLesson(null);
       return;
     }
-    
+
     try {
       const sourceChapter = chapters.find((ch) => ch._id === sourceChapterId);
       const targetChapter = chapters.find((ch) => ch._id === targetChapterId);
-      
+
       if (!sourceChapter || !targetChapter) return;
-      
+
       // If moving to different chapter, update chapterId
       if (sourceChapterId !== targetChapterId) {
         await api.put(`/lessons/${draggedLessonId}`, {
           chapterId: targetChapterId,
         });
       }
-      
+
       // Reorder lessons
       const sourceLessons = sourceChapter.lessons || [];
       const targetLessons = targetChapter.lessons || [];
-      
+
       const draggedLessonObj = sourceLessons.find((l) => l._id === draggedLessonId);
       if (!draggedLessonObj) return;
-      
+
       // Remove from source
       const updatedSourceLessons = sourceLessons.filter((l) => l._id !== draggedLessonId);
-      
+
       // Add to target
       const targetIndex = targetLessons.findIndex((l) => l._id === targetLessonId);
       const updatedTargetLessons = [...targetLessons];
       updatedTargetLessons.splice(targetIndex, 0, draggedLessonObj);
-      
+
       // Update orders
       const updatePromises = [];
-      
+
       if (sourceChapterId === targetChapterId) {
         // Same chapter reorder
         updatedTargetLessons.forEach((lesson, index) => {
@@ -411,9 +411,9 @@ const CourseEditor = () => {
           );
         });
       }
-      
+
       await Promise.all(updatePromises);
-      
+
       toastService.success('Đã sắp xếp lại bài học');
       await loadCourseData();
     } catch (error) {
@@ -423,7 +423,7 @@ const CourseEditor = () => {
       setDraggedLesson(null);
     }
   };
-  
+
   // Toggle chapter expansion
   const toggleChapter = (chapterId) => {
     setExpandedChapters((prev) => {
@@ -436,12 +436,12 @@ const CourseEditor = () => {
       return newSet;
     });
   };
-  
+
   // Save draft manually
   const handleSaveDraft = async () => {
     await handleAutoSave();
   };
-  
+
   // Publish course
   const handlePublish = async () => {
     try {
@@ -456,7 +456,7 @@ const CourseEditor = () => {
       setSaving(false);
     }
   };
-  
+
   // Check permissions
   useEffect(() => {
     if (user && user.role !== 'teacher' && user.role !== 'admin') {
@@ -464,7 +464,7 @@ const CourseEditor = () => {
       navigate('/dashboard');
     }
   }, [user, navigate]);
-  
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -474,7 +474,7 @@ const CourseEditor = () => {
       </div>
     );
   }
-  
+
   if (!course) {
     return (
       <div className={styles.container}>
@@ -485,7 +485,7 @@ const CourseEditor = () => {
       </div>
     );
   }
-  
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -513,13 +513,13 @@ const CourseEditor = () => {
           </Button>
         </div>
       </div>
-      
+
       <div className={styles.content}>
         {/* Left Panel - Course Details */}
         <div className={styles.leftPanel}>
           <div className={styles.section}>
             <h2 className={styles.sectionTitle}>Thông tin khóa học</h2>
-            
+
             <div className={styles.formGroup}>
               <Input
                 name="title"
@@ -530,10 +530,10 @@ const CourseEditor = () => {
                 required
               />
             </div>
-            
+
             <div className={styles.formGroup}>
               <label className={styles.label}>
-                Mô tả khóa học
+                Course Description
                 <span className={styles.required}>*</span>
               </label>
               <ReactQuill
@@ -544,7 +544,7 @@ const CourseEditor = () => {
                 className={styles.quillEditor}
               />
             </div>
-            
+
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>
@@ -564,7 +564,7 @@ const CourseEditor = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className={styles.formGroup}>
                 <label className={styles.label}>
                   Cấp độ
@@ -584,7 +584,7 @@ const CourseEditor = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className={styles.formGroup}>
               <label className={styles.label}>Ảnh bìa khóa học</label>
               {thumbnailPreview ? (
@@ -620,7 +620,7 @@ const CourseEditor = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Right Panel - Course Structure */}
         <div className={styles.rightPanel}>
           <div className={styles.section}>
@@ -630,7 +630,7 @@ const CourseEditor = () => {
                 + Thêm chương
               </Button>
             </div>
-            
+
             {chapters.length === 0 ? (
               <div className={styles.emptyState}>
                 <p>Chưa có chương nào. Hãy thêm chương đầu tiên!</p>
@@ -640,9 +640,8 @@ const CourseEditor = () => {
                 {chapters.map((chapter) => (
                   <div
                     key={chapter._id}
-                    className={`${styles.chapterItem} ${
-                      dragOverChapter === chapter._id ? styles.dragOver : ''
-                    }`}
+                    className={`${styles.chapterItem} ${dragOverChapter === chapter._id ? styles.dragOver : ''
+                      }`}
                     draggable
                     onDragStart={(e) => handleChapterDragStart(e, chapter._id)}
                     onDragOver={(e) => handleChapterDragOver(e, chapter._id)}
@@ -683,7 +682,7 @@ const CourseEditor = () => {
                         </button>
                       </div>
                     </div>
-                    
+
                     {expandedChapters.has(chapter._id) && (
                       <div className={styles.lessonsList}>
                         {chapter.lessons?.map((lesson) => (
@@ -745,7 +744,7 @@ const CourseEditor = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Chapter Modal */}
       {showChapterModal && (
         <ChapterModal
@@ -757,7 +756,7 @@ const CourseEditor = () => {
           }}
         />
       )}
-      
+
       {/* Lesson Modal */}
       {showLessonModal && (
         <LessonModal
@@ -780,14 +779,14 @@ const CourseEditor = () => {
 const ChapterModal = ({ chapter, onSave, onClose }) => {
   const [title, setTitle] = useState(chapter?.title || '');
   const [saving, setSaving] = useState(false);
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
       toastService.error('Vui lòng nhập tên chương');
       return;
     }
-    
+
     setSaving(true);
     try {
       await onSave({ title: title.trim() });
@@ -795,7 +794,7 @@ const ChapterModal = ({ chapter, onSave, onClose }) => {
       setSaving(false);
     }
   };
-  
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -842,50 +841,53 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
   const [uploadingResources, setUploadingResources] = useState(false);
   const videoInputRef = useRef(null);
   const resourceInputRef = useRef(null);
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
       toastService.error('Vui lòng nhập tên bài học');
       return;
     }
-    
+
     setSaving(true);
     try {
       await onSave(formData);
+    } catch (error) {
+      console.error('Error saving lesson:', error);
+      toastService.error('Không thể lưu bài học');
     } finally {
       setSaving(false);
     }
   };
-  
+
   const handleVideoUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith('video/')) {
       toastService.error('Vui lòng chọn file video');
       return;
     }
-    
+
     if (file.size > 500 * 1024 * 1024) {
       toastService.error('Kích thước video không được vượt quá 500MB');
       return;
     }
-    
+
     if (!lesson?._id) {
       toastService.error('Vui lòng lưu bài học trước khi upload video');
       return;
     }
-    
+
     try {
       setUploadingVideo(true);
       const formDataUpload = new FormData();
       formDataUpload.append('video', file);
-      
+
       await api.post(`/lessons/${lesson._id}/video`, formDataUpload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      
+
       toastService.success('Đã upload video thành công');
       if (onUploadComplete) {
         await onUploadComplete();
@@ -898,27 +900,27 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
       setUploadingVideo(false);
     }
   };
-  
+
   const handleResourceUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-    
+
     if (!lesson?._id) {
       toastService.error('Vui lòng lưu bài học trước khi upload tài liệu');
       return;
     }
-    
+
     try {
       setUploadingResources(true);
       const formDataUpload = new FormData();
       files.forEach((file) => {
         formDataUpload.append('files', file);
       });
-      
+
       await api.post(`/lessons/${lesson._id}/resource`, formDataUpload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      
+
       toastService.success(`Đã upload ${files.length} tài liệu thành công`);
       if (onUploadComplete) {
         await onUploadComplete();
@@ -931,7 +933,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
       setUploadingResources(false);
     }
   };
-  
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -954,7 +956,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
               required
             />
           </div>
-          
+
           <div className={styles.formGroup}>
             <label className={styles.label}>Nội dung bài học</label>
             <ReactQuill
@@ -967,7 +969,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
               className={styles.quillEditor}
             />
           </div>
-          
+
           <div className={styles.formGroup}>
             <label className={styles.checkboxLabel}>
               <input
@@ -980,7 +982,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
               <span>Cho phép xem trước (Preview)</span>
             </label>
           </div>
-          
+
           {lesson?._id && (
             <>
               <div className={styles.formGroup}>
@@ -1005,7 +1007,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
                   <p className={styles.uploadedFile}>✓ Đã có video</p>
                 )}
               </div>
-              
+
               <div className={styles.formGroup}>
                 <label className={styles.label}>Upload tài liệu</label>
                 <input
@@ -1033,7 +1035,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
               </div>
             </>
           )}
-          
+
           <div className={styles.modalActions}>
             <Button variant="outline" onClick={onClose} disabled={saving}>
               Hủy

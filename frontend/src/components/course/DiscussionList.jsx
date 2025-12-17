@@ -53,12 +53,12 @@ const DiscussionCard = ({ discussion, onSelect }) => {
       <div className={styles.cardFooter}>
         <div className={styles.author}>
           <div className={styles.avatar}>
-            {discussion.userId.fullName.charAt(0).toUpperCase()}
+            {discussion.userId?.fullName?.charAt(0).toUpperCase() || 'A'}
           </div>
           <div className={styles.authorInfo}>
-            <span className={styles.authorName}>{discussion.userId.fullName}</span>
+            <span className={styles.authorName}>{discussion.userId?.fullName || 'Anonymous'}</span>
             <span className={styles.authorRole}>
-              {discussion.userId.role === 'teacher' ? 'Teacher' : 'Student'}
+              {discussion.userId?.role === 'teacher' ? 'Teacher' : 'Student'}
             </span>
           </div>
           <span className={styles.time}>{formatTimeAgo(discussion.createdAt)}</span>

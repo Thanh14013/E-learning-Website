@@ -4,6 +4,7 @@ import {
   deleteQuiz,
   getQuizAttempts,
   getQuizDetail,
+  getQuizzesByLesson,
   getQuizResultDetail,
   startQuiz,
   submitQuiz,
@@ -36,8 +37,11 @@ router.put(
 // Delete quiz with ID validation
 router.delete("/:id", authenticate, isTeacher, validateObjectId, deleteQuiz);
 
+// Get quizzes by lesson ID
+router.get("/lesson/:lessonId", authenticate, getQuizzesByLesson);
+
 // Get quiz detail with ID validation
-router.get("/:id", validateObjectId, getQuizDetail);
+router.get("/:id", authenticate, validateObjectId, getQuizDetail);
 
 // Start quiz with ID validation
 router.post("/:id/start", authenticate, isStudent, validateObjectId, startQuiz);

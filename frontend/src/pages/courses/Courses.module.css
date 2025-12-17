@@ -9,6 +9,45 @@
   font-weight: 800;
   margin-bottom: var(--spacing-3);
   color: var(--text-primary);
+  text-align: center;
+}
+
+/* Search Bar */
+.searchBar {
+  max-width: 600px;
+  margin: 0 auto var(--spacing-4) auto;
+  display: flex;
+  gap: 12px;
+  background: white;
+  padding: 8px;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  padding: 12px 20px;
+  background: transparent;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.searchButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .pageSubtitle {
@@ -39,9 +78,27 @@
 
 .courseGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-3);
   align-items: stretch;
+}
+
+@media (max-width: 1200px) {
+  .courseGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .courseGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .courseGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .cardLink {
@@ -70,21 +127,72 @@
   box-shadow: var(--shadow-md);
 }
 
-.cardImage {
-  height: 150px;
+.cardImageWrapper {
+  position: relative;
+  height: 180px;
   flex-shrink: 0;
+  overflow: hidden;
   border-top-left-radius: var(--border-radius-lg);
   border-top-right-radius: var(--border-radius-lg);
 }
 
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.courseCard:hover .cardImage {
+  transform: scale(1.05);
+}
+
+.publishedBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
 .cardContent {
-  padding: var(--spacing-2);
+  padding: 16px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  gap: 10px;
 }
 
-.cardContent h4 {
+.cardMeta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.categoryBadge {
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.levelBadge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.courseTitle {
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -92,53 +200,86 @@
   margin: 0;
   height: calc(1.4 * 1.1rem * 2);
   display: -webkit-box;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.cardMeta {
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-
-.bestsellerTag {
-  background-color: #f3ca8c;
-  color: #3d2d0b;
-  font-weight: 700;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  border-radius: var(--border-radius-sm);
+.courseDescription {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  flex-grow: 1;
 }
 
 .teacherName {
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin-bottom: 16px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.btn {
+.teacherIcon {
+  font-size: 1rem;
+}
+
+.courseStats {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.statItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.statIcon {
+  font-size: 1rem;
+}
+
+.statLabel {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.statusBtn {
   width: 100%;
-  padding: 12px 16px;
-  border: none;
-  border-radius: var(--border-radius-md);
+  padding: 10px 16px;
+  border-radius: 8px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.95rem;
   text-align: center;
-  margin-top: auto; 
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
 }
 
-.btnEnroll {
-  background-color: var(--color-student-primary);
+.statusBtn.available {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
-.btnEnroll:hover {
-  background-color: var(--color-student-primary-hover);
+
+.statusBtn.available:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.statusBtn.enrolled {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statusBtn.teaching {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .btnUnenroll {
@@ -157,7 +298,8 @@
   font-size: 0.95rem;
 }
 
-.loadingText, .noCoursesText {
+.loadingText,
+.noCoursesText {
   font-size: 1.2rem;
   color: var(--text-secondary);
   text-align: center;
@@ -227,4 +369,66 @@
 }
 .tooltipChecklist li {
   margin-bottom: 8px;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 40px;
+  padding: 20px 0;
+}
+
+.paginationBtn {
+  padding: 10px 20px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #374151;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-2px);
+}
+
+.paginationBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 8px;
+}
+
+.pageNumber {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  color: #374151;
+}
+
+.pageNumber:hover {
+  background: #f3f4f6;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.pageNumber.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
 }

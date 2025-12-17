@@ -26,6 +26,10 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
         try {
             const response = await api.get(`/courses/${courseId}/lessons/${lessonId}/notes`);
             setNotes(response.data.notes || []);
+        } catch (error) {
+            console.error('Error fetching notes:', error);
+            toastService.error('Không thể tải ghi chú');
+        } finally {
             setLoading(false);
         }
     };

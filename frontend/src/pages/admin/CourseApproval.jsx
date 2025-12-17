@@ -35,7 +35,7 @@ const CourseApproval = () => {
         },
         {
             id: '2',
-            title: 'IELTS Speaking Mastery',
+            title: 'Coding Mastery',
             teacher: {
                 name: 'Jane Smith',
                 email: 'jane@example.com'

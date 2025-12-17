@@ -306,7 +306,7 @@ const CreateCourse = () => {
 
             <div className={styles.formGroup}>
               <label className={styles.label}>
-                Mô tả khóa học
+                Course Description
                 <span className={styles.requiredAsterisk}>*</span>
               </label>
               <ReactQuill
@@ -404,9 +404,8 @@ const CreateCourse = () => {
               </div>
             ) : (
               <div
-                className={`${styles.thumbnailDropzone} ${
-                  isDragging ? styles.thumbnailDropzoneDragging : ''
-                }`}
+                className={`${styles.thumbnailDropzone} ${isDragging ? styles.thumbnailDropzoneDragging : ''
+                  }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}

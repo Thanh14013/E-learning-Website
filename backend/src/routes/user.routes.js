@@ -8,6 +8,7 @@ import {
   updateUserRole,
   banUser,
   completeTeacherProfile,
+  changePassword,
 } from "../controllers/user.controller.js";
 import upload from "../middleware/upload.js";
 import { isAdmin } from "../middleware/authorize.js";
@@ -20,6 +21,9 @@ router.get("/profile", authenticate, getUserProfile);
 
 // PUT /api/users/profile - update user profile
 router.put("/profile", authenticate, updateUserProfile);
+
+// PUT /api/users/change-password - change password
+router.put("/change-password", authenticate, changePassword);
 
 // POST /api/users/avatar - upload avatar
 router.post("/avatar", authenticate, upload.single("avatar"), uploadAvatar);

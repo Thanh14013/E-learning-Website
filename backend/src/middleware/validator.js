@@ -57,7 +57,8 @@ export const validateRegister = [
     .withMessage("Full name is required")
     .isLength({ min: 2, max: 100 })
     .withMessage("Full name must be between 2 and 100 characters")
-    .matches(/^[a-zA-Z\s]+$/)
+    // Allow Unicode letters (supports names with accents, e.g., Vietnamese)
+    .matches(/^[\p{L}\s]+$/u)
     .withMessage("Full name can only contain letters and spaces"),
 
   body("email")
@@ -246,12 +247,21 @@ export const validateCourseCreation = [
     .withMessage("Course category is required")
     .isIn([
       "Programming",
-      "Design",
-      "Business",
-      "Marketing",
-      "Photography",
-      "Music",
+      "Frontend",
+      "Full Stack",
+      "Backend",
+      "DevOps",
       "Other",
+      "Nodejs",
+      "Reactjs",
+      "Java",
+      "Python",
+      "C++",
+      "Data Science",
+      "Machine Learning",
+      "Cloud Computing",
+      "Cybersecurity",
+      "Mobile Development",
     ])
     .withMessage("Invalid category"),
 
@@ -259,7 +269,7 @@ export const validateCourseCreation = [
     .trim()
     .notEmpty()
     .withMessage("Course level is required")
-    .isIn(["Beginner", "Intermediate", "Advanced"])
+    .isIn(["beginner", "intermediate", "advanced"])
     .withMessage("Invalid level"),
 
   validate,
@@ -286,18 +296,27 @@ export const validateCourseUpdate = [
     .optional()
     .isIn([
       "Programming",
-      "Design",
-      "Business",
-      "Marketing",
-      "Photography",
-      "Music",
+      "Frontend",
+      "Full Stack",
+      "Backend",
+      "DevOps",
       "Other",
+      "Nodejs",
+      "Reactjs",
+      "Java",
+      "Python",
+      "C++",
+      "Data Science",
+      "Machine Learning",
+      "Cloud Computing",
+      "Cybersecurity",
+      "Mobile Development",
     ])
     .withMessage("Invalid category"),
 
   body("level")
     .optional()
-    .isIn(["Beginner", "Intermediate", "Advanced"])
+    .isIn(["beginner", "intermediate", "advanced"])
     .withMessage("Invalid level"),
 
   validate,
@@ -394,22 +413,37 @@ export const validateSearch = [
     .isLength({ min: 1, max: 100 })
     .withMessage("Search query must be between 1 and 100 characters"),
 
+  query("search")
+    .optional()
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage("Search query must be between 1 and 100 characters"),
+
   query("category")
     .optional()
     .isIn([
       "Programming",
-      "Design",
-      "Business",
-      "Marketing",
-      "Photography",
-      "Music",
+      "Frontend",
+      "Full Stack",
+      "Backend",
+      "DevOps",
       "Other",
+      "Nodejs",
+      "Reactjs",
+      "Java",
+      "Python",
+      "C++",
+      "Data Science",
+      "Machine Learning",
+      "Cloud Computing",
+      "Cybersecurity",
+      "Mobile Development",
     ])
     .withMessage("Invalid category"),
 
   query("level")
     .optional()
-    .isIn(["Beginner", "Intermediate", "Advanced"])
+    .isIn(["beginner", "intermediate", "advanced"])
     .withMessage("Invalid level"),
 
   validate,
@@ -579,8 +613,15 @@ export const validateQuizUpdate = [
 /**
  * Quiz Submission Validation Rules
  * Validates quiz answers submission
+ * Note: Answers can have selectedOption, selectedBoolean, or filledText based on question type
  */
 export const validateQuizSubmission = [
+  body("attemptId")
+    .notEmpty()
+    .withMessage("Attempt ID is required")
+    .isMongoId()
+    .withMessage("Invalid attempt ID format"),
+
   body("answers")
     .isArray({ min: 1 })
     .withMessage("Answers must be a non-empty array"),
@@ -591,9 +632,8 @@ export const validateQuizSubmission = [
     .isMongoId()
     .withMessage("Invalid question ID format"),
 
-  body("answers.*.answer")
-    .notEmpty()
-    .withMessage("Answer is required for each question"),
+  // No validation on answer format since it varies by question type
+  // Controller handles: selectedOption (number), selectedBoolean (boolean), filledText (string)
 
   validate,
 ];
