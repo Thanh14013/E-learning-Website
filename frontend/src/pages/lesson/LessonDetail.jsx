@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCourses } from '../../contexts/CoursesContext';
+import { useDiscussions } from '../../contexts/DiscussionContext';
 import api from '../../services/api';
 import toast from '../../services/toastService';
+import DiscussionModal from '../../components/discussion/DiscussionModal.jsx';
+import DiscussionForm from '../../components/course/DiscussionForm.jsx';
 import styles from './LessonDetail.module.css';
 
 const LessonDetail = () => {
     const { courseId, lessonId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { myCourses } = useCourses();
+    const { discussions: contextDiscussions, joinCourseRoom, leaveCourseRoom } = useDiscussions();
     const [lesson, setLesson] = useState(null);
     const [course, setCourse] = useState(null);
     const [chapter, setChapter] = useState(null);
@@ -25,6 +31,13 @@ const LessonDetail = () => {
     const [activeAttemptIds, setActiveAttemptIds] = useState({});
     const [isCompleted, setIsCompleted] = useState(false);
     const [courseProgress, setCourseProgress] = useState({ completedCount: 0, totalLessons: 0 });
+
+    // Discussion states
+    const [discussions, setDiscussions] = useState([]);
+    const [selectedDiscussionId, setSelectedDiscussionId] = useState(null);
+    const [showCreateDiscussion, setShowCreateDiscussion] = useState(false);
+    const [discussionPage, setDiscussionPage] = useState(1);
+    const discussionsPerPage = 5;
 
     useEffect(() => {
         const fetchLessonData = async () => {
@@ -61,11 +74,11 @@ const LessonDetail = () => {
                     if (quizRes.data.data) {
                         const quizzesData = quizRes.data.data;
                         setQuizzes(quizzesData);
-                        
+
                         // Check which quizzes are already completed
                         const completedSet = new Set();
                         const attemptsMap = {};
-                        
+
                         for (const quiz of quizzesData) {
                             try {
                                 const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts?limit=1`);
@@ -90,7 +103,7 @@ const LessonDetail = () => {
                                 console.log(`No attempts found for quiz ${quiz._id}`);
                             }
                         }
-                        
+
                         setCompletedQuizzes(completedSet);
                         setQuizAttempts(attemptsMap);
                     }
@@ -102,7 +115,7 @@ const LessonDetail = () => {
                 try {
                     const progressRes = await api.get(`/progress/lesson/${lessonId}`);
                     setIsCompleted(progressRes.data?.progress?.isCompleted || false);
-                    
+
                     // Fetch course progress to get completed count
                     const courseProgressRes = await api.get(`/progress/course/${courseId}`);
                     console.log('📊 Course Progress Response:', courseProgressRes.data);
@@ -132,7 +145,75 @@ const LessonDetail = () => {
         }
     }, [courseId, lessonId, navigate]);
 
+    // Fetch discussions for this lesson
+    const fetchLessonDiscussions = async () => {
+        try {
+            const response = await api.get(`/discussions/lesson/${lessonId}?page=1&limit=100`);
+            if (response.data.success && response.data.data) {
+                const allDiscussions = response.data.data.discussions || [];
+                console.log('📥 Fetched discussions for lesson:', lessonId, allDiscussions.map(d => ({
+                    id: d._id,
+                    title: d.title,
+                    lessonId: d.lessonId
+                })));
+
+                // STRICT FILTER: Only discussions with matching lessonId
+                const lessonOnlyDiscussions = allDiscussions.filter(d =>
+                    d.lessonId && d.lessonId.toString() === lessonId.toString()
+                );
+
+                // Sort by createdAt desc (newest first)
+                const sortedDiscussions = lessonOnlyDiscussions.sort(
+                    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+                );
+
+                console.log('✅ Filtered lesson discussions:', sortedDiscussions.length);
+                setDiscussions(sortedDiscussions);
+            }
+        } catch (error) {
+            console.error('Failed to fetch lesson discussions:', error);
+        }
+    };
+
+    useEffect(() => {
+        if (lessonId) {
+            fetchLessonDiscussions();
+        }
+    }, [lessonId]);
+
+    // Sync context discussions with local state for this lesson
+    useEffect(() => {
+        if (contextDiscussions.length > 0) {
+            setDiscussions(prev => {
+                // STRICT: Only merge discussions that belong to THIS lesson (not null, not other lessons)
+                const newDiscussions = contextDiscussions.filter(d =>
+                    d.lessonId &&
+                    d.lessonId.toString() === lessonId.toString() &&
+                    !prev.find(p => p._id === d._id)
+                );
+                if (newDiscussions.length > 0) {
+                    console.log('🔄 Merging new lesson discussions from socket:', newDiscussions.length);
+                }
+                return [...newDiscussions, ...prev];
+            });
+        }
+    }, [contextDiscussions, lessonId]);
+
+    // Join/leave course room for real-time updates
+    useEffect(() => {
+        if (courseId) {
+            joinCourseRoom(courseId);
+            return () => leaveCourseRoom(courseId);
+        }
+    }, [courseId, joinCourseRoom, leaveCourseRoom]);
+
     const handleQuizClick = async (quizId) => {
+        // Check if quiz is already passed/completed - if so, don't allow reopening
+        if (completedQuizzes.has(quizId)) {
+            toast.info('✅ You have already passed this quiz');
+            return;
+        }
+
         if (expandedQuizId === quizId) {
             setExpandedQuizId(null);
             return;
@@ -145,27 +226,43 @@ const LessonDetail = () => {
             if (quizData.questions && quizData.questions.length > 0) {
                 setQuizQuestions(prev => ({ ...prev, [quizId]: quizData.questions }));
                 setExpandedQuizId(quizId);
-                
-                // Start a new attempt if not already started and not completed
-                if (!activeAttemptIds[quizId] && !completedQuizzes.has(quizId)) {
-                        try {
-                        const attemptRes = await api.post(`/quizzes/${quiz._id}/start`);
+
+                // Start a new attempt if not already started (allow retaking if failed)
+                if (!activeAttemptIds[quizId]) {
+                    try {
+                        const attemptRes = await api.post(`/quizzes/${quizId}/start`);
                         setActiveAttemptIds(prev => ({
                             ...prev,
-                            [quiz._id]: attemptRes.data.attemptId
+                            [quizId]: attemptRes.data.attemptId
                         }));
                         console.log('✅ Started quiz attempt:', attemptRes.data.attemptId);
                     } catch (err) {
                         console.error('Failed to start attempt:', err);
-                        toast.error(err.response?.data?.message || 'Unable to start quiz');
+                        const errorMsg = err.response?.data?.message || 'Unable to start quiz';
+                        if (err.response?.status === 400 && errorMsg.includes('No attempts remaining')) {
+                            toast.error(`❌ ${errorMsg}. You have used all ${err.response.data.attemptsAllowed || 'available'} attempts.`);
+                        } else if (err.response?.status === 403) {
+                            toast.error('🔒 You must be enrolled in this course to take the quiz');
+                        } else {
+                            toast.error(`❌ ${errorMsg}`);
+                        }
+                        setExpandedQuizId(null);
+                        return;
                     }
                 }
-                } else {
-                toast.error('This quiz has no questions yet');
-                }
+            } else {
+                toast.error('📝 This quiz has no questions yet');
+            }
         } catch (error) {
             console.error('Failed to fetch quiz questions:', error);
-            toast.error(error.response?.data?.message || 'Unable to load questions');
+            const errorMsg = error.response?.data?.message || 'Unable to load questions';
+            if (error.response?.status === 404) {
+                toast.error('❌ Quiz not found');
+            } else if (error.response?.status === 403) {
+                toast.error('🔒 You do not have permission to view this quiz');
+            } else {
+                toast.error(`❌ ${errorMsg}`);
+            }
         }
     };
 
@@ -197,7 +294,7 @@ const LessonDetail = () => {
         });
 
         const percentage = answered > 0 ? (correct / questions.length) * 100 : 0;
-        
+
         // Don't calculate isPassed here - backend will provide the correct result
         // based on quiz.passingScore
 
@@ -245,10 +342,10 @@ const LessonDetail = () => {
             const res = await api.post(`/progress/complete/${lessonId}`);
             console.log('✅ Mark Complete Response:', res.data);
             toast.success('🎉 Congratulations! You completed the lesson!');
-            
+
             // Update UI immediately
             setIsCompleted(true);
-            
+
             // Update course progress from response
             if (res.data.completedCount && res.data.totalLessons) {
                 console.log('📊 Updating progress:', res.data.completedCount, '/', res.data.totalLessons);
@@ -257,7 +354,7 @@ const LessonDetail = () => {
                     totalLessons: res.data.totalLessons
                 });
             }
-            
+
             // Refetch course progress to ensure accuracy
             try {
                 const courseProgressRes = await api.get(`/progress/course/${courseId}`);
@@ -282,7 +379,14 @@ const LessonDetail = () => {
             }, 1500);
         } catch (error) {
             console.error('Failed to mark complete:', error);
-            toast.error(error.response?.data?.message || 'Unable to mark as complete');
+            const errorMsg = error.response?.data?.message || 'Unable to mark as complete';
+            if (error.response?.status === 404) {
+                toast.error('❌ Lesson not found');
+            } else if (error.response?.status === 403) {
+                toast.error('🔒 You must be enrolled in this course to mark lessons complete');
+            } else {
+                toast.error(`❌ ${errorMsg}`);
+            }
         }
     };
 
@@ -365,40 +469,36 @@ const LessonDetail = () => {
 
                         {primaryResource && (
                             <div className={styles.overviewResources}>
-                                <div className={styles.overviewDownload}>
-                                    <div>
-                                        <p className={styles.overviewLabel}>Overview Document</p>
-                                        <p className={styles.overviewName}>{primaryResource.name}</p>
-                                    </div>
-                                    <a
-                                        href={primaryResource.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        download
-                                        className={styles.overviewDownloadBtn}
-                                    >
-                                        ⬇ Download
-                                    </a>
+                                <div className={styles.overviewHeader}>
+                                    <span className={styles.overviewIcon}>📚</span>
+                                    <h3 className={styles.overviewTitle}>Reference Documentation</h3>
                                 </div>
-
-                                {relatedResources.length > 0 && (
-                                    <div className={styles.relatedLinks}>
-                                        <span className={styles.overviewLabel}>Related resources</span>
-                                        <div className={styles.linkGrid}>
-                                            {relatedResources.map((resource, idx) => (
-                                                <a
-                                                    key={resource._id || resource.url || idx}
-                                                    href={resource.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className={styles.linkPill}
-                                                >
-                                                    {resource.name || resource.url}
-                                                </a>
-                                            ))}
-                                        </div>
+                                <div className={styles.referenceLinks}>
+                                    <div className={styles.referenceItem}>
+                                        <span className={styles.referenceLabel}>Reference:</span>
+                                        <a
+                                            href={primaryResource.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={styles.referenceLink}
+                                        >
+                                            {primaryResource.url}
+                                        </a>
                                     </div>
-                                )}
+                                    {relatedResources.length > 0 && (
+                                        <div className={styles.referenceItem}>
+                                            <span className={styles.referenceLabel}>Reference:</span>
+                                            <a
+                                                href={relatedResources[0].url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className={styles.referenceLink}
+                                            >
+                                                {relatedResources[0].url}
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -422,9 +522,9 @@ const LessonDetail = () => {
                                                 <span className={styles.resourceType}>{resource.type.toUpperCase()}</span>
                                             </div>
                                         </div>
-                                        <a 
-                                            href={resource.url} 
-                                            target="_blank" 
+                                        <a
+                                            href={resource.url}
+                                            target="_blank"
                                             rel="noopener noreferrer"
                                             className={`btn btn-sm btn-primary-student ${styles.downloadBtn}`}
                                             download
@@ -446,16 +546,21 @@ const LessonDetail = () => {
                                     <div
                                         className={styles.quizHeader}
                                         onClick={() => handleQuizClick(quiz._id)}
+                                        style={{ cursor: completedQuizzes.has(quiz._id) ? 'not-allowed' : 'pointer' }}
                                     >
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             {completedQuizzes.has(quiz._id) && (
-                                                <span style={{ color: '#28a745', fontSize: '20px' }}>✓</span>
+                                                <span style={{ color: '#28a745', fontSize: '20px', fontWeight: 'bold' }}>✓</span>
                                             )}
-                                            <h4>{quiz.title}</h4>
+                                            <h4 style={{ color: completedQuizzes.has(quiz._id) ? '#28a745' : 'inherit' }}>
+                                                {quiz.title}
+                                            </h4>
                                         </div>
-                                        <span className={styles.quizToggle}>
-                                            {expandedQuizId === quiz._id ? '▼' : '▶'}
-                                        </span>
+                                        {!completedQuizzes.has(quiz._id) && (
+                                            <span className={styles.quizToggle}>
+                                                {expandedQuizId === quiz._id ? '▼' : '▶'}
+                                            </span>
+                                        )}
                                     </div>
 
                                     {expandedQuizId === quiz._id && quizQuestions[quiz._id] && (
@@ -524,30 +629,30 @@ const LessonDetail = () => {
                                                 onClick={async () => {
                                                     const questions = quizQuestions[quiz._id];
                                                     const answers = userAnswers[quiz._id] || {};
-                                                    const unansweredCount = questions.filter(q => answers[q._id] === undefined).length;
+                                                    const unansweredCount = questions.filter(q => answers[q._id] === undefined || answers[q._id] === null || answers[q._id] === '').length;
 
                                                     if (unansweredCount > 0) {
-                                                        toast.warn(`You haven't answered ${unansweredCount} questions!`);
+                                                        toast.warn(`⚠️ Please answer all questions! You have ${unansweredCount} unanswered question${unansweredCount > 1 ? 's' : ''}`);
                                                         return;
                                                     }
 
                                                     const percentage = calculateQuizScore(quiz._id, questions);
-                                                    
+
                                                     // Submit to backend
                                                     try {
                                                         // Use existing attemptId (already started when quiz was expanded)
                                                         const attemptId = activeAttemptIds[quiz._id];
-                                                        
+
                                                         if (!attemptId) {
-                                                            toast.error('Please close and reopen the quiz to restart');
+                                                            toast.error('❌ Quiz session expired. Please close and reopen the quiz to start again.');
                                                             return;
                                                         }
-                                                        
+
                                                         // Prepare answers for backend
                                                         const formattedAnswers = questions.map(q => {
                                                             const userAnswer = answers[q._id];
                                                             const answer = { questionId: q._id };
-                                                            
+
                                                             if (q.type === 'multiple_choice') {
                                                                 answer.selectedOption = userAnswer;
                                                             } else if (q.type === 'true_false') {
@@ -555,20 +660,20 @@ const LessonDetail = () => {
                                                             } else if (q.type === 'fill_blank') {
                                                                 answer.filledText = userAnswer;
                                                             }
-                                                            
+
                                                             return answer;
                                                         });
-                                                        
+
                                                         // Submit quiz
                                                         const submitRes = await api.post(`/quizzes/${quiz._id}/submit`, {
                                                             attemptId,
                                                             answers: formattedAnswers
                                                         });
-                                                        
+
                                                         const result = submitRes.data;
-                                                        
+
                                                         console.log('📊 Quiz Result:', result);
-                                                        
+
                                                         // Update quiz scores with backend result
                                                         setQuizScores(prev => ({
                                                             ...prev,
@@ -580,29 +685,29 @@ const LessonDetail = () => {
                                                                 isPassed: result.isPassed
                                                             }
                                                         }));
-                                                        
+
                                                         // Mark as submitted
                                                         setSubmittedQuizzes(prev => new Set([...prev, quiz._id]));
-                                                        
+
                                                         // Clear attemptId so a new one can be started if failed
                                                         setActiveAttemptIds(prev => {
                                                             const newAttempts = { ...prev };
                                                             delete newAttempts[quiz._id];
                                                             return newAttempts;
                                                         });
-                                                        
+
                                                         if (result.isPassed) {
                                                             setCompletedQuizzes(prev => new Set([...prev, quiz._id]));
-                                                            toast.success(`🎉 Scored ${result.percentage}%! You passed the quiz!`);
+                                                            toast.success(`🎉 Congratulations! You scored ${result.percentage}% and passed the quiz!`);
                                                         } else {
                                                             // Get quiz details to show correct passing score
                                                             const currentQuiz = quizzes.find(q => q._id === quiz._id);
                                                             const passingScore = currentQuiz?.passingScore || 70;
-                                                            toast.error(`❌ Scored ${result.percentage}%. You need at least ${passingScore}% to pass. Close and reopen the quiz to try again.`);
+                                                            toast.error(`📊 You scored ${result.percentage}%. Passing score is ${passingScore}%. Please close and reopen to try again.`);
                                                             // Close quiz to allow retry
                                                             setExpandedQuizId(null);
                                                         }
-                                                        
+
                                                         // Auto complete lesson if all quizzes passed
                                                         setTimeout(async () => {
                                                             const { canComplete } = checkQuizCompletion();
@@ -611,7 +716,7 @@ const LessonDetail = () => {
                                                                     const res = await api.post(`/progress/complete/${lessonId}`);
                                                                     setIsCompleted(true);
                                                                     toast.success('✅ Tự động hoàn thành bài học!');
-                                                                    
+
                                                                     // Update progress immediately
                                                                     if (res.data.completedCount && res.data.totalLessons) {
                                                                         setCourseProgress({
@@ -619,7 +724,7 @@ const LessonDetail = () => {
                                                                             totalLessons: res.data.totalLessons
                                                                         });
                                                                     }
-                                                                    
+
                                                                     // Refetch notifications
                                                                     try {
                                                                         await api.get('/notifications?page=1&limit=1');
@@ -628,13 +733,23 @@ const LessonDetail = () => {
                                                                     }
                                                                 } catch (err) {
                                                                     console.error('Auto complete failed:', err);
-                                                                    toast.error('Unable to mark as complete');
+                                                                    const errorMsg = err.response?.data?.message || 'Unable to mark lesson as complete';
+                                                                    toast.error(`❌ ${errorMsg}`);
                                                                 }
                                                             }
                                                         }, 500);
                                                     } catch (error) {
                                                         console.error('Failed to submit quiz:', error);
-                                                        toast.error(error.response?.data?.message || 'Unable to submit quiz');
+                                                        const errorMsg = error.response?.data?.message || 'Unable to submit quiz';
+                                                        if (error.response?.status === 404) {
+                                                            toast.error('❌ Quiz attempt not found. Please restart the quiz.');
+                                                        } else if (error.response?.status === 403) {
+                                                            toast.error('🔒 You do not have permission to submit this quiz.');
+                                                        } else if (error.response?.status === 400 && errorMsg.includes('already submitted')) {
+                                                            toast.error('⚠️ This quiz has already been submitted.');
+                                                        } else {
+                                                            toast.error(`❌ Failed to submit quiz: ${errorMsg}`);
+                                                        }
                                                     }
                                                 }}
                                                 style={{ marginTop: '16px' }}
@@ -664,9 +779,149 @@ const LessonDetail = () => {
                         </div>
                     )}
 
+                    {/* Discussion Section */}
+                    <div className={styles.discussionSection} style={{ marginTop: '40px', borderTop: '2px solid #e0e0e0', paddingTop: '30px' }}>
+                        <div className={styles.discussionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>💬 Lesson Discussion</h3>
+                            {user && (
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => setShowCreateDiscussion(true)}
+                                    style={{ padding: '8px 16px' }}
+                                >
+                                    + New Discussion
+                                </button>
+                            )}
+                        </div>
+
+                        <div className={styles.discussionsList}>
+                            {discussions.length === 0 ? (
+                                <p style={{ textAlign: 'center', color: '#666', padding: '30px' }}>
+                                    No discussions yet. Be the first to start a discussion!
+                                </p>
+                            ) : (
+                                <>
+                                    {discussions
+                                        .slice((discussionPage - 1) * discussionsPerPage, discussionPage * discussionsPerPage)
+                                        .map((discussion) => (
+                                            <div
+                                                key={discussion._id}
+                                                className={styles.discussionCard}
+                                                onClick={() => setSelectedDiscussionId(discussion._id)}
+                                                style={{
+                                                    border: '1px solid #ddd',
+                                                    borderRadius: '8px',
+                                                    padding: '15px',
+                                                    marginBottom: '15px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    backgroundColor: discussion.isPinned ? '#fff9e6' : 'white'
+                                                }}
+                                            >
+                                                {discussion.isPinned && (
+                                                    <span style={{
+                                                        backgroundColor: '#ffc107',
+                                                        color: 'white',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '4px',
+                                                        fontSize: '0.75rem',
+                                                        marginBottom: '8px',
+                                                        display: 'inline-block'
+                                                    }}>
+                                                        📌 Pinned
+                                                    </span>
+                                                )}
+                                                <h4 style={{ margin: '5px 0 10px', fontSize: '1.1rem' }}>{discussion.title}</h4>
+                                                <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '10px' }}>
+                                                    {discussion.content.substring(0, 120)}
+                                                    {discussion.content.length > 120 && '...'}
+                                                </p>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '0.85rem', color: '#888' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <span>👤 {discussion.userId?.fullName || 'Anonymous'}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.75rem', color: '#999' }}>
+                                                        {new Date(discussion.createdAt).toLocaleDateString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                    {discussions.length > discussionsPerPage && (
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
+                                            <button
+                                                onClick={() => setDiscussionPage(prev => Math.max(1, prev - 1))}
+                                                disabled={discussionPage === 1}
+                                                className="btn"
+                                                style={{ padding: '6px 12px' }}
+                                            >
+                                                ← Previous
+                                            </button>
+                                            <span style={{ padding: '6px 12px', alignSelf: 'center' }}>
+                                                Page {discussionPage} of {Math.ceil(discussions.length / discussionsPerPage)}
+                                            </span>
+                                            <button
+                                                onClick={() => setDiscussionPage(prev => Math.min(Math.ceil(discussions.length / discussionsPerPage), prev + 1))}
+                                                disabled={discussionPage >= Math.ceil(discussions.length / discussionsPerPage)}
+                                                className="btn"
+                                                style={{ padding: '6px 12px' }}
+                                            >
+                                                Next →
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Discussion Modal */}
+                    {selectedDiscussionId && (
+                        <DiscussionModal
+                            discussionId={selectedDiscussionId}
+                            isEnrolled={(() => {
+                                const enrolled = myCourses.some(c => c._id === courseId);
+                                console.log('🔍 Enrollment check for lesson discussion:', {
+                                    courseId,
+                                    myCourses: myCourses.map(c => c._id),
+                                    enrolled
+                                });
+                                return enrolled;
+                            })()}
+                            onClose={() => setSelectedDiscussionId(null)}
+                        />
+                    )}
+
+                    {/* Create Discussion Modal */}
+                    {showCreateDiscussion && (
+                        <div className="modal-overlay" onClick={() => setShowCreateDiscussion(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+                                <DiscussionForm
+                                    courseId={courseId}
+                                    lessonId={lessonId}
+                                    onSuccess={(newDiscussion) => {
+                                        setShowCreateDiscussion(false);
+                                        toast.success('Discussion created successfully!');
+                                        // Add new discussion to the beginning and refetch
+                                        setDiscussions(prev => [newDiscussion, ...prev]);
+                                        // Also refetch to ensure sync with server
+                                        fetchLessonDiscussions();
+                                    }}
+                                    onCancel={() => setShowCreateDiscussion(false)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* Navigation Buttons */}
-                    <div className={styles.lessonNavigation}>
-                            <button
+                    <div className={styles.lessonNavigation} style={{ marginTop: '30px' }}>
+                        <button
                             className={`btn ${styles.navBtn}`}
                             onClick={() => navigateLesson('prev')}
                             disabled={!hasPrev}

@@ -56,9 +56,23 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+        scriptSrc: [
+          "'self'",
+          "https://accounts.google.com",
+          "https://apis.google.com",
+          "https://accounts.youtube.com",
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://res.cloudinary.com",
+          "https://lh3.googleusercontent.com",
+          "https://ssl.gstatic.com",
+          "https://www.gstatic.com",
+        ],
+        connectSrc: ["'self'", "https://accounts.google.com"],
+        frameSrc: ["'self'", "https://accounts.google.com"],
       },
     },
     crossOriginEmbedderPolicy: false, // Allow embedding resources from other origins
@@ -161,7 +175,9 @@ async function startServer(startPort, maxAttempts = 10) {
           console.log(`   - /notification namespace: Real-time notifications`);
           console.log(`   - /progress namespace: Learning progress tracking`);
           console.log(
-            `✅ Rate limiting disabled: ${process.env.DISABLE_RATE_LIMIT === "true"}`
+            `✅ Rate limiting disabled: ${
+              process.env.DISABLE_RATE_LIMIT === "true"
+            }`
           );
           resolve();
         });

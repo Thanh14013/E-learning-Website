@@ -25,6 +25,13 @@ const discussionSchema = new mongoose.Schema(
       required: [true, "Course ID is required."],
       index: true, // Index for faster queries by course
     },
+    // Reference to the Lesson this discussion belongs to (optional - null means course-level discussion)
+    lessonId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lesson",
+      default: null,
+      index: true, // Index for faster queries by lesson
+    },
     // Reference to the User who created this discussion
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -91,6 +98,12 @@ discussionSchema.index({ courseId: 1, createdAt: -1 });
 
 // Compound index for efficient queries on pinned discussions within a course
 discussionSchema.index({ courseId: 1, isPinned: -1, createdAt: -1 });
+
+// Compound index for efficient queries by lesson
+discussionSchema.index({ lessonId: 1, createdAt: -1 });
+
+// Compound index for efficient queries on discussions within a lesson
+discussionSchema.index({ courseId: 1, lessonId: 1, createdAt: -1 });
 
 // Text index for full-text search on title and content
 discussionSchema.index({ title: "text", content: "text" });

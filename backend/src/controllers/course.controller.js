@@ -242,7 +242,7 @@ export const getCourseDetail = async (req, res) => {
 
     // Fetch discussions for this course
     const Discussion = (await import("../models/discussion.model.js")).default;
-    const discussions = await Discussion.find({ courseId: id })
+    const discussions = await Discussion.find({ courseId: id, lessonId: null })
       .populate("userId", "fullName email avatar")
       .populate("commentCount")
       .sort({ isPinned: -1, createdAt: -1 })
@@ -535,21 +535,25 @@ export const enrollCourse = async (req, res) => {
     }
 
     // Create notification for student
-    const Notification = (await import('../models/notification.model.js')).default;
+    const Notification = (await import("../models/notification.model.js"))
+      .default;
     await Notification.create({
       userId: studentId,
-      type: 'course',
-      title: 'Course Enrolled!',
+      type: "course",
+      title: "Course Enrolled!",
       content: `You successfully enrolled in "${course.title}". Start learning now!`,
       link: `/courses/${courseId}`,
       isRead: false,
     });
 
     // Emit notification
-    req.io?.of("/notification").to(studentId.toString()).emit("notification:new", {
-      type: 'enrollment',
-      message: `Enrolled in ${course.title}`,
-    });
+    req.io
+      ?.of("/notification")
+      .to(studentId.toString())
+      .emit("notification:new", {
+        type: "enrollment",
+        message: `Enrolled in ${course.title}`,
+      });
 
     return res.status(200).json({
       success: true,
@@ -562,7 +566,7 @@ export const enrollCourse = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while enrolling in course",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -917,16 +921,16 @@ export const reviewCourse = async (req, res) => {
       data: {
         course: {
           rating: course.rating,
-          totalReviews: course.totalReviews
+          totalReviews: course.totalReviews,
         },
         review: {
           _id: newReview._id,
           userId: newReview.userId,
           rating: newReview.rating,
           comment: newReview.comment,
-          createdAt: newReview.createdAt
-        }
-      }
+          createdAt: newReview.createdAt,
+        },
+      },
     });
   } catch (error) {
     console.error("Review course error:", error);

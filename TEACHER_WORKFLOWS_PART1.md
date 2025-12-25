@@ -40,82 +40,48 @@
    - Tạo document mới trong collection **users** với:
      - fullName, email, password (hashed)
      - role: "teacher"
-     - isVerified: false
+     - isVerified: true (mặc định, không cần xác thực email)
      - isBanned: false
      - **profileCompleted: false**
      - **profileApprovalStatus: null**
-     - verificationToken: random 32-byte hex string
      - createdAt: timestamp hiện tại
    - Tạo document trong collection **userProfiles** liên kết với userId
-   - Tạo verification token và lưu vào user document
-   - Gửi email xác thực đến địa chỉ email của teacher thông qua SendGrid
-   - Tạo JWT access token và refresh token
-   - Lưu refresh token vào user document
 6. Trả về response:
    ```json
    {
-     "message": "Registration successful. Please check your email to verify your account.",
+     "success": true,
+     "message": "Registration successful. Please login.",
      "user": {
        "_id": "user_id",
        "fullName": "Nguyen Van B",
        "email": "teacher@example.com",
        "role": "teacher",
        "avatar": "",
-       "isVerified": false,
+       "isVerified": true,
        "profileCompleted": false,
        "profileApprovalStatus": null
-     },
-     "tokens": {
-       "accessToken": "jwt_token",
-       "refreshToken": "refresh_token"
      }
    }
    ```
 7. Frontend xử lý:
-   - Lưu tokens vào localStorage
-   - Lưu user info vào AuthContext
-   - Hiển thị toast: "Đăng ký thành công! Vui lòng kiểm tra email để xác thực."
-   - **Redirect đến `/email-verification-required`**
+   - Hiển thị toast: "Đăng ký thành công! Vui lòng đăng nhập."
+   - **Redirect đến `/login`**
 
 **Collections sử dụng:**
 
 - `users` - Tạo document mới cho teacher
 - `userProfiles` - Tạo profile mới
-- Gửi email qua SendGrid service
 
 **UI Changes:**
 
 - Radio buttons cho role selection (Student/Teacher)
 - Accent color styling cho radio buttons
 
-**Note:** Teacher phải verify email trước khi có thể login
+**Note:** Teacher có thể đăng nhập ngay sau khi đăng ký (không cần verify email)
 
 ---
 
-### 1.2. Workflow Xác Thực Email
-
-**Mô tả:** Teacher xác nhận địa chỉ email sau khi đăng ký.
-
-**API Endpoint:** `POST /api/auth/verify-email`
-
-**Quy trình:**
-
-1. Teacher nhận email xác thực trong hộp thư
-2. Click vào link xác thực trong email (chứa token)
-3. Frontend gửi request POST đến `/api/auth/verify-email` với token trong body
-4. Hệ thống verify token (kiểm tra tính hợp lệ và thời hạn)
-5. Tìm user trong collection **users** dựa trên token
-6. Cập nhật field `isEmailVerified=true` trong document user
-7. Xóa verification token khỏi database
-8. Trả về response thành công
-
-**Collections sử dụng:**
-
-- `users` - Cập nhật field isEmailVerified
-
----
-
-### 1.3. Workflow Đăng Nhập
+### 1.2. Workflow Đăng Nhập
 
 **Mô tả:** Teacher đăng nhập vào hệ thống với email và password.
 
@@ -225,15 +191,14 @@ Login → Check credentials → Check isVerified
 
 ---
 
-### 1.4. Workflow Hoàn Thành Hồ Sơ Teacher (NEW)
+### 1.3. Workflow Hoàn Thành Hồ Sơ Teacher
 
-**Mô tả:** Teacher điền đầy đủ thông tin cá nhân và upload CV sau khi đã verify email.
+**Mô tả:** Teacher điền đầy đủ thông tin cá nhân và upload CV sau khi đăng ký.
 
 **API Endpoint:** `POST /api/users/complete-teacher-profile`
 
 **Điều kiện tiên quyết:**
 
-- Email đã được verified (`isVerified = true`)
 - User phải có role = "teacher"
 - Profile chưa được hoàn thành (`profileCompleted = false`)
 
@@ -265,7 +230,6 @@ Login → Check credentials → Check isVerified
 5. Backend xử lý:
    - Xác thực JWT token từ header
    - Kiểm tra user.role === "teacher"
-   - Kiểm tra user.isVerified === true
    - Kiểm tra user.profileCompleted === false (chưa submit trước đó)
    - Validate tất cả các trường required
    - **Upload CV lên Cloudinary:**
@@ -319,7 +283,6 @@ Login → Check credentials → Check isVerified
 **Error Handling:**
 
 - 403 nếu không phải teacher
-- 403 nếu email chưa verified
 - 400 nếu profile đã completed trước đó
 - 400 nếu thiếu thông tin required
 - 500 nếu upload CV thất bại
@@ -328,76 +291,10 @@ Login → Check credentials → Check isVerified
 
 - Teacher KHÔNG thể truy cập dashboard cho đến khi admin approve
 - Admin sẽ review và approve/reject trong vòng 48h
-- Email notification sẽ được gửi khi status thay đổi
 
 ---
 
-### 1.5. Workflow Quên Mật Khẩu và Đặt Lại Mật Khẩu
-
-**Mô tả:** Teacher yêu cầu đặt lại mật khẩu khi quên.
-
-#### Bước 1: Quên mật khẩu
-
-**API Endpoint:** `POST /api/auth/forgot-password`
-
-**Quy trình:**
-
-1. Teacher click "Quên mật khẩu" trên trang đăng nhập
-2. Nhập địa chỉ email
-3. Gửi request POST đến `/api/auth/forgot-password` với email
-4. Hệ thống tìm user trong collection **users** theo email
-5. Tạo reset password token (random string) với thời hạn (ví dụ: 1 giờ)
-6. Lưu token vào collection **users** (field `resetPasswordToken` và `resetPasswordExpire`)
-7. Gửi email chứa link reset password đến địa chỉ email qua SendGrid
-8. Trả về response thành công
-
-#### Bước 2: Đặt lại mật khẩu
-
-**API Endpoint:** `PUT /api/auth/reset-password/:token`
-
-**Quy trình:**
-
-1. Teacher click vào link trong email (chứa token)
-2. Nhập mật khẩu mới
-3. Gửi request PUT đến `/api/auth/reset-password/:token` với password mới
-4. Hệ thống validate token (kiểm tra tồn tại và chưa hết hạn)
-5. Tìm user trong collection **users** theo token
-6. Hash password mới
-7. Cập nhật password trong document user
-8. Xóa reset token khỏi database
-9. Trả về response thành công
-
-**Collections sử dụng:**
-
-- `users` - Cập nhật reset token và password
-
----
-
-### 1.6. Workflow Gửi Lại Email Xác Thực
-
-**Mô tả:** Teacher yêu cầu gửi lại email xác thực nếu chưa nhận được hoặc email đã hết hạn.
-
-**API Endpoint:** `POST /api/auth/resend-verification`
-
-**Quy trình:**
-
-1. Teacher đăng nhập và nhận thấy email chưa được xác thực
-2. Click nút "Gửi lại email xác thực"
-3. Gửi request POST đến `/api/auth/resend-verification` (cần authentication token)
-4. Hệ thống xác thực JWT token từ header
-5. Kiểm tra email đã được verify chưa
-6. Nếu chưa, tạo verification token mới
-7. Lưu token vào collection **users**
-8. Gửi email xác thực mới qua SendGrid
-9. Trả về response thành công
-
-**Collections sử dụng:**
-
-- `users` - Cập nhật verification token mới
-
----
-
-### 1.7. Workflow Đăng Xuất
+### 1.4. Workflow Đăng Xuất
 
 **Mô tả:** Teacher đăng xuất khỏi hệ thống.
 
@@ -420,7 +317,7 @@ Login → Check credentials → Check isVerified
 
 ---
 
-### 1.8. Workflow Làm Mới Access Token
+### 1.5. Workflow Làm Mới Access Token
 
 **Mô tả:** Làm mới access token khi token cũ sắp hết hạn hoặc đã hết hạn.
 
@@ -444,7 +341,7 @@ Login → Check credentials → Check isVerified
 
 ---
 
-### 1.9. Workflow Xem Thông Tin Profile Cá Nhân
+### 1.6. Workflow Xem Thông Tin Profile Cá Nhân
 
 **Mô tả:** Teacher xem thông tin profile của chính mình.
 
@@ -466,7 +363,7 @@ Login → Check credentials → Check isVerified
 
 ---
 
-### 1.10. Workflow Cập Nhật Thông Tin Profile
+### 1.7. Workflow Cập Nhật Thông Tin Profile
 
 **Mô tả:** Teacher cập nhật thông tin cá nhân như tên, số điện thoại, địa chỉ.
 
@@ -490,7 +387,7 @@ Login → Check credentials → Check isVerified
 
 ---
 
-### 1.10. Workflow Upload Avatar
+### 1.8. Workflow Upload Avatar
 
 **Mô tả:** Teacher upload ảnh đại diện.
 

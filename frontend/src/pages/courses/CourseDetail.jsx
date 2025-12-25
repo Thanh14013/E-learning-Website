@@ -287,15 +287,15 @@ const LiveSessionsSection = ({ courseId }) => {
             <div className={styles.sessionInfo}>
               <div className={styles.sessionTitle}>{session.title}</div>
               <div className={styles.sessionTime}>
-                📆 {new Date(session.scheduledAt).toLocaleDateString('en-US', { 
-                  month: 'short', 
+                📆 {new Date(session.scheduledAt).toLocaleDateString('en-US', {
+                  month: 'short',
                   day: 'numeric',
                   year: 'numeric'
                 })}
                 {' '}at{' '}
-                {new Date(session.scheduledAt).toLocaleTimeString('en-US', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
+                {new Date(session.scheduledAt).toLocaleTimeString('en-US', {
+                  hour: '2-digit',
+                  minute: '2-digit'
                 })}
               </div>
               {session.description && (
@@ -330,7 +330,7 @@ const CourseDetailPage = () => {
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [showCreateDiscussion, setShowCreateDiscussion] = useState(false);
   const [discussionPage, setDiscussionPage] = useState(1);
-  const discussionsPerPage = 4;
+  const discussionsPerPage = 5;
 
   // Join socket room for real-time updates
   useEffect(() => {
@@ -362,7 +362,7 @@ const CourseDetailPage = () => {
         setCourse(courseData);
         setModules(courseData.chapters || []);
         setDiscussions(courseData.discussions || []);
-        
+
         // Fetch progress if enrolled
         if (user && myCourses.some(c => c._id === courseId)) {
           try {
@@ -397,14 +397,14 @@ const CourseDetailPage = () => {
     try {
       setIsEnrolling(true);
       console.log('🎓 Enrolling in course:', courseId);
-      
+
       const response = await enrollCourse(courseId);
       console.log('✅ Enroll response:', response);
-      
+
       // Check if response has success flag
       if (response && response.success !== false) {
-      toast.success(response.message || 'Course enrolled successfully!');
-        
+        toast.success(response.message || 'Course enrolled successfully!');
+
         // Reload page to show updated enrollment status
         setTimeout(() => {
           window.location.reload();
@@ -415,9 +415,9 @@ const CourseDetailPage = () => {
     } catch (error) {
       console.error('❌ Enrollment failed:', error);
       // Extract error message properly
-      const errorMsg = error.response?.data?.message 
-            || error.message 
-            || 'Unable to enroll in course';
+      const errorMsg = error.response?.data?.message
+        || error.message
+        || 'Unable to enroll in course';
       toast.error(errorMsg);
       setIsEnrolling(false);
     }
@@ -439,7 +439,7 @@ const CourseDetailPage = () => {
               <StarIcon />
               <span className={styles.count}>({course.totalReviews || 0} ratings)</span>
             </div>
-            <span> {course.teacherId?.fullName || 'Unknown'}</span>
+
           </div>
         </div>
       </header>
@@ -560,7 +560,7 @@ const CourseDetailPage = () => {
             <div className={styles.sectionHeader}>
               <h3>💬 Discussions & Q&A</h3>
               {isEnrolled && (
-                <button 
+                <button
                   className="btn btn-primary-student"
                   onClick={() => setShowCreateDiscussion(true)}
                   style={{ marginLeft: 'auto' }}
@@ -571,53 +571,53 @@ const CourseDetailPage = () => {
             </div>
             {discussions.length > 0 ? (
               <>
-              <div className={styles.discussionsList}>
-                {discussions.slice((discussionPage - 1) * discussionsPerPage, discussionPage * discussionsPerPage).map((discussion) => (
-                  <div 
-                    key={discussion._id} 
-                    className={styles.discussionCard}
-                    onClick={() => setSelectedDiscussionId(discussion._id)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <h4 className={styles.discussionTitle}>{discussion.title}</h4>
-                    <p className={styles.discussionPreview}>
-                      {discussion.content?.substring(0, 120)}{discussion.content?.length > 120 ? '...' : ''}
-                    </p>
-                    <div className={styles.discussionFooter}>
-                      <div className={styles.author}>
-                        <div className={styles.avatar}></div>
-                        <span className={styles.authorName}>
-                          {discussion.userId?.fullName || 'Anonymous'}
-                        </span>
-                        <span className={styles.timestamp}>
-                          • {new Date(discussion.createdAt).toLocaleDateString()}
-                        </span>
+                <div className={styles.discussionsList}>
+                  {discussions.slice((discussionPage - 1) * discussionsPerPage, discussionPage * discussionsPerPage).map((discussion) => (
+                    <div
+                      key={discussion._id}
+                      className={styles.discussionCard}
+                      onClick={() => setSelectedDiscussionId(discussion._id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <h4 className={styles.discussionTitle}>{discussion.title}</h4>
+                      <p className={styles.discussionPreview}>
+                        {discussion.content?.substring(0, 120)}{discussion.content?.length > 120 ? '...' : ''}
+                      </p>
+                      <div className={styles.discussionFooter}>
+                        <div className={styles.author}>
+                          <div className={styles.avatar}></div>
+                          <span className={styles.authorName}>
+                            {discussion.userId?.fullName || 'Anonymous'}
+                          </span>
+                          <span className={styles.timestamp}>
+                            • {new Date(discussion.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              {discussions.length > discussionsPerPage && (
-                <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}>
-                  <button 
-                    className="btn btn-outline"
-                    onClick={() => setDiscussionPage(p => Math.max(1, p - 1))}
-                    disabled={discussionPage === 1}
-                  >
-                    ← Previous
-                  </button>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                    Page {discussionPage} of {Math.ceil(discussions.length / discussionsPerPage)}
-                  </span>
-                  <button 
-                    className="btn btn-outline"
-                    onClick={() => setDiscussionPage(p => Math.min(Math.ceil(discussions.length / discussionsPerPage), p + 1))}
-                    disabled={discussionPage >= Math.ceil(discussions.length / discussionsPerPage)}
-                  >
-                    Next →
-                  </button>
+                  ))}
                 </div>
-              )}
+                {discussions.length > discussionsPerPage && (
+                  <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'center', alignItems: 'center' }}>
+                    <button
+                      className="btn btn-outline"
+                      onClick={() => setDiscussionPage(p => Math.max(1, p - 1))}
+                      disabled={discussionPage === 1}
+                    >
+                      ← Previous
+                    </button>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                      Page {discussionPage} of {Math.ceil(discussions.length / discussionsPerPage)}
+                    </span>
+                    <button
+                      className="btn btn-outline"
+                      onClick={() => setDiscussionPage(p => Math.min(Math.ceil(discussions.length / discussionsPerPage), p + 1))}
+                      disabled={discussionPage >= Math.ceil(discussions.length / discussionsPerPage)}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
               </>
             ) : (
               <div className={styles.noDiscussions}>
@@ -636,7 +636,7 @@ const CourseDetailPage = () => {
       {showCreateDiscussion && (
         <div className="modal-overlay" onClick={() => setShowCreateDiscussion(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
-            <DiscussionForm 
+            <DiscussionForm
               courseId={courseId}
               onSuccess={(newDiscussion) => {
                 setShowCreateDiscussion(false);

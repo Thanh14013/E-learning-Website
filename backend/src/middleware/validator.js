@@ -101,6 +101,19 @@ export const validateLogin = [
 ];
 
 /**
+ * Google Login Validation Rules
+ * Validates Google ID token credential
+ */
+export const validateGoogleLogin = [
+  body("credential")
+    .notEmpty()
+    .withMessage("Google credential is required")
+    .isString()
+    .withMessage("Credential must be a string"),
+  validate,
+];
+
+/**
  * Email Validation Rules
  * Validates single email field
  */

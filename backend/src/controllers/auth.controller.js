@@ -1,16 +1,21 @@
 import User from "../models/user.model.js";
 import UserProfile from "../models/userProfile.model.js";
 import crypto from "crypto";
+import { OAuth2Client } from "google-auth-library";
 import {
   verifyRefreshToken,
   generateAccessToken,
   generateTokenPair,
 } from "../config/jwt.config.js";
 import { AppError } from "../middleware/errorHandler.js";
-import { sendEmail } from "../services/email.services.js";
 
 // Check if running in production environment
 const isProduction = process.env.NODE_ENV === "production";
+
+// Reuse a single Google OAuth client instance
+const googleClient = process.env.GOOGLE_CLIENT_ID
+  ? new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+  : null;
 
 /**
  * POST /api/auth/register
@@ -26,63 +31,6 @@ export const register = async (req, res, next) => {
   try {
     const { fullName, email, password, role } = req.body;
 
-    // Validate input data
-    if (!fullName || !email || !password) {
-      return next(new AppError("Please fill in all required fields.", 400));
-    }
-
-    // Prevent admin role registration
-    if (role === "admin") {
-      return next(new AppError("Admin accounts cannot be registered.", 403));
-    }
-
-    // Handle duplicate email error
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return next(
-        new AppError("This email already exists in our system.", 400)
-      );
-    }
-
-    // create user record with role (only student or teacher)
-    // Mark user as verified by default since email verification flow is removed
-    const user = await User.create({
-      fullName,
-      email,
-      password,
-      role: role === "teacher" ? "teacher" : "student",
-      isVerified: true,
-    });
-
-    // create user profile
-    await UserProfile.create({ userId: user._id });
-
-    // Registration successful — do NOT issue tokens or auto-login
-    const payload = {
-      success: true,
-      message: "Registration successful. Please login.",
-      user: {
-        _id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar || "",
-        isVerified: user.isVerified,
-        profileCompleted: user.profileCompleted,
-        profileApprovalStatus: user.profileApprovalStatus,
-      },
-    };
-
-    res.status(201).json(payload);
-  } catch (error) {
-    // Log full error with stack for debugging
-    console.error("Register error:", error);
-    // Forward to global error handler to use unified formatting
-    next(error);
-  }
-};
-
-/**
  * POST /api/auth/refresh-token
  * @desc Generate a new access token using a valid refresh token
  * @access Public
@@ -274,6 +222,165 @@ export const login = async (req, res) => {
 };
 
 /**
+ * POST /api/auth/google
+ * @desc Authenticate with Google One Tap / OAuth2 ID token
+ * @access Public
+ *
+ * @body {string} credential - Google ID token
+ */
+export const loginWithGoogle = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res
+        .status(400)
+        .json({ message: "Google credential is required." });
+    }
+
+    if (!googleClient) {
+      return res.status(500).json({ message: "Google SSO is not configured." });
+    }
+
+    // Verify the ID token with Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      return res
+        .status(401)
+        .json({ message: "Unable to verify Google token." });
+    }
+
+    const { email, name, picture, email_verified: emailVerified } = payload;
+
+    if (!email || !emailVerified) {
+      return res
+        .status(401)
+        .json({ message: "Google account email is not verified." });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+
+    let user = await User.findOne({ email: normalizedEmail }).select(
+      "+password +refreshToken"
+    );
+
+    // Disallow SSO for admin accounts to avoid bypassing admin auth
+    if (user && user.role === "admin") {
+      return res.status(403).json({
+        message: "Google login is not available for admin accounts.",
+      });
+    }
+
+    // Disallow banned users
+    if (user && user.isBanned) {
+      return res.status(403).json({
+        message: "Your account has been banned. Contact support for help.",
+      });
+    }
+
+    // Create user if not exists (default role: student)
+    if (!user) {
+      const randomPassword = crypto.randomBytes(32).toString("hex");
+
+      user = await User.create({
+        fullName: name || normalizedEmail.split("@")[0],
+        email: normalizedEmail,
+        password: randomPassword,
+        role: "student",
+        avatar: picture || "",
+        isVerified: true,
+      });
+
+      await UserProfile.create({ userId: user._id });
+    } else {
+      // Update missing profile info opportunistically
+      let shouldSave = false;
+
+      if (!user.fullName && name) {
+        user.fullName = name;
+        shouldSave = true;
+      }
+
+      if (!user.avatar && picture) {
+        user.avatar = picture;
+        shouldSave = true;
+      }
+
+      if (shouldSave) {
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+
+    const { accessToken, refreshToken } = generateTokenPair({
+      id: user._id,
+      role: user.role || "student",
+      email: user.email,
+    });
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
+      maxAge: (() => {
+        const expires = process.env.JWT_REFRESH_EXPIRE || "7d";
+
+        if (expires.endsWith("d")) {
+          const days = parseInt(expires.replace("d", ""), 10);
+          return days * 24 * 60 * 60 * 1000;
+        }
+
+        return 7 * 24 * 60 * 60 * 1000;
+      })(),
+    };
+
+    res.cookie("refreshToken", refreshToken, cookieOptions);
+
+    const userProfile = await UserProfile.findOne({ userId: user._id });
+
+    return res.status(200).json({
+      message: "Login successful with Google.",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar || "",
+        isVerified: user.isVerified,
+        profileCompleted: user.profileCompleted,
+        profileApprovalStatus: user.profileApprovalStatus,
+        profile: userProfile
+          ? {
+              phone: userProfile.phone,
+              address: userProfile.address,
+              bio: userProfile.bio,
+              expertise: userProfile.expertise,
+              qualifications: userProfile.qualifications,
+              cvUrl: userProfile.cvUrl,
+            }
+          : null,
+      },
+      tokens: {
+        accessToken,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error during Google login." });
+  }
+};
+
+/**
  * PUT /api/auth/reset-password/:token
  * @desc Reset user password using a valid reset token
  * @access Public
@@ -289,46 +396,6 @@ export const resetPassword = async (req, res) => {
     if (!password) {
       return res.status(400).json({ message: "New password is required." });
     }
-
-    // Validate password strength
-    if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters long." });
-    }
-
-    // Hash the token
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-    // Find user by reset token and ensure token is still valid
-    const user = await User.findOne({
-      resetPasswordToken: hashedToken,
-      resetPasswordExpire: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Invalid or expired password reset token." });
-    }
-
-    // Update password
-    user.password = password;
-
-    // Clear reset token + expiry
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-
-    await user.save();
-
-    return res.status(200).json({
-      message: "Password has been reset successfully. You can now log in.",
-    });
-  } catch (error) {
-    console.error("Reset password error:", error);
-    res.status(500).json({ message: "Server error while resetting password." });
-  }
-};
 
 /**
 ́́ * POST /api/auth/logout
@@ -371,87 +438,5 @@ export const logout = async (req, res) => {
   } catch (error) {
     console.error("Log out error:", error);
     res.status(500).json({ message: "Server error during log out." });
-  }
-};
-
-/**
- * POST /api/auth/forgot-password
- * @desc Send a password reset link to user's email
- * @access Public
- *
- * @body {string} email - Registered email address of the user
- */
-export const forgotPassword = async (req, res) => {
-  let user;
-
-  try {
-    const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
-    }
-
-    // Check if user exists
-    user = await User.findOne({ email });
-    if (!user) {
-      // (Optional) To prevent email enumeration, return generic message
-      return res.status(200).json({
-        message:
-          "If an account with that email exists, a password reset link has been sent.",
-      });
-    }
-
-    // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
-
-    // Hash token before saving to DB (for security)
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
-
-    // Set reset token + expiry (10 minutes)
-    user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
-
-    await user.save({ validateBeforeSave: false });
-
-    // Build reset URL (frontend)
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
-
-    // Email content
-    const html = `
-            <h2>Password Reset Request</h2>
-            <p>Hello ${user.fullName || "User"},</p>
-            <p>You requested to reset your password. Click the link below to reset it:</p>
-            <a href="${resetUrl}" target="_blank">${resetUrl}</a>
-            <p>This link will expire in 10 minutes.</p>
-            <p>If you did not request this, please ignore this email.</p>
-        `;
-
-    // Send via SendGrid
-    await sendEmail({
-      to: user.email,
-      subject: "Password Reset Request",
-      html,
-    });
-
-    res.status(200).json({
-      message:
-        "If an account with that email exists, a password reset link has been sent.",
-    });
-  } catch (error) {
-    console.error("Forgot password error:", error);
-
-    // Reset token cleanup if error occurred after saving
-    if (user) {
-      user.resetPasswordToken = undefined;
-      user.resetPasswordExpire = undefined;
-      await user.save({ validateBeforeSave: false });
-    }
-
-    res
-      .status(500)
-      .json({ message: "Server error while sending password reset email." });
   }
 };

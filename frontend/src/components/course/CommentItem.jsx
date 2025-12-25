@@ -9,7 +9,7 @@ const formatTimeAgo = (dateString) => {
   const now = new Date();
   const date = new Date(dateString);
   const seconds = Math.floor((now - date) / 1000);
-  
+
   if (seconds < 60) return 'Just now';
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
@@ -20,7 +20,7 @@ const formatTimeAgo = (dateString) => {
 const CommentItem = ({ comment, discussionId, depth = 0 }) => {
   const { user } = useAuth();
   const { toggleLikeComment, deleteComment, updateComment, createComment, fetchDiscussionDetail } = useDiscussions();
-  
+
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
@@ -91,10 +91,10 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
               <span className={styles.dot}>•</span>
               <span className={styles.time}>{formatTimeAgo(comment.createdAt)}</span>
             </div>
-            
+
             <div className={styles.actionIcons}>
               {canEdit && (
-                <button 
+                <button
                   className={styles.iconButton}
                   onClick={() => setShowEditForm(!showEditForm)}
                   title="Edit comment"
@@ -106,13 +106,13 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
                 </button>
               )}
               {canDelete && (
-                <button 
+                <button
                   className={styles.iconButton}
                   onClick={() => setShowDeleteConfirm(true)}
                   title="Delete comment"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                   </svg>
                 </button>
               )}
@@ -144,23 +144,13 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
 
           {/* Footer Actions */}
           <div className={styles.commentFooter}>
-            <button 
-              className={`${styles.actionButton} ${isLiked ? styles.liked : ''}`}
-              onClick={handleLike}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={isLiked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                <path d="M7 22V11M2 13v6c0 1.1.9 2 2 2h2.4c.5 0 .9-.2 1.2-.6l5.2-6.3c.5-.6.3-1.6-.4-2-.7-.4-1.5-.2-1.9.4L8 16V6c0-1.1.9-2 2-2h.5c.8 0 1.5.7 1.5 1.5v3.4c0 .5.2.9.6 1.2l3.4 2.6c.8.6 1 1.8.4 2.6l-3.9 5.2c-.3.4-.8.5-1.2.5H4c-1.1 0-2-.9-2-2z"/>
-              </svg>
-              <span>{comment.likesCount > 0 ? comment.likesCount : 'Like'}</span>
-            </button>
-
             {canReply && user && (
-              <button 
+              <button
                 className={styles.actionButton}
                 onClick={() => setShowReplyForm(!showReplyForm)}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                 </svg>
                 <span>Reply</span>
               </button>
@@ -170,7 +160,7 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
           {/* Reply Form */}
           {showReplyForm && (
             <div className={styles.replyFormContainer}>
-              <CommentForm 
+              <CommentForm
                 onSubmit={handleReply}
                 onCancel={() => setShowReplyForm(false)}
                 parentId={comment._id}
@@ -185,7 +175,7 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
       {comment.replies && comment.replies.length > 0 && (
         <div className={styles.replies}>
           {comment.replies.map(reply => (
-            <CommentItem 
+            <CommentItem
               key={reply._id}
               comment={reply}
               discussionId={discussionId}

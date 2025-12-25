@@ -894,7 +894,7 @@ const seedLessons = async (chapters) => {
         videoDuration: 600 + i * 300, // 10-25 minutes
         resources: [
           {
-            name: "Lesson Notes",
+            name: "Lesson Documents",
             url: `https://res.cloudinary.com/demo/document/upload/v1/resources/notes${chapterIndex}-${i}.pdf`,
             type: "pdf",
           },

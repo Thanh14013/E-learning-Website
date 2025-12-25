@@ -231,9 +231,7 @@ export const getUserList = async (req, res) => {
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .select(
-        "-password -refreshToken -verificationToken -resetPasswordToken -resetPasswordExpire"
-      );
+      .select("-password -refreshToken");
 
     return res.status(200).json({
       total: totalUsers,

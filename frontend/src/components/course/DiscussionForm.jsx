@@ -2,20 +2,21 @@ import { useState } from 'react';
 import { useDiscussions } from '../../contexts/DiscussionContext.jsx';
 import styles from './DiscussionForm.module.css';
 
-const DiscussionForm = ({ 
-  courseId, 
-  discussionData = null, 
-  onSuccess, 
-  onCancel 
+const DiscussionForm = ({
+  courseId,
+  lessonId = null,
+  discussionData = null,
+  onSuccess,
+  onCancel
 }) => {
   const { createDiscussion, updateDiscussion } = useDiscussions();
   const isEditMode = !!discussionData;
-  
+
   const [formData, setFormData] = useState({
     title: discussionData?.title || '',
     content: discussionData?.content || '',
   });
-  
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,8 +35,8 @@ const DiscussionForm = ({
     // Content validation
     if (!formData.content.trim()) {
       newErrors.content = 'Content is required';
-    } else if (formData.content.length < 1) {
-      newErrors.content = 'Content must be at least 1 character';
+    } else if (formData.content.length < 10) {
+      newErrors.content = 'Content must be at least 10 characters';
     } else if (formData.content.length > 5000) {
       newErrors.content = 'Content cannot exceed 5000 characters';
     }
@@ -50,7 +51,7 @@ const DiscussionForm = ({
       ...prev,
       [name]: value
     }));
-    
+
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -62,7 +63,7 @@ const DiscussionForm = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
 
     setIsSubmitting(true);
@@ -76,10 +77,11 @@ const DiscussionForm = ({
       } else {
         result = await createDiscussion(courseId, {
           title: formData.title.trim(),
-          content: formData.content.trim()
+          content: formData.content.trim(),
+          lessonId: lessonId || null
         });
       }
-      
+
       if (onSuccess) onSuccess(result);
     } catch (error) {
       console.error('Submit failed:', error);
@@ -91,7 +93,7 @@ const DiscussionForm = ({
   return (
     <form className={styles.discussionForm} onSubmit={handleSubmit}>
       <h2>{isEditMode ? 'Edit Discussion' : 'Create New Discussion'}</h2>
-      
+
       {/* Title Field */}
       <div className="form-group">
         <label htmlFor="title" className="form-label">
@@ -153,7 +155,7 @@ const DiscussionForm = ({
 
       {/* Form Actions */}
       <div className={styles.formActions}>
-        <button 
+        <button
           type="button"
           className="btn btn-outline"
           onClick={onCancel}
@@ -161,13 +163,13 @@ const DiscussionForm = ({
         >
           Cancel
         </button>
-        <button 
+        <button
           type="submit"
           className="btn btn-primary-student"
           disabled={isSubmitting || Object.keys(errors).length > 0}
         >
-          {isSubmitting 
-            ? (isEditMode ? 'Updating...' : 'Creating...') 
+          {isSubmitting
+            ? (isEditMode ? 'Updating...' : 'Creating...')
             : (isEditMode ? 'Update Discussion' : 'Create Discussion')
           }
         </button>

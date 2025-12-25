@@ -5,15 +5,13 @@
 ### 1. QUẢN LÝ TÀI KHOẢN & XÁC THỰC
 
 1.1. Workflow đăng ký tài khoản Teacher  
-1.2. Workflow xác thực email  
-1.3. Workflow đăng nhập  
-1.4. Workflow quên mật khẩu và đặt lại mật khẩu  
-1.5. Workflow gửi lại email xác thực  
-1.6. Workflow đăng xuất  
-1.7. Workflow làm mới access token  
-1.8. Workflow xem thông tin profile cá nhân  
-1.9. Workflow cập nhật thông tin profile  
-1.10. Workflow upload avatar
+1.2. Workflow đăng nhập  
+1.3. Workflow hoàn thành hồ sơ Teacher  
+1.4. Workflow đăng xuất  
+1.5. Workflow làm mới access token  
+1.6. Workflow xem thông tin profile cá nhân  
+1.7. Workflow cập nhật thông tin profile  
+1.8. Workflow upload avatar
 
 ---
 

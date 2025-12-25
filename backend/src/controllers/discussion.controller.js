@@ -1,17 +1,19 @@
-import Discussion from '../models/discussion.model.js';
-import Comment from '../models/comment.model.js';
-import User from '../models/user.model.js';
-import { getSocketIOInstance } from '../config/socket.config.js';
-import { emitDiscussionCreated, emitDiscussionLiked } from '../socket/index.js';
-import { notifyDiscussionCreated, notifyDiscussionLiked, notifyDiscussionPinned } from '../services/notification.service.js';
+import Discussion from "../models/discussion.model.js";
+import Comment from "../models/comment.model.js";
+import User from "../models/user.model.js";
+import { getSocketIOInstance } from "../config/socket.config.js";
+import { emitDiscussionCreated, emitDiscussionLiked } from "../socket/index.js";
+import {
+  notifyDiscussionCreated,
+  notifyDiscussionLiked,
+  notifyDiscussionPinned,
+} from "../services/notification.service.js";
 
 /**
  * Discussion Controller
  * Handles CRUD operations for course discussions
  * Integrates with Socket.IO for real-time updates and notification service
  */
-
-
 
 /**
  * Create a new discussion in a course
@@ -20,21 +22,21 @@ import { notifyDiscussionCreated, notifyDiscussionLiked, notifyDiscussionPinned 
  */
 export const createDiscussion = async (req, res) => {
   try {
-    const { courseId, title, content } = req.body;
+    const { courseId, lessonId, title, content } = req.body;
     const userId = req.user.id;
 
     // Validate required fields
     if (!courseId) {
       return res.status(400).json({
         success: false,
-        message: 'Course ID is required.',
+        message: "Course ID is required.",
       });
     }
 
     if (!title || !content) {
       return res.status(400).json({
         success: false,
-        message: 'Title and content are required.',
+        message: "Title and content are required.",
       });
     }
 
@@ -42,25 +44,27 @@ export const createDiscussion = async (req, res) => {
     if (title.length < 5 || title.length > 200) {
       return res.status(400).json({
         success: false,
-        message: 'Title must be between 5 and 200 characters.',
+        message: "Title must be between 5 and 200 characters.",
       });
     }
 
     // Validate content length
-    if (content.length < 1 || content.length > 5000) {
+    if (content.length < 10 || content.length > 5000) {
       return res.status(400).json({
         success: false,
-        message: 'Content must be between 1 and 5000 characters.',
+        message: "Content must be between 10 and 5000 characters.",
       });
     }
 
     // Validate that user is enrolled in the course or is the teacher
     const Course = (await import("../models/course.model.js")).default;
-    const course = await Course.findById(courseId).select('teacherId enrolledStudents');
+    const course = await Course.findById(courseId).select(
+      "teacherId enrolledStudents"
+    );
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found.',
+        message: "Course not found.",
       });
     }
 
@@ -70,16 +74,17 @@ export const createDiscussion = async (req, res) => {
       (studentId) => studentId.toString() === userId.toString()
     );
 
-    if (!isTeacher && !isEnrolled && req.user.role !== 'admin') {
+    if (!isTeacher && !isEnrolled && req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: 'You must be enrolled in this course to create discussions.',
+        message: "You must be enrolled in this course to create discussions.",
       });
     }
 
     // Create discussion
     const discussion = await Discussion.create({
       courseId,
+      lessonId: lessonId || null,
       userId,
       title: title.trim(),
       content: content.trim(),
@@ -89,7 +94,7 @@ export const createDiscussion = async (req, res) => {
     });
 
     // Populate user information
-    await discussion.populate('userId', 'fullName email avatar role');
+    await discussion.populate("userId", "fullName email avatar role");
 
     // Get creator information for notifications
     const creator = {
@@ -106,6 +111,7 @@ export const createDiscussion = async (req, res) => {
         title: discussion.title,
         content: discussion.content,
         courseId: discussion.courseId,
+        lessonId: discussion.lessonId,
         userId: discussion.userId,
         isPinned: discussion.isPinned,
         likesCount: discussion.likesCount,
@@ -115,7 +121,7 @@ export const createDiscussion = async (req, res) => {
       });
     } catch (socketError) {
       // Log socket error but don't fail the request
-      console.error('Socket.IO error:', socketError.message);
+      console.error("Socket.IO error:", socketError.message);
     }
 
     // Send notifications to course members
@@ -123,17 +129,18 @@ export const createDiscussion = async (req, res) => {
       await notifyDiscussionCreated(courseId, discussion, creator);
     } catch (notificationError) {
       // Log notification error but don't fail the request
-      console.error('Notification error:', notificationError.message);
+      console.error("Notification error:", notificationError.message);
     }
 
     // Return created discussion
     return res.status(201).json({
       success: true,
-      message: 'Discussion created successfully.',
+      message: "Discussion created successfully.",
       data: {
         discussion: {
           _id: discussion._id,
           courseId: discussion.courseId,
+          lessonId: discussion.lessonId,
           userId: discussion.userId,
           title: discussion.title,
           content: discussion.content,
@@ -146,14 +153,14 @@ export const createDiscussion = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Create discussion error:', error);
+    console.error("Create discussion error:", error);
 
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({
         success: false,
-        message: 'Validation failed.',
+        message: "Validation failed.",
         errors: messages,
       });
     }
@@ -162,14 +169,14 @@ export const createDiscussion = async (req, res) => {
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
-        message: 'A discussion with this information already exists.',
+        message: "A discussion with this information already exists.",
       });
     }
 
     // Generic error
     return res.status(500).json({
       success: false,
-      message: 'Failed to create discussion. Please try again later.',
+      message: "Failed to create discussion. Please try again later.",
     });
   }
 };
@@ -190,27 +197,38 @@ export const getDiscussionsByCourse = async (req, res) => {
     const {
       page = 1,
       limit = 10,
-      search = '',
-      sortBy = 'createdAt',
-      order = 'desc',
+      search = "",
+      sortBy = "createdAt",
+      order = "desc",
+      lessonId, // Optional filter for lesson-level discussions
     } = req.query;
 
     // Validate courseId
     if (!courseId) {
       return res.status(400).json({
         success: false,
-        message: 'Course ID is required.',
+        message: "Course ID is required.",
       });
     }
 
     // Build query
     const query = { courseId };
 
+    // Filter by lessonId if provided
+    // If lessonId is explicitly "null", get only course-level discussions
+    // If lessonId has a value, get only that lesson's discussions
+    // If lessonId is not provided, get all discussions (course + all lessons)
+    if (lessonId === "null") {
+      query.lessonId = null;
+    } else if (lessonId) {
+      query.lessonId = lessonId;
+    }
+
     // Add search filter if provided
     if (search) {
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { content: { $regex: search, $options: 'i' } },
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -223,7 +241,7 @@ export const getDiscussionsByCourse = async (req, res) => {
     const sortConfig = {
       isPinned: -1, // Pinned first
     };
-    sortConfig[sortBy] = order === 'asc' ? 1 : -1;
+    sortConfig[sortBy] = order === "asc" ? 1 : -1;
 
     // Get total count for pagination
     const totalDiscussions = await Discussion.countDocuments(query);
@@ -233,8 +251,8 @@ export const getDiscussionsByCourse = async (req, res) => {
       .sort(sortConfig)
       .skip(skip)
       .limit(limitNum)
-      .populate('userId', 'fullName email avatar role')
-      .populate('commentCount')
+      .populate("userId", "fullName email avatar role")
+      .populate("commentCount")
       .lean();
 
     // Add likesCount to each discussion
@@ -250,7 +268,7 @@ export const getDiscussionsByCourse = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Discussions retrieved successfully.',
+      message: "Discussions retrieved successfully.",
       data: {
         discussions: discussionsWithCommentCount,
         pagination: {
@@ -264,10 +282,10 @@ export const getDiscussionsByCourse = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get discussions by course error:', error);
+    console.error("Get discussions by course error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve discussions. Please try again later.',
+      message: "Failed to retrieve discussions. Please try again later.",
     });
   }
 };
@@ -283,14 +301,14 @@ export const getDiscussionDetail = async (req, res) => {
 
     // Find discussion and populate user info
     const discussion = await Discussion.findById(id)
-      .populate('userId', 'fullName email avatar role')
-      .populate('commentCount')
+      .populate("userId", "fullName email avatar role")
+      .populate("commentCount")
       .lean();
 
     if (!discussion) {
       return res.status(404).json({
         success: false,
-        message: 'Discussion not found.',
+        message: "Discussion not found.",
       });
     }
 
@@ -300,7 +318,7 @@ export const getDiscussionDetail = async (req, res) => {
 
     // Get all comments for this discussion
     const comments = await Comment.find({ discussionId: id })
-      .populate('userId', 'fullName email avatar role')
+      .populate("userId", "fullName email avatar role")
       .sort({ createdAt: 1 })
       .lean();
 
@@ -334,7 +352,7 @@ export const getDiscussionDetail = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Discussion detail retrieved successfully.',
+      message: "Discussion detail retrieved successfully.",
       data: {
         discussion: {
           ...discussion,
@@ -345,19 +363,19 @@ export const getDiscussionDetail = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get discussion detail error:', error);
+    console.error("Get discussion detail error:", error);
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid discussion ID format.',
+        message: "Invalid discussion ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to retrieve discussion detail. Please try again later.',
+      message: "Failed to retrieve discussion detail. Please try again later.",
     });
   }
 };
@@ -379,23 +397,26 @@ export const updateDiscussion = async (req, res) => {
     if (!discussion) {
       return res.status(404).json({
         success: false,
-        message: 'Discussion not found.',
+        message: "Discussion not found.",
       });
     }
 
     // Check ownership (owner or teacher or admin)
     const isOwner = discussion.userId.toString() === userId.toString();
-    const isAdmin = req.user.role === 'admin';
+    const isAdmin = req.user.role === "admin";
 
     // Determine course teacher
     const Course = (await import("../models/course.model.js")).default;
-    const course = await Course.findById(discussion.courseId).select('teacherId');
-    const isTeacher = course && course.teacherId.toString() === userId.toString();
+    const course = await Course.findById(discussion.courseId).select(
+      "teacherId"
+    );
+    const isTeacher =
+      course && course.teacherId.toString() === userId.toString();
 
     if (!isOwner && !isTeacher && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: 'You do not have permission to update this discussion.',
+        message: "You do not have permission to update this discussion.",
       });
     }
 
@@ -404,7 +425,7 @@ export const updateDiscussion = async (req, res) => {
       if (title.length < 5 || title.length > 200) {
         return res.status(400).json({
           success: false,
-          message: 'Title must be between 5 and 200 characters.',
+          message: "Title must be between 5 and 200 characters.",
         });
       }
       discussion.title = title.trim();
@@ -414,7 +435,7 @@ export const updateDiscussion = async (req, res) => {
       if (content.length < 10 || content.length > 5000) {
         return res.status(400).json({
           success: false,
-          message: 'Content must be between 10 and 5000 characters.',
+          message: "Content must be between 10 and 5000 characters.",
         });
       }
       discussion.content = content.trim();
@@ -424,15 +445,16 @@ export const updateDiscussion = async (req, res) => {
     await discussion.save();
 
     // Populate user info
-    await discussion.populate('userId', 'fullName email avatar role');
+    await discussion.populate("userId", "fullName email avatar role");
 
     return res.status(200).json({
       success: true,
-      message: 'Discussion updated successfully.',
+      message: "Discussion updated successfully.",
       data: {
         discussion: {
           _id: discussion._id,
           courseId: discussion.courseId,
+          lessonId: discussion.lessonId,
           userId: discussion.userId,
           title: discussion.title,
           content: discussion.content,
@@ -445,29 +467,29 @@ export const updateDiscussion = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Update discussion error:', error);
+    console.error("Update discussion error:", error);
 
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((err) => err.message);
       return res.status(400).json({
         success: false,
-        message: 'Validation failed.',
+        message: "Validation failed.",
         errors: messages,
       });
     }
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid discussion ID format.',
+        message: "Invalid discussion ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to update discussion. Please try again later.',
+      message: "Failed to update discussion. Please try again later.",
     });
   }
 };
@@ -488,23 +510,26 @@ export const deleteDiscussion = async (req, res) => {
     if (!discussion) {
       return res.status(404).json({
         success: false,
-        message: 'Discussion not found.',
+        message: "Discussion not found.",
       });
     }
 
     // Check ownership (owner or teacher or admin)
     const isOwner = discussion.userId.toString() === userId.toString();
-    const isAdmin = req.user.role === 'admin';
+    const isAdmin = req.user.role === "admin";
 
     // Determine course teacher
     const Course = (await import("../models/course.model.js")).default;
-    const course = await Course.findById(discussion.courseId).select('teacherId');
-    const isTeacher = course && course.teacherId.toString() === userId.toString();
+    const course = await Course.findById(discussion.courseId).select(
+      "teacherId"
+    );
+    const isTeacher =
+      course && course.teacherId.toString() === userId.toString();
 
     if (!isOwner && !isTeacher && !isAdmin) {
       return res.status(403).json({
         success: false,
-        message: 'You do not have permission to delete this discussion.',
+        message: "You do not have permission to delete this discussion.",
       });
     }
 
@@ -516,22 +541,22 @@ export const deleteDiscussion = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Discussion and all associated comments deleted successfully.',
+      message: "Discussion and all associated comments deleted successfully.",
     });
   } catch (error) {
-    console.error('Delete discussion error:', error);
+    console.error("Delete discussion error:", error);
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid discussion ID format.',
+        message: "Invalid discussion ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to delete discussion. Please try again later.',
+      message: "Failed to delete discussion. Please try again later.",
     });
   }
 };
@@ -552,7 +577,7 @@ export const likeDiscussion = async (req, res) => {
     if (!discussion) {
       return res.status(404).json({
         success: false,
-        message: 'Discussion not found.',
+        message: "Discussion not found.",
       });
     }
 
@@ -589,7 +614,7 @@ export const likeDiscussion = async (req, res) => {
         likesCount
       );
     } catch (socketError) {
-      console.error('Socket.IO error:', socketError.message);
+      console.error("Socket.IO error:", socketError.message);
     }
 
     // Send notification to discussion owner (only if liking, not unliking)
@@ -606,32 +631,34 @@ export const likeDiscussion = async (req, res) => {
           liker
         );
       } catch (notificationError) {
-        console.error('Notification error:', notificationError.message);
+        console.error("Notification error:", notificationError.message);
       }
     }
 
     return res.status(200).json({
       success: true,
-      message: isLiked ? 'Discussion liked successfully.' : 'Discussion unliked successfully.',
+      message: isLiked
+        ? "Discussion liked successfully."
+        : "Discussion unliked successfully.",
       data: {
         isLiked,
         likesCount,
       },
     });
   } catch (error) {
-    console.error('Like discussion error:', error);
+    console.error("Like discussion error:", error);
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid discussion ID format.',
+        message: "Invalid discussion ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to like discussion. Please try again later.',
+      message: "Failed to like discussion. Please try again later.",
     });
   }
 };
@@ -647,10 +674,10 @@ export const pinDiscussion = async (req, res) => {
     const userId = req.user.id;
 
     // Check if user is teacher or admin
-    if (req.user.role !== 'teacher' && req.user.role !== 'admin') {
+    if (req.user.role !== "teacher" && req.user.role !== "admin") {
       return res.status(403).json({
         success: false,
-        message: 'Only teachers and admins can pin discussions.',
+        message: "Only teachers and admins can pin discussions.",
       });
     }
 
@@ -660,7 +687,7 @@ export const pinDiscussion = async (req, res) => {
     if (!discussion) {
       return res.status(404).json({
         success: false,
-        message: 'Discussion not found.',
+        message: "Discussion not found.",
       });
     }
 
@@ -703,33 +730,33 @@ export const pinDiscussion = async (req, res) => {
           teacher
         );
       } catch (notificationError) {
-        console.error('Notification error:', notificationError.message);
+        console.error("Notification error:", notificationError.message);
       }
     }
 
     return res.status(200).json({
       success: true,
       message: discussion.isPinned
-        ? 'Discussion pinned successfully.'
-        : 'Discussion unpinned successfully.',
+        ? "Discussion pinned successfully."
+        : "Discussion unpinned successfully.",
       data: {
         isPinned: discussion.isPinned,
       },
     });
   } catch (error) {
-    console.error('Pin discussion error:', error);
+    console.error("Pin discussion error:", error);
 
     // Handle invalid ObjectId
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return res.status(400).json({
         success: false,
-        message: 'Invalid discussion ID format.',
+        message: "Invalid discussion ID format.",
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: 'Failed to pin discussion. Please try again later.',
+      message: "Failed to pin discussion. Please try again later.",
     });
   }
 };

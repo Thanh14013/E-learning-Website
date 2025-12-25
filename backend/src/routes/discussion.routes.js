@@ -37,17 +37,75 @@ router.post("/", authenticate, isStudentOrTeacher, createDiscussion);
 
 /**
  * GET /api/discussions/course/:courseId
- * Get all discussions for a specific course
+ * Get all discussions for a specific course or lesson
  * @access Public
- * @query page, limit, search, sortBy, order
+ * @query page, limit, search, sortBy, order, lessonId
+ * @note Pass lessonId='null' to get only course-level discussions
+ *       Pass lessonId=<id> to get specific lesson discussions
+ *       Omit lessonId to get all discussions
  */
-// Prepare to add validation
-// Future validation logic can be added here
-
 router.get(
   "/course/:courseId",
   validateCourseIdParam,
   validatePagination,
+  getDiscussionsByCourse
+);
+
+/**
+ * GET /api/discussions/lesson/:lessonId
+ * Get all discussions for a specific lesson
+ * @access Public
+ * @query page, limit, search, sortBy, order
+ */
+router.get(
+  "/lesson/:lessonId",
+  validatePagination,
+  async (req, res, next) => {
+    // Convert lessonId param to query for reuse of getDiscussionsByCourse
+    req.query.lessonId = req.params.lessonId;
+    // We need courseId - will be fetched from lesson -> chapter
+    try {
+      const Lesson = (await import("../models/lesson.model.js")).default;
+      const Chapter = (await import("../models/chapter.model.js")).default;
+
+      console.log("🔍 Finding lesson with ID:", req.params.lessonId);
+      const lesson = await Lesson.findById(req.params.lessonId).select(
+        "chapterId"
+      );
+      if (!lesson) {
+        console.log("❌ Lesson not found in database");
+        return res.status(404).json({
+          success: false,
+          message: "Lesson not found.",
+        });
+      }
+
+      console.log("✅ Lesson found, chapterId:", lesson.chapterId);
+
+      // Get courseId from chapter
+      const chapter = await Chapter.findById(lesson.chapterId).select(
+        "courseId"
+      );
+      if (!chapter) {
+        console.log("❌ Chapter not found for lesson");
+        return res.status(404).json({
+          success: false,
+          message: "Chapter not found.",
+        });
+      }
+
+      console.log("✅ Chapter found, courseId:", chapter.courseId);
+      req.params.courseId = chapter.courseId.toString();
+      next();
+    } catch (error) {
+      console.error("❌ Error fetching lesson/chapter:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to retrieve lesson.",
+        error: error.message,
+      });
+    }
+  },
   getDiscussionsByCourse
 );
 
@@ -85,7 +143,13 @@ router.put("/:id/like", authenticate, validateObjectId, likeDiscussion);
  * Pin or unpin a discussion (Teacher/Admin only)
  * @access Protected - Teacher or Admin only
  */
-router.put("/:id/pin", authenticate, isTeacherOrAdmin, validateObjectId, pinDiscussion);
+router.put(
+  "/:id/pin",
+  authenticate,
+  isTeacherOrAdmin,
+  validateObjectId,
+  pinDiscussion
+);
 
 /**
  * POST /api/discussions/:id/comment

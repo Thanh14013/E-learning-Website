@@ -1,16 +1,16 @@
 import express from "express";
 import {
   register,
-  resetPassword,
   refreshAccessToken,
   login,
+  loginWithGoogle,
   logout,
-  forgotPassword,
 } from "../controllers/auth.controller.js";
 import { registerLimiter } from "../middleware/rateLimiter.js";
 import {
   validateRegister,
   validateRefreshToken,
+  validateGoogleLogin,
 } from "../middleware/validator.js";
 import { authenticate } from "../middleware/auth.js";
 
@@ -22,18 +22,15 @@ router.post("/register", registerLimiter, validateRegister, register);
 // POST /api/auth/refresh-token - Refresh access token with validation
 router.post("/refresh-token", validateRefreshToken, refreshAccessToken);
 
-// PUT /api/auth/reset-password/:token - Reset user password using valid token
-router.put("/reset-password/:token", resetPassword);
-
 // POST /api/auth/login
 router.post("/login", login);
+
+// POST /api/auth/google - Login/Register via Google SSO
+router.post("/google", validateGoogleLogin, loginWithGoogle);
 
 // POST /api/auth/logout
 router.post("/logout", authenticate, logout);
 
-// POST /api/auth/forgot-password - Generate password reset token
-router.post("/forgot-password", forgotPassword);
-
-// NOTE: email verification/resend endpoints removed as requested
+// NOTE: email verification/resend/password-reset endpoints removed as requested
 
 export default router;

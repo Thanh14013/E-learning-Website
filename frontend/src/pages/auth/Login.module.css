@@ -37,7 +37,7 @@
   border: 1px solid var(--input-border);
   background-color: var(--input-bg);
   color: var(--input-text);
-  
+
   border-radius: 6px;
   outline: none;
   font-size: 16px;
@@ -66,16 +66,49 @@
   font-size: 14px;
 }
 .forgotPasswordContainer a {
-    color: var(--color-info);
-    text-decoration: none;
+  color: var(--color-info);
+  text-decoration: none;
 }
 
 .button:hover {
   background-color: var(--color-student-primary-hover);
 }
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 24px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.divider span {
+  flex: 1;
+  height: 1px;
+  background: var(--input-border);
+}
+
+.googleContainer {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.googleButton {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.helper {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
 .link {
-    color: var(--color-info);
-    cursor: pointer;
+  color: var(--color-info);
+  cursor: pointer;
 }
 .link:hover {
   text-decoration: underline;
@@ -83,9 +116,9 @@
 
 /* Responsive Design */
 @media (max-width: 600px) {
-    .container {
-        width: 90%;
-        margin: 40px auto;
-        padding: 30px;
-    }
+  .container {
+    width: 90%;
+    margin: 40px auto;
+    padding: 30px;
+  }
 }

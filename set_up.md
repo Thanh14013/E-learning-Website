@@ -78,6 +78,8 @@ TURN_PASSWORD=password
 3. Lấy API credentials
 4. Thêm vào `.env` file
 
+> ✅ Google SSO: thêm `GOOGLE_CLIENT_ID` (backend) và `VITE_GOOGLE_CLIENT_ID` (frontend) bằng Client ID từ Google Cloud Console (OAuth 2.0 Web client).
+
 #### 2.5 Cài đặt SendGrid
 
 1. Truy cập [SendGrid](https://sendgrid.com/)

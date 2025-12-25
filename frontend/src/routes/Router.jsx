@@ -9,8 +9,6 @@ import Courses from "../pages/courses/Course.jsx";
 import CourseDetailPage from "../pages/courses/CourseDetail.jsx";
 import CreateCourse from "../pages/courses/CreateCourse.jsx";
 import Dashboard from "../pages/dashboard/DashboardOverview.jsx";
-import ForgotPasswordPage from "../pages/auth/ForgotPassword.jsx";
-import ResetPasswordPage from "../pages/auth/ResetPassword.jsx";
 import QuizDemo from "../pages/quizz/QuizDemo.jsx";
 import QuizReview from "../pages/quizz/QuizReview.jsx";
 import QuizzList from "../components/quizz/QuizzList.jsx";
@@ -44,8 +42,6 @@ const router = createBrowserRouter([
       { path: "teacher/complete-profile", element: <CompleteTeacherProfile /> },
       { path: "teacher/approval-pending", element: <TeacherApprovalPending /> },
       { path: "api-docs", element: <ApiDocs /> },
-      { path: "forgot-password", element: <ForgotPasswordPage /> },
-      { path: "reset-password/:token", element: <ResetPasswordPage /> },
 
       { path: "courses", element: <Courses /> },
       { path: "courses/:courseId", element: <CourseDetailPage /> },

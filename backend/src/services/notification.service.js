@@ -4,7 +4,7 @@ import {
   sendNotificationToCourse,
 } from "../socket/index.js";
 import Notification from "../models/notification.model.js";
-import { sendEmail } from "./email.services.js";
+// Email service import removed - notifications are in-app only
 
 /**
  * Notification Service
@@ -43,24 +43,14 @@ const createAndSendNotification = async (
       });
     }
 
-    // Send email notification if enabled
-    if (sendEmailNotification && userEmail && userName) {
-      await sendEmail({
-        to: userEmail,
-        subject: notificationData.title,
-        html: `
-                    <h3>Hello ${userName},</h3>
-                    <p>${notificationData.content}</p>
-                    ${
-                      notificationData.link
-                        ? `<p><a href="${process.env.FRONTEND_URL}${notificationData.link}" style="color:#1a73e8;">View Details</a></p>`
-                        : ""
-                    }
-                    <br/>
-                    <p>This is an automated notification from the E-Learning Platform.</p>
-                `,
-      });
-    }
+    // Email notifications disabled - use in-app notifications only
+    // if (sendEmailNotification && userEmail && userName) {
+    //   await sendEmail({
+    //     to: userEmail,
+    //     subject: notificationData.title,
+    //     html: `...`,
+    //   });
+    // }
 
     return notification;
   } catch (error) {
@@ -129,9 +119,7 @@ export const notifyEnrollment = async (
           action: "enrollment",
         },
       },
-      true,
-      teacher.email,
-      teacher.fullName
+      false
     );
 
     // Notify student about successful enrollment
@@ -148,9 +136,7 @@ export const notifyEnrollment = async (
           action: "enrollment_confirmation",
         },
       },
-      true,
-      student.email,
-      student.fullName
+      false
     );
 
     console.log(`📚 Enrollment notification sent for course ${course._id}`);
@@ -187,30 +173,7 @@ export const notifyQuizAssigned = async (enrolledStudents, quiz, course) => {
     // Send batch notifications
     await createAndSendBatchNotifications(studentIds, notificationData);
 
-    // Send email to all students
-    for (const student of enrolledStudents) {
-      await sendEmail({
-        to: student.email,
-        subject: `New Quiz: ${quiz.title}`,
-        html: `
-                    <h3>Hello ${student.fullName},</h3>
-                    <p>A new quiz has been published in your course "${
-                      course.title
-                    }".</p>
-                    <p><strong>Quiz:</strong> ${quiz.title}</p>
-                    ${
-                      quiz.dueDate
-                        ? `<p><strong>Due Date:</strong> ${new Date(
-                            quiz.dueDate
-                          ).toLocaleDateString()}</p>`
-                        : ""
-                    }
-                    <p><a href="${process.env.FRONTEND_URL}/courses/${
-          course._id
-        }/quizzes/${quiz._id}" style="color:#1a73e8;">Take Quiz Now</a></p>
-                `,
-      });
-    }
+    // Email notifications disabled - use in-app notifications only
 
     console.log(
       `📝 Quiz assignment notification sent to ${studentIds.length} students`
@@ -257,7 +220,8 @@ export const notifyDiscussionReply = async (
           commenterId: commenter._id,
         },
       },
-      true,
+      false
+    );
       discussionOwner.email,
       discussionOwner.fullName
     );

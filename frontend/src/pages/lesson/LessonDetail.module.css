@@ -99,80 +99,75 @@
 
 .overviewResources {
   margin-top: var(--spacing-4);
-  padding: var(--spacing-3);
-  border: 1px dashed var(--color-gray-300);
-  border-radius: var(--border-radius-md);
-  background: var(--color-gray-50);
+  padding: var(--spacing-4);
+  border: 2px solid #e3e8f0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-3);
 }
 
-.overviewDownload {
+.overviewHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: var(--spacing-3);
-  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 2px solid #e3e8f0;
 }
 
-.overviewLabel {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
+.overviewIcon {
+  font-size: 1.5rem;
+}
+
+.overviewTitle {
   margin: 0;
-}
-
-.overviewName {
-  margin: 4px 0 0;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.overviewDownloadBtn {
-  background: var(--color-primary);
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 10px;
-  text-decoration: none;
-  font-weight: 600;
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.overviewDownloadBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-}
-
-.relatedLinks {
+.referenceLinks {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
 }
 
-.linkGrid {
+.referenceItem {
   display: flex;
-  flex-wrap: wrap;
+  align-items: flex-start;
   gap: var(--spacing-2);
-}
-
-.linkPill {
-  display: inline-flex;
-  align-items: center;
-  padding: 8px 12px;
-  border-radius: 999px;
+  padding: var(--spacing-2);
   background: white;
-  border: 1px solid var(--color-gray-200);
-  color: var(--color-primary);
-  text-decoration: none;
-  font-weight: 600;
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+  border-radius: 8px;
+  border: 1px solid #e3e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.linkPill:hover {
-  background: var(--color-gray-100);
-  border-color: var(--color-primary);
-  transform: translateY(-1px);
+.referenceItem:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.referenceLabel {
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+  font-size: 0.95rem;
+}
+
+.referenceLink {
+  color: var(--text-primary);
+  text-decoration: none;
+  word-break: break-all;
+  transition: color 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.referenceLink:hover {
+  color: var(--color-primary);
+  text-decoration: underline;
 }
 
 .lessonContent h2,
