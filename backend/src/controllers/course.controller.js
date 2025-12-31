@@ -6,6 +6,7 @@ import Lesson from "../models/lesson.model.js";
 import Progress from "../models/progress.model.js";
 import User from "../models/user.model.js";
 import { notifyEnrollment } from "../services/notification.service.js";
+import mongoose from "mongoose";
 
 /**
  * @route   POST /api/courses
@@ -30,6 +31,9 @@ export const createCourse = async (req, res) => {
       category,
       level: level.toLowerCase(),
       teacherId,
+      approvalStatus: "pending",
+      submittedAt: new Date(),
+      isPublished: false,
     });
 
     return res.status(201).json({
@@ -85,7 +89,7 @@ export const uploadCourseThumbnail = async (req, res) => {
 
     // Upload to Cloudinary
     const filePath = req.file.path;
-    const secureUrl = await uploadFile(filePath, {
+    const uploadResult = await uploadFile(filePath, {
       folder: "courses",
       resource_type: "image",
     });
@@ -94,13 +98,13 @@ export const uploadCourseThumbnail = async (req, res) => {
     fs.unlinkSync(filePath);
 
     // Update course thumbnail
-    course.thumbnail = secureUrl;
+    course.thumbnail = uploadResult.secure_url;
     await course.save();
 
     return res.status(200).json({
       success: true,
       message: "Thumbnail uploaded successfully",
-      data: { thumbnail: secureUrl },
+      data: { thumbnail: uploadResult.secure_url },
     });
   } catch (error) {
     console.error("Upload thumbnail error:", error);
@@ -128,8 +132,13 @@ export const getAllCourses = async (req, res) => {
     if (req.query.category) filter.category = req.query.category;
     if (req.query.level) filter.level = req.query.level; // Don't lowercase - match exact case
     if (req.query.teacher) filter.teacherId = req.query.teacher;
-    if (req.query.isPublished !== undefined)
+    if (req.query.isPublished !== undefined) {
       filter.isPublished = req.query.isPublished === "true";
+    } else {
+      // Default: Only show published AND approved courses for public view
+      filter.isPublished = true;
+      filter.approvalStatus = "approved";
+    }
 
     // Text search (title/description) - accept both 'q' and 'search' parameters
     const searchQuery = req.query.search || req.query.q;
@@ -278,6 +287,84 @@ export const getCourseDetail = async (req, res) => {
 };
 
 /**
+ * @route  GET /api/teacher/courses/:id
+ * @desc   Get course detail for Teacher (Full access)
+ * @access Private (Teacher/Admin)
+ */
+export const getTeacherCourseById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const userRole = req.user.role;
+
+    // Fetch course
+    const course = await Course.findById(id).lean();
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    // Check ownership if teacher (Admins can view all)
+    if (userRole === 'teacher' && course.teacherId.toString() !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view this course",
+      });
+    }
+
+    // Fetch chapters + lessons (Raw data, no filtering)
+    const chapters = await Chapter.find({ courseId: id })
+      .sort({ order: 1 })
+      .lean();
+
+    const chapterIds = chapters.map((ch) => ch._id);
+    const lessons = await Lesson.find({ chapterId: { $in: chapterIds } })
+      .sort({ order: 1 })
+      .lean();
+
+    // Map lessons into chapters
+    const structuredChapters = chapters.map((chapter) => ({
+      ...chapter,
+      lessons: lessons
+        .filter(
+          (lesson) => lesson.chapterId.toString() === chapter._id.toString()
+        )
+        // Return FULL lesson object including videoUrl, resources, etc.
+        .map(l => ({
+            ...l,
+            // Ensure resources are explicitly included (though spread should handle it)
+            resources: l.resources || [] 
+        })),
+    }));
+
+    // Fetch discussons (optional)
+    // Fetch discussions for this course
+    const Discussion = (await import("../models/discussion.model.js")).default;
+    const discussions = await Discussion.find({ courseId: id, lessonId: null })
+      .populate("userId", "fullName email avatar")
+      .sort({ isPinned: -1, createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...course,
+        chapters: structuredChapters,
+        discussions
+      },
+    });
+  } catch (error) {
+    console.error("Get teacher course detail error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+/**
  * @route  PUT /api/courses/:id
  * @desc   Update Course
  * @access Private (teacher/admin + owner)
@@ -364,6 +451,13 @@ export const togglePublishCourse = async (req, res) => {
     const nextState = !course.isPublished;
 
     if (nextState === true) {
+      if (course.approvalStatus !== "approved" && req.user.role !== "admin") {
+        return res.status(400).json({
+          success: false,
+          message: "Course must be approved by an admin before publishing.",
+        });
+      }
+
       const chapters = await Chapter.find({ courseId: id });
 
       if (!chapters.length) {
@@ -380,6 +474,29 @@ export const togglePublishCourse = async (req, res) => {
         return res.status(400).json({
           success: false,
           message: "Course must have at least 1 lesson before publishing.",
+        });
+      }
+
+      // Check for quizzes
+      const Quiz = (await import("../models/quiz.model.js")).default;
+      const Question = (await import("../models/question.model.js")).default;
+
+      const quizzes = await Quiz.find({ courseId: id });
+      if (!quizzes.length) {
+        return res.status(400).json({
+          success: false,
+          message: "Course must have at least 1 quiz before publishing.",
+        });
+      }
+
+      // Check if at least one quiz has questions
+      const quizIds = quizzes.map(q => q._id);
+      const questionsCount = await Question.countDocuments({ quizId: { $in: quizIds } });
+
+      if (questionsCount === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Course quizzes must have at least 1 question before publishing.",
         });
       }
     }
@@ -428,6 +545,13 @@ export const deleteCourse = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: "Access denied. You do not own this course.",
+      });
+    }
+
+    if (course.approvalStatus === 'approved' && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: "Cannot delete an approved course. Please contact admin if necessary.",
       });
     }
 
@@ -937,6 +1061,260 @@ export const reviewCourse = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while reviewing course.",
+    });
+  }
+};
+
+/**
+ * @route   PUT /api/teacher/courses/:id/submit
+ * @desc    Submit course for approval
+ * @access  Private (Teacher)
+ */
+export const submitCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
+    }
+
+    if (course.teacherId.toString() !== userId && req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. You do not own this course.",
+      });
+    }
+
+    // Validation (Same as publish)
+    const chapters = await Chapter.find({ courseId: id });
+    if (!chapters.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Course must have at least 1 chapter.",
+      });
+    }
+
+    const chapterIds = chapters.map((c) => c._id);
+    const lessons = await Lesson.find({ chapterId: { $in: chapterIds } });
+    if (!lessons.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Course must have at least 1 lesson.",
+      });
+    }
+
+    // Check for quizzes
+    const Quiz = (await import("../models/quiz.model.js")).default;
+    const Question = (await import("../models/question.model.js")).default;
+
+    const quizzes = await Quiz.find({ courseId: id });
+    if (!quizzes.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Course must have at least 1 quiz.",
+      });
+    }
+
+    const quizIds = quizzes.map((q) => q._id);
+    const questionsCount = await Question.countDocuments({
+      quizId: { $in: quizIds },
+    });
+
+    if (questionsCount === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Course quizzes must have at least 1 question.",
+      });
+    }
+
+    // Update status
+    course.approvalStatus = "pending";
+    course.submittedAt = Date.now();
+    course.isPublished = false; // Cannot be published until approved
+    await course.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Course submitted for review successfully",
+      data: course,
+    });
+  } catch (error) {
+    console.error("Submit course error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while submitting course",
+    });
+  }
+};
+
+/**
+ * @route  GET /api/admin/courses
+ * @desc   Admin: list courses by approval status
+ * @access Admin
+ */
+export const getAdminCourses = async (req, res) => {
+  try {
+    const { status = "pending", page = 1, limit = 10 } = req.query;
+
+    const filter = {};
+    if (status && status !== "all") {
+      if (status === "pending") {
+        filter.$or = [
+          { approvalStatus: { $exists: false } },
+          { approvalStatus: "pending" },
+        ];
+      } else {
+        filter.approvalStatus = status;
+      }
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Calculate stats independent of filter
+    const stats = {
+      all: await Course.countDocuments({}),
+      pending: await Course.countDocuments({
+        $or: [
+          { approvalStatus: { $exists: false } },
+          { approvalStatus: "pending" },
+        ],
+      }),
+      approved: await Course.countDocuments({ approvalStatus: "approved" }),
+      rejected: await Course.countDocuments({ approvalStatus: "rejected" }),
+    };
+
+    const [courses, total] = await Promise.all([
+      Course.find(filter)
+        .populate("teacherId", "fullName email role profileApprovalStatus")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Course.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: courses,
+      stats, // Return stats in response
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Get admin courses error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching courses for review.",
+    });
+  }
+};
+
+/**
+ * @route  PUT /api/admin/courses/:id/approve
+ * @desc   Admin: approve a course
+ * @access Admin
+ */
+export const approveCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid course id." });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found." });
+    }
+
+    course.approvalStatus = "approved";
+    course.approvalNotes = notes || null;
+    course.rejectionReason = null;
+    course.approvedAt = new Date();
+    course.rejectedAt = null;
+    course.reviewedBy = req.user.id;
+    course.isPublished = true;
+
+    await course.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      success: true,
+      message: "Course approved successfully.",
+      data: course,
+    });
+  } catch (error) {
+    console.error("Approve course error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while approving course.",
+    });
+  }
+};
+
+/**
+ * @route  PUT /api/admin/courses/:id/reject
+ * @desc   Admin: reject a course
+ * @access Admin
+ */
+export const rejectCourse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+
+    if (!notes || !notes.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Rejection notes are required.",
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid course id." });
+    }
+
+    const course = await Course.findById(id);
+    if (!course) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Course not found." });
+    }
+
+    course.approvalStatus = "rejected";
+    course.rejectionReason = notes.trim();
+    course.approvalNotes = null;
+    course.rejectedAt = new Date();
+    course.approvedAt = null;
+    course.reviewedBy = req.user.id;
+    course.isPublished = false;
+
+    await course.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      success: true,
+      message: "Course rejected.",
+      data: course,
+    });
+  } catch (error) {
+    console.error("Reject course error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while rejecting course.",
     });
   }
 };

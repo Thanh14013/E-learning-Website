@@ -26,11 +26,72 @@ const googleClient = process.env.GOOGLE_CLIENT_ID
  * @body {string} email - Email address of the user
  * @body {string} password - Plain text password
  */
-
 export const register = async (req, res, next) => {
   try {
     const { fullName, email, password, role } = req.body;
 
+    if (!fullName || !email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Please provide all required fields." });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists." });
+    }
+
+    // Create new user (auto-verified)
+    const user = await User.create({
+      fullName,
+      email: email.toLowerCase(),
+      password,
+      role: role || "student", // Default role
+      isVerified: true,
+    });
+
+    // Create empty profile linked to user
+    await UserProfile.create({ userId: user._id });
+
+    // Generate tokens for auto-login after registration
+    const { accessToken, refreshToken } = generateTokenPair({
+      id: user._id,
+      role: user.role,
+      email: user.email,
+    });
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    // Set cookie
+    const cookieOptions = {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    };
+
+    res.cookie("refreshToken", refreshToken, cookieOptions);
+
+    res.status(201).json({
+      message: "User registered successfully.",
+      user: {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar || "",
+      },
+      tokens: { accessToken },
+    });
+  } catch (error) {
+    console.error("Register error:", error);
+    res.status(500).json({ message: "Server error during registration." });
+  }
+};
+
+/**
  * POST /api/auth/refresh-token
  * @desc Generate a new access token using a valid refresh token
  * @access Public
@@ -148,16 +209,22 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
-    // Prevent regular users from having admin role
-    if (user.role === "admin") {
-      return res.status(403).json({
-        message: "Invalid login method for admin accounts.",
-      });
-    }
-
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password." });
+    }
+
+    if (user.role === "teacher") {
+      if (!user.profileCompleted) {
+        return res
+          .status(403)
+          .json({ message: "Please complete your teacher profile first." });
+      }
+      if (user.profileApprovalStatus !== "approved") {
+        return res
+          .status(403)
+          .json({ message: "Your teacher profile is pending admin approval." });
+      }
     }
 
     const { accessToken, refreshToken } = generateTokenPair({
@@ -317,6 +384,19 @@ export const loginWithGoogle = async (req, res) => {
       }
     }
 
+    if (user.role === "teacher") {
+      if (!user.profileCompleted) {
+        return res
+          .status(403)
+          .json({ message: "Please complete your teacher profile first." });
+      }
+      if (user.profileApprovalStatus !== "approved") {
+        return res
+          .status(403)
+          .json({ message: "Your teacher profile is pending admin approval." });
+      }
+    }
+
     const { accessToken, refreshToken } = generateTokenPair({
       id: user._id,
       role: user.role || "student",
@@ -397,8 +477,39 @@ export const resetPassword = async (req, res) => {
       return res.status(400).json({ message: "New password is required." });
     }
 
+    // Hash the token to compare with what's in DB
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // Find user with matching token and make sure it hasn't expired
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+
+    // Update password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    // Save (pre-save hook in model will hash the new password)
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Server error during password reset." });
+  }
+};
+
 /**
-́́ * POST /api/auth/logout
+ * POST /api/auth/logout
  * @desc Log out user and invalidate refresh token
  * @access Private
  */
@@ -407,18 +518,14 @@ export const logout = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken) {
-      return res.status(400).json({ message: "No refresh token found." });
-    }
-
-    // Verify refresh token using JWT config
-    const decoded = verifyRefreshToken(refreshToken);
-    if (!decoded) {
       return res
-        .status(401)
-        .json({ message: "Invalid or expired refresh token." });
+        .status(200)
+        .json({ message: "Logged out successfully (no token)." });
     }
 
-    const user = await User.findById(decoded.id);
+    // Optional: Verify to get user ID, but generally we just want to clear cookie and DB ref
+    // For safety, let's try to find the user with this token
+    const user = await User.findOne({ refreshToken });
 
     if (user) {
       user.refreshToken = null;

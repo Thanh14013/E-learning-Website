@@ -31,6 +31,10 @@ export const createQuiz = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to create quiz" });
     }
 
+    // Calculate order
+    const lastQuiz = await Quiz.find({ lessonId }).sort({ order: -1 }).limit(1);
+    const order = lastQuiz.length > 0 ? lastQuiz[0].order + 1 : 1;
+
     const quiz = await Quiz.create({
       courseId,
       lessonId,
@@ -38,6 +42,8 @@ export const createQuiz = async (req, res) => {
       duration,
       passingScore,
       attemptsAllowed,
+      order,
+      isPublished: true, // Default to true when created
     });
 
     return res.status(201).json({
@@ -53,6 +59,43 @@ export const createQuiz = async (req, res) => {
 };
 
 /**
+ * @route   GET /api/quizzes/course/:courseId
+ * @desc    Get all quizzes for a course (Teacher/Admin) - includes drafts
+ * @access  Private (Teacher/Admin)
+ */
+export const getQuizzesByCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.user.id; // Teacher ID
+
+    // Check course ownership if not admin
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: "Course not found" });
+    }
+
+    if (req.user.role !== "admin" && String(course.teacherId) !== userId) {
+      return res.status(403).json({ message: "Not authorized to view quizzes for this course" });
+    }
+
+    const quizzes = await Quiz.find({ courseId })
+      .select("title duration passingScore attemptsAllowed isPublished lessonId")
+      .sort({ order: 1 })
+      .lean();
+
+    return res.json({
+      success: true,
+      data: quizzes,
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Server error while fetching course quizzes" });
+  }
+};
+
+/**
  * @route   GET /api/quizzes/lesson/:lessonId
  * @desc    Get all quizzes for a lesson
  * @access  Public
@@ -61,8 +104,9 @@ export const getQuizzesByLesson = async (req, res) => {
   try {
     const { lessonId } = req.params;
 
-    const quizzes = await Quiz.find({ lessonId, isPublished: true })
+    const quizzes = await Quiz.find({ lessonId })
       .select("title duration passingScore attemptsAllowed")
+      .sort({ order: 1 }) // Sorted by order
       .lean();
 
     return res.json({
@@ -120,7 +164,7 @@ export const getQuizDetail = async (req, res) => {
     let questions = [];
 
     if (isEnrolled) {
-      questions = await Question.find({ quizId }).lean();
+      questions = await Question.find({ quizId }).sort({ order: 1 }).lean();
       console.log("   📝 Questions:", questions.length);
     } else {
       console.log("   ❌ Blocked - not enrolled");
@@ -550,5 +594,39 @@ export const deleteQuiz = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Server error while deleting quiz" });
+  }
+};
+
+/**
+ * @route   PUT /api/quizzes/:id/publish
+ * @desc    Toggle quiz publish status (Teacher only)
+ * @access  Private (Teacher)
+ */
+export const togglePublishQuiz = async (req, res) => {
+  try {
+    const quizId = req.params.id;
+    const teacherId = req.user.id;
+
+    const quiz = await Quiz.findById(quizId).populate("courseId");
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    if (String(quiz.courseId.teacherId) !== teacherId) {
+      return res.status(403).json({ message: "Not authorized to update quiz" });
+    }
+
+    quiz.isPublished = !quiz.isPublished;
+    await quiz.save();
+
+    return res.json({
+      message: `Quiz ${quiz.isPublished ? "published" : "unpublished"} successfully`,
+      quiz,
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Server error while toggling quiz publish status" });
   }
 };

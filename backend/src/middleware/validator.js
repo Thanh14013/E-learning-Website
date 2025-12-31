@@ -1,5 +1,6 @@
 import { body, param, query, validationResult } from "express-validator";
 import Lesson from "../models/lesson.model.js";
+import Quiz from "../models/quiz.model.js";
 
 /**
  * Validation Result Handler

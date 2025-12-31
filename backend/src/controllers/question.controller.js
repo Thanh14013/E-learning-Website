@@ -34,6 +34,10 @@ export const createQuestion = async (req, res) => {
             return res.status(400).json({ message: "Fill blank question requires correctText field." });
         }
 
+        // Calculate order
+        const lastQuestion = await Question.find({ quizId }).sort({ order: -1 }).limit(1);
+        const order = lastQuestion.length > 0 ? lastQuestion[0].order + 1 : 1;
+
         const question = await Question.create({
             quizId,
             type,
@@ -42,6 +46,7 @@ export const createQuestion = async (req, res) => {
             correctOption,
             correctBoolean,
             correctText,
+            order,
         });
 
         return res.status(201).json({
@@ -50,7 +55,10 @@ export const createQuestion = async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        return res.status(500).json({ message: "Server error while creating question" });
+        return res.status(500).json({ 
+            message: "Server error while creating question",
+            error: err.message
+        });
     }
 };
 
