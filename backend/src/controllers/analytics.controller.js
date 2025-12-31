@@ -337,9 +337,14 @@ export const generateStudentReport = async (req, res) => {
     }
 
     // Get enrolled courses with detailed progress
-    const enrolledCourses = await Course.find({
-      enrolledStudents: userId,
-    }).populate("teacherId", "fullName");
+    let query = { enrolledStudents: userId };
+    
+    // If teacher, only show their courses
+    if (req.user.role === 'teacher') {
+      query.teacherId = requesterId;
+    }
+
+    const enrolledCourses = await Course.find(query).populate("teacherId", "fullName");
 
     const courseReports = await Promise.all(
       enrolledCourses.map(async (course) => {

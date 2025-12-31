@@ -1,0 +1,120 @@
+.container {
+  padding: 24px;
+  color: #e5e7eb;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.subheading {
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.rangeLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: #cbd5e1;
+}
+
+.rangeLabel select {
+  background: #0f172a;
+  color: #e5e7eb;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.summaryCard {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cardLabel {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.cardValue {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.growthGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.growthCard {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.growthCard h3 {
+  margin: 0 0 6px;
+  color: #c7d2fe;
+  font-weight: 600;
+}
+
+.growthValue {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #a855f7;
+}
+
+.growthHint {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.chartSection {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.loading,
+.errorState {
+  padding: 32px;
+  text-align: center;
+  color: #e5e7eb;
+}
