@@ -13,7 +13,7 @@ export const JWT_CONFIG = {
   ACCESS_TOKEN_SECRET:
     process.env.JWT_ACCESS_SECRET ||
     "your-access-token-secret-key-change-this-in-production",
-  ACCESS_TOKEN_EXPIRY: process.env.JWT_ACCESS_EXPIRY || "15m", // 15 minutes
+  ACCESS_TOKEN_EXPIRY: process.env.JWT_ACCESS_EXPIRY || "3h", // 3 hours
 
   // Refresh Token Configuration
   REFRESH_TOKEN_SECRET:

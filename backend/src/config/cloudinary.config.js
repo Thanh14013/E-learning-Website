@@ -5,10 +5,15 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // Function to upload a file to Cloudinary
-const uploadFile = async (filePath, options = { resource_type: "auto" }) => {
+const uploadFile = async (filePath, options = {}) => {
   try {
-    const { secure_url } = await cloudinary.uploader.upload(filePath, options);
-    return secure_url;
+    const uploadOptions = {
+      resource_type: "auto",
+      ...(typeof options === "string" ? { folder: options } : options),
+    };
+
+    const result = await cloudinary.uploader.upload(filePath, uploadOptions);
+    return result; // contains secure_url, public_id, duration (for videos), etc.
   } catch (error) {
     console.error("Upload failed:", error);
     throw new Error("File upload failed");
@@ -16,11 +21,11 @@ const uploadFile = async (filePath, options = { resource_type: "auto" }) => {
 };
 
 const deleteFile = async (publicId, options = {}) => {
-    try {
-        await cloudinary.uploader.destroy(publicId, options);
-    } catch (error) {
-        console.warn("Cloudinary delete failed:", error.message);
-    }
+  try {
+    await cloudinary.uploader.destroy(publicId, options);
+  } catch (error) {
+    console.warn("Cloudinary delete failed:", error.message);
+  }
 };
 
 // Function to connect and configure Cloudinary

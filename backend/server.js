@@ -15,6 +15,7 @@ import authRoutes from "./src/routes/auth.routes.js";
 import discussionRoutes from "./src/routes/discussion.routes.js";
 import commentRoutes from "./src/routes/comment.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
+import teacherRoutes from "./src/routes/teacher.routes.js";
 import courseRoutes from "./src/routes/course.routes.js";
 import chapterRoutes from "./src/routes/chapter.routes.js";
 import sessionRoutes from "./src/routes/session.routes.js";
@@ -24,6 +25,8 @@ import lessonRoutes from "./src/routes/lesson.routes.js";
 import progressRoutes from "./src/routes/progress.routes.js";
 import quizRoutes from "./src/routes/quiz.routes.js";
 import questionRoutes from "./src/routes/question.routes.js";
+import adminRoutes from "./src/routes/admin.routes.js";
+import reportRoutes from "./src/routes/report.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import { setupAnalyticsCronJobs } from "./src/services/cron.service.js";
 import {
@@ -122,6 +125,9 @@ app.get("/health", (req, res) => {
 
 // API routes
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/teacher", teacherRoutes);
+app.use("/api/reports", reportRoutes);
 app.use("/api/discussions", discussionRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/users", userRoutes);
