@@ -15,9 +15,9 @@ const formatTimeAgo = (dateString) => {
     return date.toLocaleDateString();
 };
 
-const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll }) => {
+const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll, courseTeacherId }) => {
     const { user } = useAuth();
-    const { currentDiscussion, fetchDiscussionDetail, createComment, updateComment, deleteComment, loading: contextLoading } = useDiscussions();
+    const { currentDiscussion, fetchDiscussionDetail, createComment, updateComment, deleteComment, deleteDiscussion, loading: contextLoading } = useDiscussions();
     const [commentContent, setCommentContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState(null);
@@ -33,6 +33,23 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll }) => {
     const discussion = currentDiscussion?.discussion;
     const comments = currentDiscussion?.comments || [];
     const loading = contextLoading;
+
+    // Check permissions
+    const isDiscussionOwner = user?._id === discussion?.userId?._id;
+    const isCourseTeacher = user?._id === courseTeacherId;
+    const canDeleteDiscussion = isDiscussionOwner || isCourseTeacher;
+
+    const handleDeleteDiscussion = async () => {
+        if (window.confirm('Are you sure you want to delete this discussion?')) {
+            try {
+                await deleteDiscussion(discussionId);
+                onClose();
+            } catch (error) {
+                console.error('Failed to delete discussion:', error);
+                // Toast handled in context
+            }
+        }
+    };
 
     const handleCommentSubmit = async (e) => {
         e.preventDefault();
@@ -108,13 +125,32 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll }) => {
                                 )}
                             </div>
                             <div>
-                                <div className={styles.authorName}>{discussion.userId?.fullName || 'Anonymous'}</div>
+                                <div className={styles.authorName}>
+                                    {discussion.userId?.fullName || 'Anonymous'}
+                                    {discussion.userId?._id === courseTeacherId && (
+                                        <span className={styles.teacherBadge}>Teacher</span>
+                                    )}
+                                </div>
                                 <div className={styles.timestamp}>{formatTimeAgo(discussion.createdAt)}</div>
                             </div>
                         </div>
-                        {discussion.isPinned && (
-                            <span className={styles.pinnedBadge}>📌 Pinned</span>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {canDeleteDiscussion && (
+                                <button
+                                    className={styles.iconButton}
+                                    onClick={handleDeleteDiscussion}
+                                    title="Delete Discussion"
+                                    style={{ color: '#ef4444' }}
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    </svg>
+                                </button>
+                            )}
+                            {discussion.isPinned && (
+                                <span className={styles.pinnedBadge}>📌 Pinned</span>
+                            )}
+                        </div>
                     </div>
 
                     {/* Discussion Content */}
@@ -130,7 +166,10 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll }) => {
                             <div className={styles.commentsList}>
                                 {comments.map((comment) => {
                                     const isOwner = user?._id === comment.userId?._id;
-                                    const isTeacher = user?.role === 'teacher';
+                                    // Use courseTeacherId for delete permission logic on comments too if desired
+                                    // User logic was: isOwner || user?.role === 'teacher'
+                                    // Let's refine it to isOwner || user is this course teacher
+                                    const isTeacher = user?._id === courseTeacherId;
                                     const canEdit = isOwner;
                                     const canDelete = isOwner || isTeacher;
                                     const isEditing = editingCommentId === comment._id;
@@ -149,6 +188,9 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll }) => {
                                                     <div>
                                                         <div className={styles.commentAuthorName}>
                                                             {comment.userId?.fullName || 'Anonymous'}
+                                                            {comment.userId?._id === courseTeacherId && (
+                                                                <span className={styles.teacherBadge}>Teacher</span>
+                                                            )}
                                                         </div>
                                                         <div className={styles.commentTimestamp}>
                                                             {formatTimeAgo(comment.createdAt)}
@@ -188,7 +230,7 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll }) => {
                                                                 title="Delete"
                                                             >
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                                                 </svg>
                                                             </button>
                                                         )}

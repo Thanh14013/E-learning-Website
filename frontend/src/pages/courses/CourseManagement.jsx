@@ -47,7 +47,7 @@ const StatusBadge = ({ status }) => {
 };
 
 // Course Card Component
-const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview }) => {
+const CourseManagementCard = ({ course, user, onEdit, onDelete, onAnalytics, onPreview }) => {
   const studentCount = course.enrolledStudents?.length || 0;
 
   let status = 'draft';
@@ -111,14 +111,15 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
             <span className={styles.statValue}>{studentCount}</span>
             <span className={styles.statLabel}>Students</span>
           </div>
-          {course.rating && (
+          {/* Rating Display Fixed */}
+          {(course.rating > 0 || course.totalReviews > 0) && (
             <div className={styles.statItem}>
               <span className={styles.statIcon}>⭐</span>
               <span className={styles.statValue}>
-                {course.rating.average?.toFixed(1) || '0.0'}
+                {typeof course.rating === 'number' ? course.rating.toFixed(1) : '0.0'}
               </span>
               <span className={styles.statLabel}>
-                ({course.rating.count || 0} reviews)
+                ({course.totalReviews || 0} reviews)
               </span>
             </div>
           )}
@@ -137,27 +138,17 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
         {/* Action Buttons */}
         <div className={styles.cardActions}>
           <button
-            className={`${styles.actionBtn} ${styles.previewBtn}`}
-            onClick={(e) => {
-              e.preventDefault();
-              onPreview?.(course);
-            }}
-            title="Preview"
-          >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-            Preview
-          </button>
-
-          <button
             className={`${styles.actionBtn} ${styles.editBtn}`}
             onClick={(e) => {
               e.preventDefault();
               onEdit?.(course);
             }}
-            title="Edit"
+            title={course.isPublished && user?.role !== 'admin' ? "Cannot edit published course" : "Edit"}
+            disabled={course.isPublished && user?.role !== 'admin'}
+            style={{
+              opacity: (course.isPublished && user?.role !== 'admin') ? 0.5 : 1,
+              cursor: (course.isPublished && user?.role !== 'admin') ? 'not-allowed' : 'pointer'
+            }}
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -165,29 +156,31 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
             Edit
           </button>
 
-          <button
-            className={`${styles.actionBtn} ${styles.analyticsBtn}`}
-            onClick={(e) => {
-              e.preventDefault();
-              onAnalytics?.(course);
-            }}
-            title="Analytics"
-          >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Analytics
-          </button>
+          {course.isPublished && (
+            <button
+              className={`${styles.actionBtn} ${styles.analyticsBtn}`}
+              onClick={(e) => {
+                e.preventDefault();
+                onAnalytics?.(course);
+              }}
+              title="Analytics"
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Analytics
+            </button>
+          )}
 
           <button
             className={`${styles.actionBtn} ${styles.deleteBtn}`}
             onClick={handleDelete}
-            title={course.approvalStatus === 'approved' ? "Cannot delete approved course" : "Delete"}
-            disabled={course.approvalStatus === 'approved'}
+            title={course.approvalStatus === 'approved' && user?.role !== 'admin' ? "Cannot delete approved course" : "Delete"}
+            disabled={course.approvalStatus === 'approved' && user?.role !== 'admin'}
             style={{
-              opacity: course.approvalStatus === 'approved' ? 0.5 : 1,
-              cursor: course.approvalStatus === 'approved' ? 'not-allowed' : 'pointer',
-              display: course.approvalStatus === 'approved' ? 'none' : 'flex' // Or just hide it? User said "teacher cannot delete", hiding is safer.
+              opacity: (course.approvalStatus === 'approved' && user?.role !== 'admin') ? 0.5 : 1,
+              cursor: (course.approvalStatus === 'approved' && user?.role !== 'admin') ? 'not-allowed' : 'pointer',
+              display: (course.approvalStatus === 'approved' && user?.role !== 'admin') ? 'none' : 'flex'
             }}
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -261,8 +254,8 @@ const CourseManagement = () => {
           return bCount - aCount;
         }
         case 'rating': {
-          const aRating = a.rating?.average || 0;
-          const bRating = b.rating?.average || 0;
+          const aRating = typeof a.rating === 'number' ? a.rating : (a.rating?.average || 0);
+          const bRating = typeof b.rating === 'number' ? b.rating : (b.rating?.average || 0);
           return bRating - aRating;
         }
         case 'title':
@@ -564,6 +557,7 @@ const CourseManagement = () => {
             <CourseManagementCard
               key={course._id || course.id}
               course={course}
+              user={user}
               onEdit={handleEdit}
               onDelete={handleDelete}
               onAnalytics={handleAnalytics}

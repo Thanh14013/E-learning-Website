@@ -1,0 +1,260 @@
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    color: #f3f4f6;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #374151;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #fff;
+}
+
+.timer {
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 16px;
+    background: #374151;
+    padding: 4px 12px;
+    border-radius: 4px;
+    color: #a5f3fc;
+}
+
+.timerLow {
+    color: #fda4af;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.closeBtn {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.content {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Confirm State */
+.confirmState {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 30px 0;
+}
+
+.statItem {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.statItem span {
+    font-size: 14px;
+    color: #9ca3af;
+}
+
+.statItem strong {
+    font-size: 24px;
+    color: #fff;
+}
+
+.positive { color: #34d399; }
+.negative { color: #f87171; }
+
+.startBtn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.startBtn:hover {
+    background: #2563eb;
+}
+
+.noAttempts {
+    color: #f87171;
+    font-weight: 500;
+}
+
+/* Taking State */
+.takingState {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.questionBlock {
+    background: #111827;
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #374151;
+}
+
+.questionText {
+    font-size: 16px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.qIndex {
+    color: #9ca3af;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.optionLabel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background 0.1s;
+}
+
+.optionLabel:hover {
+    background: #1f2937;
+}
+
+.optionLabel input {
+    width: 18px;
+    height: 18px;
+    accent-color: #3b82f6;
+}
+
+.footer {
+    padding: 20px 24px;
+    border-top: 1px solid #374151;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.submitBtn {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.submitBtn:hover {
+    background: #059669;
+}
+
+/* Review Mode Styles */
+.readOnlyOption {
+    cursor: default;
+    opacity: 1; /* Override disabled opacity */
+}
+
+.readOnlyOption input {
+    cursor: default;
+}
+
+.correctOption {
+    background-color: rgba(40, 167, 69, 0.1);
+    border: 1px solid #28a745;
+    color: #28a745;
+}
+
+.wrongOption {
+    background-color: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+.iconCheck {
+    margin-left: auto;
+    color: #28a745;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.iconCross {
+    margin-left: auto;
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.explanation {
+    margin-top: 12px;
+    padding: 12px;
+    background-color: #2d3748; /* Dark theme contrast */
+    border-left: 4px solid #4a90e2;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    display: none;
+}
+
+.explanation.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}

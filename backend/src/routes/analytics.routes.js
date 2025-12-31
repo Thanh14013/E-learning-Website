@@ -6,6 +6,7 @@ import {
   exportCourseAnalytics,
   generateStudentReport,
   manualCollectAnalytics,
+  getStudentTrend
 } from "../controllers/analytics.controller.js";
 import { authenticate } from "../middleware/auth.js";
 import { authorize } from "../middleware/authorize.js";
@@ -18,6 +19,13 @@ const router = express.Router();
  * @access  Private (Teacher - owner only or Admin)
  */
 router.get("/course/:courseId", authenticate, getCourseAnalytics);
+
+/**
+ * @route   GET /api/analytics/course/:courseId/student/:studentId
+ * @desc    Get daily trend for a specific student in a course
+ * @access  Private (Teacher or Admin)
+ */
+router.get("/course/:courseId/student/:studentId", authenticate, getStudentTrend);
 
 /**
  * @route   GET /api/analytics/student/:userId

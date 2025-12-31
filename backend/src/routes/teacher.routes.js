@@ -20,7 +20,7 @@ router.use(authorize('teacher', 'admin'));
 // ==========================================
 // Dashboard & Analytics
 // ==========================================
-router.get('/dashboard', analyticsController.getDashboardAnalytics);
+router.get('/dashboard', analyticsController.getTeacherDashboardAnalytics);
 router.get('/analytics/course/:courseId', analyticsController.getCourseAnalytics);
 router.get('/analytics/student/:userId', analyticsController.getStudentAnalytics);
 router.get('/analytics/export', analyticsController.exportCourseAnalytics);

@@ -520,6 +520,8 @@ export const notifyDiscussionCreated = async (
 ) => {
   try {
     const io = getSocketIOInstance();
+    const Course = (await import("../models/course.model.js")).default;
+    const course = await Course.findById(courseId).select('teacherId title');
 
     // Notification data
     const notification = {
@@ -530,12 +532,28 @@ export const notifyDiscussionCreated = async (
       metadata: {
         courseId,
         discussionId: discussion._id,
-        createdBy: creator._id,
+        createdBy: creator._id || creator.id,
       },
     };
 
     // Send real-time notification to all users in the course
     sendNotificationToCourse(io, courseId, notification);
+
+    // Notify Teacher specifically (if not the creator)
+    if (course && course.teacherId && course.teacherId.toString() !== (creator.id || creator._id).toString()) {
+        await createAndSendNotification(
+            course.teacherId,
+            {
+                type: "discussion",
+                title: "New Discussion in " + course.title,
+                content: `${creator.fullName} started a discussion: "${discussion.title}"`,
+                link: `/courses/${courseId}/learn?tab=discussions`, // Redirect to course discussions tab
+                metadata: notification.metadata
+            },
+            false
+        );
+        console.log(`📢 Discussion notification sent to Teacher ${course.teacherId}`);
+    }
 
     console.log(
       `📢 Discussion creation notification sent for course ${courseId}`

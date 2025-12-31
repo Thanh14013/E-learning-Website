@@ -16,7 +16,7 @@
   justify-content: center;
   min-height: 400px;
   gap: var(--spacing-2);
-  color: var(--color-gray-500);
+  color: var(--color-gray-600);
 }
 
 .spinner {
@@ -70,10 +70,64 @@
 }
 
 /* Quick Stats */
-.quickStats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+/* Quick Stats */
+.statsContainer {
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+}
+
+.statsRowTop {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-2);
+}
+
+.statsRowBottom {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-2);
+}
+
+/* Fallback for responsiveness */
+.chartsRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+}
+
+.chartCard {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+}
+
+.chartCard h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-4);
+}
+
+@media (max-width: 1024px) {
+    .statsRowBottom {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .statsRowTop, .statsRowBottom {
+    grid-template-columns: 1fr;
+  }
 }
 
 .statCard {
@@ -111,7 +165,8 @@
 
 .statLabel {
   font-size: 0.875rem;
-  color: var(--color-gray-500);
+  color: var(--color-gray-700);
+  font-weight: 500;
   margin-top: 2px;
 }
 
@@ -503,7 +558,7 @@
 
 .discussionMeta {
   font-size: 0.8rem;
-  color: var(--color-gray-500);
+  color: var(--color-gray-600);
   margin: 0 0 4px 0;
 }
 
@@ -518,7 +573,7 @@
 .emptyState {
   padding: var(--spacing-4);
   text-align: center;
-  color: var(--color-gray-500);
+  color: var(--color-gray-600);
 }
 
 .emptyState p {
@@ -630,5 +685,22 @@
 
   .discussionItem:hover {
     background: var(--color-gray-600);
+  }
+
+  .statLabel,
+  .discussionMeta,
+  .emptyState,
+  .activityText,
+  .quizStudent,
+  .quizCourse {
+    color: var(--color-gray-400); 
+  }
+
+  .statValue,
+  .sectionTitle,
+  .discussionTitle a,
+  .quizTitle,
+  .activityText strong {
+    color: var(--color-gray-100);
   }
 }

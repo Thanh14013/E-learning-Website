@@ -118,3 +118,181 @@
   text-align: center;
   color: #e5e7eb;
 }
+
+.tableContainer {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.tableHeader {
+  padding: 16px;
+  border-bottom: 1px solid #1f2937;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f3f4f6;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #1f2937;
+}
+
+.table th {
+  background: #1e293b;
+  color: #9ca3af;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.table td {
+  color: #dfe2e8;
+  font-size: 14px;
+}
+
+.studentCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #374151;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+}
+
+.progressBar {
+  height: 6px;
+  background: #374151;
+  border-radius: 3px;
+  width: 100px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.progressFill {
+  height: 100%;
+  background: #10b981;
+  border-radius: 3px;
+}
+
+.progressWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progressText {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.viewDetailBtn {
+  background: none;
+  border: 1px solid #374151;
+  color: #e5e7eb;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.viewDetailBtn:hover {
+  background: #374151;
+  border-color: #4b5563;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  background: #0f172a;
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #1f2937;
+}
+
+.studentInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.studentInfo h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #f3f4f6;
+}
+
+.studentInfo .email {
+  font-size: 13px;
+  color: #9ca3af;
+  display: block;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.closeBtn:hover {
+  color: #f3f4f6;
+}
+
+.modalBody {
+  padding: 24px;
+}
+
+.modalBody h4 {
+  margin: 0 0 20px;
+  color: #cbd5e1;
+  font-size: 16px;
+}

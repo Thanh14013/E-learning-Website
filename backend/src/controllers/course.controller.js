@@ -391,6 +391,14 @@ export const updateCourse = async (req, res) => {
       });
     }
 
+    // Restriction: Cannot edit published courses unless Admin
+    if (course.isPublished && req.user.role !== "admin") {
+        return res.status(403).json({
+            success: false,
+            message: "Cannot edit a published course. Please unpublish first or contact admin.",
+        });
+    }
+
     // Fields allowed to update
     const allowedFields = ["title", "description", "category", "level"];
 

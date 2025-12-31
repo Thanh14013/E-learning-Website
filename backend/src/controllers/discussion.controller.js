@@ -253,6 +253,14 @@ export const getDiscussionsByCourse = async (req, res) => {
       .limit(limitNum)
       .populate("userId", "fullName email avatar role")
       .populate("commentCount")
+      .populate({
+        path: "lessonId",
+        select: "title chapterId order",
+        populate: {
+          path: "chapterId",
+          select: "title order",
+        },
+      })
       .lean();
 
     // Add likesCount to each discussion

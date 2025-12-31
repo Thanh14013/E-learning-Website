@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useCourses } from '../../../../contexts/CoursesContext';
 import api from '../../../../services/api';
@@ -19,10 +21,14 @@ import styles from './teacherView.module.css';
  */
 
 // Course Card Component
-const CourseCard = ({ course, analytics }) => {
+// Course Card Component
+const CourseCard = ({ course, analytics, user }) => {
   const completionRate = analytics?.completionRate || 0;
-  const avgScore = analytics?.avgScore || 0;
-  const studentCount = analytics?.studentCount || 0;
+  const avgScore = analytics?.avgScore || analytics?.rating || 0;
+  const studentCount = analytics?.students || analytics?.studentCount || 0;
+
+  const isPublished = course.isPublished;
+  const canEdit = !isPublished || user?.role === 'admin';
 
   return (
     <div className={styles.courseCard}>
@@ -41,35 +47,47 @@ const CourseCard = ({ course, analytics }) => {
           </Link>
         </h4>
         <div className={styles.courseStats}>
-          <div className={styles.statItem}>
-            <span className={styles.statIcon}>👥</span>
-            <span className={styles.statValue}>{studentCount}</span>
-            <span className={styles.statLabel}>Students</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statIcon}>✓</span>
-            <span className={styles.statValue}>{completionRate}%</span>
-            <span className={styles.statLabel}>Completion</span>
-          </div>
-          <div className={styles.statItem}>
-            <span className={styles.statIcon}>⭐</span>
-            <span className={styles.statValue}>{avgScore.toFixed(1)}</span>
-            <span className={styles.statLabel}>Avg Score</span>
-          </div>
+          {isPublished ? (
+            <>
+              <div className={styles.statItem}>
+                <span className={styles.statIcon}>👥</span>
+                <span className={styles.statValue}>{studentCount}</span>
+                <span className={styles.statLabel}>Students</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statIcon}>✓</span>
+                <span className={styles.statValue}>{completionRate}%</span>
+                <span className={styles.statLabel}>Completion</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statIcon}>⭐</span>
+                <span className={styles.statValue}>{avgScore.toFixed(1)}</span>
+                <span className={styles.statLabel}>Avg Score</span>
+              </div>
+            </>
+          ) : (
+            <div style={{ width: '100%', textAlign: 'center', color: 'var(--color-gray-500)', fontStyle: 'italic', padding: '10px 0' }}>
+              Pending Approval
+            </div>
+          )}
         </div>
         <div className={styles.courseActions}>
-          <Link
-            to={`/teacher/courses/${course._id || course.id}/edit`}
-            className={styles.manageBtn}
-          >
-            Manage
-          </Link>
-          <Link
-            to={`/teacher/courses/${course._id || course.id}/analytics`}
-            className={styles.analyticsBtn}
-          >
-            Analytics
-          </Link>
+          {canEdit && (
+            <Link
+              to={`/teacher/courses/${course._id || course.id}/edit`}
+              className={styles.manageBtn}
+            >
+              Edit
+            </Link>
+          )}
+          {course.isPublished && (
+            <Link
+              to={`/teacher/courses/${course._id || course.id}/analytics`}
+              className={styles.analyticsBtn}
+            >
+              Analytics
+            </Link>
+          )}
         </div>
       </div>
     </div>
@@ -77,7 +95,7 @@ const CourseCard = ({ course, analytics }) => {
 };
 
 // Course Carousel Component
-const CourseCarousel = ({ courses, analyticsMap }) => {
+const CourseCarousel = ({ courses, analyticsMap, user }) => {
   const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -137,6 +155,7 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
             key={course._id || course.id}
             course={course}
             analytics={analyticsMap?.[course._id || course.id]}
+            user={user}
           />
         ))}
       </div>
@@ -162,6 +181,7 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
               key={course._id || course.id}
               course={course}
               analytics={analyticsMap?.[course._id || course.id]}
+              user={user}
             />
           ))}
         </div>
@@ -190,15 +210,33 @@ const QuickStats = ({ stats }) => {
       color: 'var(--color-teacher-primary)',
     },
     {
+      label: 'Total chapters',
+      value: stats.totalChapters || 0,
+      icon: '📑',
+      color: '#8b5cf6', // Violet
+    },
+    {
+      label: 'Total lessons',
+      value: stats.totalLessons || 0,
+      icon: '🎬',
+      color: '#10b981', // Emerald
+    },
+    {
       label: 'Total students',
       value: stats.totalStudents || 0,
       icon: '👥',
       color: 'var(--color-info)',
     },
     {
-      label: 'Pending grading',
-      value: stats.pendingQuizzes || 0,
-      icon: '📝',
+      label: 'Published courses',
+      value: stats.publishedCourses || 0,
+      icon: '✅',
+      color: 'var(--color-success)',
+    },
+    {
+      label: 'Avg Rating',
+      value: stats.averageRating || 0,
+      icon: '⭐',
       color: 'var(--color-warning)',
     },
     {
@@ -209,130 +247,91 @@ const QuickStats = ({ stats }) => {
     },
   ];
 
-  return (
-    <div className={styles.quickStats}>
-      {statItems.map((item, index) => (
-        <div key={index} className={styles.statCard}>
-          <div className={styles.statIcon} style={{ color: item.color }}>
-            {item.icon}
-          </div>
-          <div className={styles.statContent}>
-            <div className={styles.statValue}>{item.value}</div>
-            <div className={styles.statLabel}>{item.label}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Recent Activity Component
-const RecentActivity = ({ activities }) => {
-  if (!activities || activities.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p>No recent activity</p>
+  const renderCard = (item, index) => (
+    <div key={index} className={styles.statCard}>
+      <div className={styles.statIcon} style={{ color: item.color }}>
+        {item.icon}
       </div>
-    );
-  }
-
-  return (
-    <div className={styles.activityList}>
-      {activities.map((activity, index) => (
-        <div key={index} className={styles.activityItem}>
-          <div className={styles.activityIcon}>
-            {activity.type === 'quiz' && '📝'}
-            {activity.type === 'lesson' && '📹'}
-            {activity.type === 'discussion' && '💬'}
-            {activity.type === 'enrollment' && '➕'}
-          </div>
-          <div className={styles.activityContent}>
-            <div className={styles.activityText}>
-              <strong>{activity.studentName}</strong> {activity.action}
-              {activity.courseName && (
-                <span className={styles.activityCourse}> trong {activity.courseName}</span>
-              )}
-            </div>
-            <div className={styles.activityTime}>
-              {activity.timestamp}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Pending Quizzes Component
-const PendingQuizzes = ({ quizzes }) => {
-  if (!quizzes || quizzes.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p>No quizzes to grade</p>
+      <div className={styles.statContent}>
+        <div className={styles.statValue}>{item.value}</div>
+        <div className={styles.statLabel}>{item.label}</div>
       </div>
-    );
-  }
-
-  return (
-    <div className={styles.pendingQuizzesList}>
-      {quizzes.map((quiz, index) => (
-        <div key={index} className={styles.pendingQuizItem}>
-          <div className={styles.quizInfo}>
-            <h4 className={styles.quizTitle}>{quiz.quizTitle}</h4>
-            <p className={styles.quizCourse}>{quiz.courseName}</p>
-            <p className={styles.quizStudent}>
-              Student: <strong>{quiz.studentName}</strong>
-            </p>
-          </div>
-          <div className={styles.quizActions}>
-            <Link
-              to={`/quiz/${quiz.quizId}/grade/${quiz.attemptId}`}
-              className={styles.gradeBtn}
-            >
-              Grade
-            </Link>
-          </div>
-        </div>
-      ))}
     </div>
   );
-};
 
-// New Discussions Component
-const NewDiscussions = ({ discussions }) => {
-  if (!discussions || discussions.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p>No new discussions</p>
+  return (
+    <div className={styles.statsContainer}>
+      <div className={styles.statsRowTop}>
+        {statItems.slice(0, 4).map((item, index) => renderCard(item, `top-${index}`))}
       </div>
-    );
-  }
-
-  return (
-    <div className={styles.discussionsList}>
-      {discussions.map((discussion, index) => (
-        <div key={index} className={styles.discussionItem}>
-          <div className={styles.discussionIcon}>💬</div>
-          <div className={styles.discussionContent}>
-            <h4 className={styles.discussionTitle}>
-              <Link to={`/discussion/${discussion.id}`}>
-                {discussion.title}
-              </Link>
-            </h4>
-            <p className={styles.discussionMeta}>
-              {discussion.authorName} • {discussion.courseName} • {discussion.timestamp}
-            </p>
-            {discussion.commentCount > 0 && (
-              <p className={styles.discussionComments}>
-                {discussion.commentCount} new comments
-              </p>
-            )}
-          </div>
-        </div>
-      ))}
+      <div className={styles.statsRowBottom}>
+        {statItems.slice(4).map((item, index) => renderCard(item, `bottom-${index}`))}
+      </div>
     </div>
   );
 };
+
+// --- Aggregate Charts Component ---
+const AggregateCharts = ({ trend }) => {
+  const trendData = useMemo(() => {
+    const dates = trend?.dates || [];
+    return dates.map((d, idx) => ({
+      date: new Date(d).toLocaleDateString("en-US", { month: 'short', day: 'numeric' }),
+      totalStudents: trend.totalStudents?.[idx] ?? 0,
+      activeStudents: trend.activeStudents?.[idx] ?? 0,
+      completionRate: trend.completionRate?.[idx] ?? 0,
+    }));
+  }, [trend]);
+
+  if (!trend || !trend.dates || trend.dates.length === 0) return null;
+
+  return (
+    <div className={styles.chartsRow}>
+      <div className={styles.chartCard}>
+        <h3>Enrollment & Engagement (Last 30 Days)</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
+            <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+              itemStyle={{ color: '#fff' }}
+            />
+            <Line type="monotone" dataKey="totalStudents" name="Total students" stroke="#6366f1" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+            <Line type="monotone" dataKey="activeStudents" name="Active students" stroke="#10b981" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className={styles.chartCard}>
+        <h3>Overall Completion Rate</h3>
+        <ResponsiveContainer width="100%" height={250}>
+          <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="completion" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.05} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
+            <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+            <YAxis domain={[0, 100]} stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
+            <Tooltip
+              contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+              formatter={(value) => [`${value}%`, 'Completion']}
+            />
+            <Area type="monotone" dataKey="completionRate" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#completion)" name="Completion %" />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+
+
+// NewDiscussions component removed
 
 // Main Teacher View Component
 const TeacherView = () => {
@@ -342,13 +341,15 @@ const TeacherView = () => {
   const [stats, setStats] = useState({
     totalCourses: 0,
     totalStudents: 0,
-    pendingQuizzes: 0,
+    publishedCourses: 0,
     newDiscussions: 0,
+    trend: {},
   });
   const [analyticsMap, setAnalyticsMap] = useState({});
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [pendingQuizzes, setPendingQuizzes] = useState([]);
   const [newDiscussions, setNewDiscussions] = useState([]);
+  const navigate = useNavigate();
+
+  // trendData removed (unused)
 
   useEffect(() => {
     fetchDashboardData();
@@ -359,14 +360,19 @@ const TeacherView = () => {
     try {
       // Fetch dashboard data from backend
       const dashboardRes = await api.get('/teacher/dashboard');
-      const dashboardData = dashboardRes.data;
+      const dashboardData = dashboardRes.data?.data || dashboardRes.data; // Handle potentially unwrapped response safely
 
+      // Set stats from dashboard data
       // Set stats from dashboard data
       setStats({
         totalCourses: dashboardData.totalCourses || myCourses?.length || 0,
+        totalChapters: dashboardData.totalChapters || 0,
+        totalLessons: dashboardData.totalLessons || 0,
         totalStudents: dashboardData.totalStudents || 0,
-        pendingQuizzes: dashboardData.pendingQuizzes || 0,
+        publishedCourses: dashboardData.publishedCourses || 0, // Use backend count
+        averageRating: dashboardData.averageRating || 0,
         newDiscussions: dashboardData.newDiscussions || 0,
+        trend: dashboardData.trend || {}, // pass trend data
       });
 
       // Process analytics if available
@@ -378,15 +384,7 @@ const TeacherView = () => {
         setAnalyticsMap(map);
       }
 
-      // Process activities if available
-      if (dashboardData.recentActivities) {
-        setRecentActivities(dashboardData.recentActivities.slice(0, 5));
-      }
 
-      // Process pending quizzes if available
-      if (dashboardData.pendingQuizzes) {
-        setPendingQuizzes(dashboardData.pendingQuizzes);
-      }
 
       // Process discussions if available
       if (dashboardData.recentDiscussions) {
@@ -399,11 +397,10 @@ const TeacherView = () => {
       setStats({
         totalCourses: myCourses?.length || 0,
         totalStudents: 0,
-        pendingQuizzes: 0,
+        publishedCourses: 0,
         newDiscussions: 0,
       });
-      setRecentActivities([]);
-      setPendingQuizzes([]);
+
       setNewDiscussions([]);
     } finally {
       setLoading(false);
@@ -427,6 +424,11 @@ const TeacherView = () => {
         <QuickStats stats={stats} />
       </section>
 
+      {/* Aggregate Charts Section */}
+      <section className={styles.section}>
+        <AggregateCharts trend={stats.trend} />
+      </section>
+
       {/* My Courses Section */}
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
@@ -438,39 +440,14 @@ const TeacherView = () => {
         <CourseCarousel
           courses={myCourses || []}
           analyticsMap={analyticsMap}
+          user={user}
         />
       </section>
 
-      {/* Two Column Layout for Activities and Quizzes */}
-      <div className={styles.twoColumnLayout}>
-        {/* Recent Student Activity */}
-        <section className={styles.section}>
-          <h3 className={styles.sectionTitle}>Recent student activity</h3>
-          <RecentActivity activities={recentActivities} />
-        </section>
 
-        {/* Pending Quizzes */}
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>Bài kiểm tra cần chấm</h3>
-            {pendingQuizzes.length > 0 && (
-              <span className={styles.badge}>{pendingQuizzes.length}</span>
-            )}
-          </div>
-          <PendingQuizzes quizzes={pendingQuizzes} />
-        </section>
-      </div>
 
       {/* New Discussions Section */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Thảo luận mới</h3>
-          {newDiscussions.length > 0 && (
-            <span className={styles.badge}>{newDiscussions.length}</span>
-          )}
-        </div>
-        <NewDiscussions discussions={newDiscussions} />
-      </section>
+
     </div>
   );
 };

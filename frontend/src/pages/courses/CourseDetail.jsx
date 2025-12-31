@@ -656,6 +656,7 @@ const CourseDetailPage = () => {
           isEnrolled={isEnrolled}
           onClose={() => setSelectedDiscussionId(null)}
           onEnroll={handleEnroll}
+          courseTeacherId={course?.teacherId?._id || course?.teacherId}
         />
       )}
     </div>

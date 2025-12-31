@@ -205,6 +205,31 @@ export const markLessonCompleted = async (req, res) => {
       isRead: false,
     });
 
+    // If Course is fully completed (100%), notify the Teacher
+    if (isCourseCompleted && course.teacherId) {
+        try {
+            await Notification.create({
+                userId: course.teacherId,
+                type: 'course',
+                title: 'Student Completed Course',
+                content: `${user.fullName} has completed 100% of your course "${course.title}"`,
+                link: `/courses/${courseId}/analytics`,
+                isRead: false,
+            });
+            
+             // Real-time socket for teacher
+            if (req.io) {
+                 req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
+                    type: 'course',
+                    title: 'Student Completed Course',
+                    message: `${user.fullName} has completed 100% of your course "${course.title}"`,
+                 });
+            }
+        } catch (errNotify) {
+            console.error('Failed to notify teacher of course completion:', errNotify);
+        }
+    }
+
     // Emit notification via socket (if available)
     if (req.io) {
       try {

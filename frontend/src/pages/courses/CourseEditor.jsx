@@ -580,27 +580,7 @@ const CourseEditor = () => {
           <h1 className={styles.title}>Edit Course</h1>
         </div>
         <div className={styles.headerRight}>
-          <div className={styles.autoSaveStatus}>
-            {autoSaveStatus === 'saving' && <span style={{ color: '#666' }}>Saving...</span>}
-            {autoSaveStatus === 'saved' && <span style={{ color: '#28a745' }}>Saved</span>}
-            {autoSaveStatus === 'error' && <span className={styles.error}>Save error</span>}
-          </div>
 
-          <div style={{
-            padding: '6px 12px',
-            borderRadius: '20px',
-            fontSize: '0.9rem',
-            fontWeight: 'bold',
-            marginRight: '10px',
-            backgroundColor: course.approvalStatus === 'approved' ? '#d4edda' : (course.approvalStatus === 'rejected' ? '#f8d7da' : '#fff3cd'),
-            color: course.approvalStatus === 'approved' ? '#155724' : (course.approvalStatus === 'rejected' ? '#721c24' : '#856404'),
-          }}>
-            {course.approvalStatus === 'approved' ? '✅ Live' : (course.approvalStatus === 'pending' ? '⏳ Pending Approval' : '❌ Rejected')}
-          </div>
-
-          <Button variant="outline" onClick={handleSaveDraft} disabled={saving} style={{ marginRight: '10px' }}>
-            Save
-          </Button>
 
           {course.approvalStatus === 'rejected' && (
             <Button variant="primary" onClick={handlePublish} disabled={saving}>
