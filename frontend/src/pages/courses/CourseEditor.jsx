@@ -8,6 +8,7 @@ import { Loading } from '../../components/common/Loading';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
 import toastService from '../../services/toastService';
+import QuizBuilder from '../../components/quiz/QuizBuilder';
 import styles from './CourseEditor.module.css';
 
 const CourseEditor = () => {
@@ -21,6 +22,7 @@ const CourseEditor = () => {
   const [autoSaveStatus, setAutoSaveStatus] = useState('saved'); // 'saving', 'saved', 'error'
   const [course, setCourse] = useState(null);
   const [chapters, setChapters] = useState([]);
+  const [quizzes, setQuizzes] = useState([]);
   const [expandedChapters, setExpandedChapters] = useState(new Set());
 
   // Form data
@@ -29,6 +31,7 @@ const CourseEditor = () => {
     description: '',
     category: 'Other',
     level: 'beginner',
+    highlights: [],
   });
 
   // Thumbnail
@@ -45,15 +48,22 @@ const CourseEditor = () => {
   // Modals
   const [showChapterModal, setShowChapterModal] = useState(false);
   const [showLessonModal, setShowLessonModal] = useState(false);
+  const [showQuizBuilder, setShowQuizBuilder] = useState(false);
   const [editingChapter, setEditingChapter] = useState(null);
   const [editingLesson, setEditingLesson] = useState(null);
+  const [editingQuiz, setEditingQuiz] = useState(null); // { quizId, lessonId }
 
   // Auto-save
   const autoSaveTimerRef = useRef(null);
   const lastSavedRef = useRef(null);
   const savingRef = useRef(false);
 
-  const categories = ['Programming', 'Design', 'Business', 'Language', 'Other'];
+  const categories = [
+    "Programming", "Frontend", "Full Stack", "Backend", "DevOps",
+    "Nodejs", "Reactjs", "Java", "Python", "C++",
+    "Data Science", "Machine Learning", "Cloud Computing", "Cybersecurity",
+    "Mobile Development", "Other"
+  ].sort();
   const levels = [
     { value: 'beginner', label: 'Beginner' },
     { value: 'intermediate', label: 'Intermediate' },
@@ -66,7 +76,7 @@ const CourseEditor = () => {
       setLoading(true);
 
       // Load course details
-      const courseRes = await api.get(`/courses/${courseId}`);
+      const courseRes = await api.get(`/teacher/courses/${courseId}`);
       const courseData = courseRes.data.data || courseRes.data;
       setCourse(courseData);
       setFormData({
@@ -74,6 +84,7 @@ const CourseEditor = () => {
         description: courseData.description || '',
         category: courseData.category || 'Other',
         level: courseData.level || 'beginner',
+        highlights: courseData.highlights || [],
       });
 
       if (courseData.thumbnail) {
@@ -93,6 +104,16 @@ const CourseEditor = () => {
       })).sort((a, b) => a.order - b.order);
 
       setChapters(chaptersWithLessons);
+
+      setChapters(chaptersWithLessons);
+
+      // Load quizzes
+      try {
+        const quizzesRes = await api.get(`/teacher/quizzes/course/${courseId}`);
+        setQuizzes(quizzesRes.data.data || []);
+      } catch (err) {
+        console.error('Failed to load quizzes:', err);
+      }
 
       // Expand first chapter by default
       if (chaptersWithLessons.length > 0) {
@@ -125,7 +146,7 @@ const CourseEditor = () => {
       savingRef.current = true;
       setSaving(true);
 
-      await api.put(`/courses/${courseId}`, formData);
+      await api.put(`/teacher/courses/${courseId}`, formData);
 
       lastSavedRef.current = currentData;
       setAutoSaveStatus('saved');
@@ -134,7 +155,7 @@ const CourseEditor = () => {
       if (thumbnailFile) {
         const formDataUpload = new FormData();
         formDataUpload.append('thumbnail', thumbnailFile);
-        await api.post(`/courses/${courseId}/thumbnail`, formDataUpload, {
+        await api.post(`/teacher/courses/${courseId}/thumbnail`, formDataUpload, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         setThumbnailFile(null);
@@ -200,6 +221,25 @@ const CourseEditor = () => {
     reader.readAsDataURL(file);
   };
 
+  // Highlights management
+  const handleAddHighlight = () => {
+    setFormData(prev => ({
+      ...prev,
+      highlights: [...prev.highlights, '']
+    }));
+  };
+
+  const handleHighlightChange = (index, value) => {
+    const newHighlights = [...formData.highlights];
+    newHighlights[index] = value;
+    setFormData(prev => ({ ...prev, highlights: newHighlights }));
+  };
+
+  const handleRemoveHighlight = (index) => {
+    const newHighlights = formData.highlights.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, highlights: newHighlights }));
+  };
+
   // Chapter management
   const handleAddChapter = () => {
     setEditingChapter(null);
@@ -214,15 +254,15 @@ const CourseEditor = () => {
   const handleSaveChapter = async (chapterData) => {
     try {
       if (editingChapter) {
-        await api.put(`/chapters/${editingChapter._id}`, chapterData);
+        await api.put(`/teacher/chapters/${editingChapter._id}`, chapterData);
         toastService.success('Chapter updated');
       } else {
-        await api.post('/chapters', { ...chapterData, courseId });
+        await api.post('/teacher/chapters', { ...chapterData, courseId });
         toastService.success('Added new chapter');
       }
       await loadCourseData();
       setShowChapterModal(false);
-      } catch (error) {
+    } catch (error) {
       console.error('Save chapter error:', error);
       toastService.error('Unable to save chapter');
     }
@@ -234,13 +274,42 @@ const CourseEditor = () => {
     }
 
     try {
-      await api.delete(`/chapters/${chapterId}`);
+      await api.delete(`/teacher/chapters/${chapterId}`);
       toastService.success('Chapter deleted');
       await loadCourseData();
     } catch (error) {
       console.error('Delete chapter error:', error);
       toastService.error('Unable to delete chapter');
     }
+  };
+
+  // Quiz management
+  const handleAddQuiz = (lessonId) => {
+    setEditingQuiz({ lessonId, quizId: null });
+    setShowQuizBuilder(true);
+  };
+
+  const handleEditQuiz = (quiz) => {
+    setEditingQuiz({ lessonId: quiz.lessonId, quizId: quiz._id });
+    setShowQuizBuilder(true);
+  };
+
+  const handleDeleteQuiz = async (quizId) => {
+    if (!window.confirm('Are you sure you want to delete this quiz?')) return;
+    try {
+      await api.delete(`/teacher/quizzes/${quizId}`);
+      toastService.success('Quiz deleted');
+      loadCourseData();
+    } catch (error) {
+      console.error('Delete quiz error:', error);
+      toastService.error('Unable to delete quiz');
+    }
+  };
+
+  const handleQuizBuilderClose = () => {
+    setShowQuizBuilder(false);
+    setEditingQuiz(null);
+    loadCourseData(); // Reload to get updated quizzes
   };
 
   // Lesson management
@@ -257,11 +326,11 @@ const CourseEditor = () => {
 
   const handleSaveLesson = async (lessonData) => {
     try {
-        if (editingLesson) {
-        await api.put(`/lessons/${editingLesson._id}`, lessonData);
+      if (editingLesson) {
+        await api.put(`/teacher/lessons/${editingLesson._id}`, lessonData);
         toastService.success('Lesson updated');
       } else {
-        await api.post('/lessons', { ...lessonData, chapterId: dragOverChapter });
+        await api.post('/teacher/lessons', { ...lessonData, chapterId: dragOverChapter });
         toastService.success('Added new lesson');
       }
       await loadCourseData();
@@ -279,7 +348,7 @@ const CourseEditor = () => {
     }
 
     try {
-      await api.delete(`/lessons/${lessonId}`);
+      await api.delete(`/teacher/lessons/${lessonId}`);
       toastService.success('Lesson deleted');
       await loadCourseData();
     } catch (error) {
@@ -321,7 +390,7 @@ const CourseEditor = () => {
 
       // Update order
       const reorderedIds = reordered.map((ch) => ch._id);
-      await api.put('/chapters/reorder', { chapters: reorderedIds });
+      await api.put('/teacher/chapters/reorder', { chapters: reorderedIds });
 
       toastService.success('Chapters reordered');
       await loadCourseData();
@@ -365,7 +434,7 @@ const CourseEditor = () => {
 
       // If moving to different chapter, update chapterId
       if (sourceChapterId !== targetChapterId) {
-        await api.put(`/lessons/${draggedLessonId}`, {
+        await api.put(`/teacher/lessons/${draggedLessonId}`, {
           chapterId: targetChapterId,
         });
       }
@@ -392,19 +461,19 @@ const CourseEditor = () => {
         // Same chapter reorder
         updatedTargetLessons.forEach((lesson, index) => {
           updatePromises.push(
-            api.put(`/lessons/${lesson._id}`, { order: index + 1 })
+            api.put(`/teacher/lessons/${lesson._id}`, { order: index + 1 })
           );
         });
       } else {
         // Different chapters
         updatedSourceLessons.forEach((lesson, index) => {
           updatePromises.push(
-            api.put(`/lessons/${lesson._id}`, { order: index + 1 })
+            api.put(`/teacher/lessons/${lesson._id}`, { order: index + 1 })
           );
         });
         updatedTargetLessons.forEach((lesson, index) => {
           updatePromises.push(
-            api.put(`/lessons/${lesson._id}`, {
+            api.put(`/teacher/lessons/${lesson._id}`, {
               order: index + 1,
               chapterId: targetChapterId,
             })
@@ -442,16 +511,16 @@ const CourseEditor = () => {
     await handleAutoSave();
   };
 
-  // Publish course
+  // Submit course for review
   const handlePublish = async () => {
     try {
       setSaving(true);
-      await api.put(`/courses/${courseId}/publish`);
-      toastService.success('Course published');
-      await loadCourseData();
+      await api.put(`/teacher/courses/${courseId}/submit`);
+      toastService.success('Course submitted for review');
+      navigate('/teacher/courses');
     } catch (error) {
-      console.error('Publish error:', error);
-      toastService.error(error.response?.data?.message || 'Unable to publish course');
+      console.error('Submit error:', error);
+      toastService.error(error.response?.data?.message || 'Unable to submit course');
     } finally {
       setSaving(false);
     }
@@ -486,6 +555,17 @@ const CourseEditor = () => {
     );
   }
 
+  if (showQuizBuilder) {
+    return (
+      <QuizBuilder
+        courseId={courseId}
+        lessonId={editingQuiz?.lessonId}
+        quizId={editingQuiz?.quizId}
+        onClose={handleQuizBuilderClose}
+      />
+    );
+  }
+
   return (
     <div className={styles.container}>
       {/* Header */}
@@ -501,16 +581,32 @@ const CourseEditor = () => {
         </div>
         <div className={styles.headerRight}>
           <div className={styles.autoSaveStatus}>
-            {autoSaveStatus === 'saving' && <span>Saving...</span>}
-            {autoSaveStatus === 'saved' && <span className={styles.saved}>Saved</span>}
+            {autoSaveStatus === 'saving' && <span style={{ color: '#666' }}>Saving...</span>}
+            {autoSaveStatus === 'saved' && <span style={{ color: '#28a745' }}>Saved</span>}
             {autoSaveStatus === 'error' && <span className={styles.error}>Save error</span>}
           </div>
-          <Button variant="outline" onClick={handleSaveDraft} disabled={saving}>
-            Save draft
+
+          <div style={{
+            padding: '6px 12px',
+            borderRadius: '20px',
+            fontSize: '0.9rem',
+            fontWeight: 'bold',
+            marginRight: '10px',
+            backgroundColor: course.approvalStatus === 'approved' ? '#d4edda' : (course.approvalStatus === 'rejected' ? '#f8d7da' : '#fff3cd'),
+            color: course.approvalStatus === 'approved' ? '#155724' : (course.approvalStatus === 'rejected' ? '#721c24' : '#856404'),
+          }}>
+            {course.approvalStatus === 'approved' ? '✅ Live' : (course.approvalStatus === 'pending' ? '⏳ Pending Approval' : '❌ Rejected')}
+          </div>
+
+          <Button variant="outline" onClick={handleSaveDraft} disabled={saving} style={{ marginRight: '10px' }}>
+            Save
           </Button>
-          <Button variant="primary" onClick={handlePublish} disabled={saving || course.isPublished}>
-            {course.isPublished ? 'Published' : 'Publish'}
-          </Button>
+
+          {course.approvalStatus === 'rejected' && (
+            <Button variant="primary" onClick={handlePublish} disabled={saving}>
+              Resubmit
+            </Button>
+          )}
         </div>
       </div>
 
@@ -521,7 +617,7 @@ const CourseEditor = () => {
             <h2 className={styles.sectionTitle}>Course Information</h2>
 
             <div className={styles.formGroup}>
-                <Input
+              <Input
                 name="title"
                 label="Course title"
                 value={formData.title}
@@ -536,7 +632,7 @@ const CourseEditor = () => {
                 Course Description
                 <span className={styles.required}>*</span>
               </label>
-                <ReactQuill
+              <ReactQuill
                 theme="snow"
                 value={formData.description}
                 onChange={handleDescriptionChange}
@@ -618,6 +714,38 @@ const CourseEditor = () => {
                 className={styles.fileInput}
               />
             </div>
+
+            {/* Highlights Section */}
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle} style={{ marginTop: '2rem' }}>What you'll learn</h2>
+              <Button variant="outline" size="small" onClick={handleAddHighlight}>
+                + Add Item
+              </Button>
+            </div>
+            <div className={styles.formGroup}>
+              {formData.highlights.map((highlight, index) => (
+                <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                  <Input
+                    value={highlight}
+                    onChange={(e) => handleHighlightChange(index, e.target.value)}
+                    placeholder="e.g. Build full-stack apps"
+                  />
+                  <Button
+                    variant="secondary"
+                    onClick={() => handleRemoveHighlight(index)}
+                    style={{ minWidth: '40px', padding: '0 10px' }}
+                  >
+                    ×
+                  </Button>
+                </div>
+              ))}
+              {formData.highlights.length === 0 && (
+                <p style={{ color: '#666', fontStyle: 'italic', fontSize: '0.9rem' }}>Add key learning outcomes to attract students.</p>
+              )}
+            </div>
+
+
+
           </div>
         </div>
 
@@ -686,48 +814,87 @@ const CourseEditor = () => {
                     {expandedChapters.has(chapter._id) && (
                       <div className={styles.lessonsList}>
                         {chapter.lessons?.map((lesson) => (
-                          <div
-                            key={lesson._id}
-                            className={styles.lessonItem}
-                            draggable
-                            onDragStart={(e) =>
-                              handleLessonDragStart(e, lesson._id, chapter._id)
-                            }
-                            onDragOver={handleLessonDragOver}
-                            onDrop={(e) =>
-                              handleLessonDrop(e, lesson._id, chapter._id)
-                            }
-                            onDragEnd={() => setDraggedLesson(null)}
-                          >
-                            <div className={styles.lessonDragHandle}>☰</div>
-                            <div className={styles.lessonInfo}>
-                              <h4 className={styles.lessonTitle}>{lesson.title}</h4>
-                              {lesson.videoUrl && (
-                                <span className={styles.lessonBadge}>📹 Has video</span>
-                              )}
-                              {lesson.resources?.length > 0 && (
-                                <span className={styles.lessonBadge}>
-                                  📎 {lesson.resources.length} resources
-                                </span>
-                              )}
+                          <React.Fragment key={lesson._id}>
+                            <div
+                              className={styles.lessonItem}
+                              draggable
+                              onDragStart={(e) =>
+                                handleLessonDragStart(e, lesson._id, chapter._id)
+                              }
+                              onDragOver={handleLessonDragOver}
+                              onDrop={(e) =>
+                                handleLessonDrop(e, lesson._id, chapter._id)
+                              }
+                              onDragEnd={() => setDraggedLesson(null)}
+                            >
+                              <div className={styles.lessonDragHandle}>☰</div>
+                              <div className={styles.lessonInfo}>
+                                <h4 className={styles.lessonTitle}>{lesson.title}</h4>
+                                {lesson.videoUrl && (
+                                  <span className={styles.lessonBadge}>📹 Has video</span>
+                                )}
+                                {lesson.resources?.length > 0 && (
+                                  <span className={styles.lessonBadge}>
+                                    📎 {lesson.resources.length} resources
+                                  </span>
+                                )}
+                              </div>
+                              <div className={styles.lessonActions}>
+                                <button
+                                  className={styles.actionButton}
+                                  onClick={() => handleAddQuiz(lesson._id)}
+                                  title="Add Quiz"
+                                >
+                                  ❓
+                                </button>
+                                <button
+                                  className={styles.actionButton}
+                                  onClick={() => handleEditLesson(lesson)}
+                                  title="Edit"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  className={styles.actionButton}
+                                  onClick={() => handleDeleteLesson(lesson._id)}
+                                  title="Delete"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
                             </div>
-                            <div className={styles.lessonActions}>
-                              <button
-                                className={styles.actionButton}
-                                onClick={() => handleEditLesson(lesson)}
-                                title="Edit"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                className={styles.actionButton}
-                                onClick={() => handleDeleteLesson(lesson._id)}
-                                title="Delete"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </div>
+
+                            {/* Render Quizzes for this Lesson */}
+                            {
+                              quizzes
+                                .filter(q => q.lessonId === lesson._id)
+                                .map(quiz => (
+                                  <div key={quiz._id} className={styles.quizItem}>
+                                    <div className={styles.quizInfo}>
+                                      <span className={styles.quizIcon}>❓</span>
+                                      <span className={styles.quizTitle}>{quiz.title}</span>
+                                      <span className={styles.quizMeta}>{quiz.duration} min • {quiz.passingScore}% pass</span>
+                                    </div>
+                                    <div className={styles.quizActions}>
+                                      <button
+                                        className={styles.actionButton}
+                                        onClick={() => handleEditQuiz(quiz)}
+                                        title="Edit Quiz"
+                                      >
+                                        ✏️
+                                      </button>
+                                      <button
+                                        className={styles.actionButton}
+                                        onClick={() => handleDeleteQuiz(quiz._id)}
+                                        title="Delete Quiz"
+                                      >
+                                        🗑️
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))
+                            }
+                          </React.Fragment>
                         ))}
                         <button
                           className={styles.addLessonButton}
@@ -746,32 +913,36 @@ const CourseEditor = () => {
       </div>
 
       {/* Chapter Modal */}
-      {showChapterModal && (
-        <ChapterModal
-          chapter={editingChapter}
-          onSave={handleSaveChapter}
-          onClose={() => {
-            setShowChapterModal(false);
-            setEditingChapter(null);
-          }}
-        />
-      )}
+      {
+        showChapterModal && (
+          <ChapterModal
+            chapter={editingChapter}
+            onSave={handleSaveChapter}
+            onClose={() => {
+              setShowChapterModal(false);
+              setEditingChapter(null);
+            }}
+          />
+        )
+      }
 
       {/* Lesson Modal */}
-      {showLessonModal && (
-        <LessonModal
-          lesson={editingLesson}
-          chapterId={dragOverChapter || editingLesson?.chapterId}
-          onSave={handleSaveLesson}
-          onClose={() => {
-            setShowLessonModal(false);
-            setEditingLesson(null);
-            setDragOverChapter(null);
-          }}
-          onUploadComplete={loadCourseData}
-        />
-      )}
-    </div>
+      {
+        showLessonModal && (
+          <LessonModal
+            lesson={editingLesson}
+            chapterId={dragOverChapter || editingLesson?.chapterId}
+            onSave={handleSaveLesson}
+            onClose={() => {
+              setShowLessonModal(false);
+              setEditingLesson(null);
+              setDragOverChapter(null);
+            }}
+            onUploadComplete={loadCourseData}
+          />
+        )
+      }
+    </div >
   );
 };
 
@@ -835,7 +1006,9 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
     title: lesson?.title || '',
     content: lesson?.content || '',
     isPreview: lesson?.isPreview || false,
+    resources: lesson?.resources || [],
   });
+  const [newLink, setNewLink] = useState({ name: '', url: '' });
   const [saving, setSaving] = useState(false);
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingResources, setUploadingResources] = useState(false);
@@ -901,6 +1074,23 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
     }
   };
 
+  const handleAddLink = () => {
+    if (!newLink.name || !newLink.url) return;
+
+    setFormData(prev => ({
+      ...prev,
+      resources: [...prev.resources, { ...newLink, type: 'link' }]
+    }));
+    setNewLink({ name: '', url: '' });
+  };
+
+  const handleRemoveResource = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      resources: prev.resources.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleResourceUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -917,15 +1107,33 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
         formDataUpload.append('files', file);
       });
 
-      await api.post(`/lessons/${lesson._id}/resource`, formDataUpload, {
+      const response = await api.post(`/lessons/${lesson._id}/resource`, formDataUpload, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
+      // Add uploaded files to local state
+      const newResources = response.data.resources.map(res => ({
+        name: res.filename || 'Resource', // Or use original name if available in response
+        url: res.url,
+        type: 'pdf', // Default to pdf/doc type as defined in backend logic (or derive from extension)
+      }));
+
+      setFormData(prev => ({
+        ...prev,
+        resources: [...prev.resources, ...newResources]
+      }));
+
       toastService.success(`Successfully uploaded ${files.length} resources`);
       if (onUploadComplete) {
-        await onUploadComplete();
+        // We DON'T call onUploadComplete here to reload everything yet, 
+        // because we want the user to see the added resources in the list and then click Save.
+        // OR we can rely on the fact that upload endpoint already saved them to Media? 
+        // BUT we need to save them to Lesson.resources. So we just update local state here.
       }
-      onClose();
+
+      // Reset input
+      if (resourceInputRef.current) resourceInputRef.current.value = '';
+
     } catch (error) {
       console.error('Upload resources error:', error);
       toastService.error('Unable to upload resources');
@@ -979,7 +1187,7 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
                   setFormData((prev) => ({ ...prev, isPreview: e.target.checked }))
                 }
               />
-              <span>Allow preview (Preview)</span>
+              <span>Allow preview</span>
             </label>
           </div>
 
@@ -987,56 +1195,114 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
             <>
               <div className={styles.formGroup}>
                 <label className={styles.label}>Upload video</label>
-                <input
-                  ref={videoInputRef}
-                  type="file"
-                  accept="video/*"
-                  onChange={handleVideoUpload}
-                  className={styles.fileInput}
-                  disabled={uploadingVideo}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => videoInputRef.current?.click()}
-                  disabled={uploadingVideo}
-                >
-                  {uploadingVideo ? 'Uploading...' : 'Choose video'}
-                </Button>
-                {lesson.videoUrl && (
-                  <p className={styles.uploadedFile}>✓ Video available</p>
-                )}
+                <div className={styles.videoUploadContainer}>
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className={styles.fileInput}
+                    disabled={uploadingVideo}
+                    style={{ display: 'none' }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => videoInputRef.current?.click()}
+                    disabled={uploadingVideo}
+                  >
+                    {uploadingVideo ? 'Uploading...' : 'Choose Video File'}
+                  </Button>
+                  {lesson.videoUrl && (
+                    <div className={styles.resourceItem}>
+                      <span>📹 Current Video</span>
+                      <a href={lesson.videoUrl} target="_blank" rel="noopener noreferrer" className={styles.resourceLink}>View</a>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Upload resources</label>
-                <input
-                  ref={resourceInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.ppt,.pptx,.doc,.docx,.jpg,.jpeg,.png"
-                  onChange={handleResourceUpload}
-                  className={styles.fileInput}
-                  disabled={uploadingResources}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => resourceInputRef.current?.click()}
-                  disabled={uploadingResources}
-                >
-                  {uploadingResources ? 'Uploading...' : 'Choose resources'}
-                </Button>
-                {lesson.resources?.length > 0 && (
-                  <p className={styles.uploadedFile}>
-                    ✓ {lesson.resources.length} resources available
-                  </p>
-                )}
+                <label className={styles.label}>Resources</label>
+
+                {/* Resource List */}
+                <div className={styles.resourceList}>
+                  {formData.resources.map((res, index) => (
+                    <div key={index} className={styles.resourceItem}>
+                      <span className={styles.resourceIcon}>
+                        {res.type === 'link' ? '🔗' : '📄'}
+                      </span>
+                      <div className={styles.resourceInfo}>
+                        <div className={styles.resourceName}>{res.name}</div>
+                        <a href={res.url} target="_blank" rel="noopener noreferrer" className={styles.resourceLink}>{res.url}</a>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.removeResourceBtn}
+                        onClick={() => handleRemoveResource(index)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add Resource Actions */}
+                <div className={styles.resourceActions}>
+                  {/* File Upload */}
+                  <div className={styles.uploadAction}>
+                    <input
+                      ref={resourceInputRef}
+                      type="file"
+                      multiple
+                      accept=".pdf,.ppt,.pptx,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={handleResourceUpload}
+                      style={{ display: 'none' }}
+                      disabled={uploadingResources}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => resourceInputRef.current?.click()}
+                      disabled={uploadingResources}
+                      size="sm"
+                    >
+                      {uploadingResources ? 'Uploading...' : '+ Upload File'}
+                    </Button>
+                  </div>
+
+                  {/* Add Link */}
+                  <div className={styles.linkAction}>
+                    <div className={styles.linkInputs}>
+                      <Input
+                        placeholder="Resource Title"
+                        value={newLink.name}
+                        onChange={e => setNewLink(prev => ({ ...prev, name: e.target.value }))}
+                        size="sm"
+                      />
+                      <Input
+                        placeholder="URL (https://...)"
+                        value={newLink.url}
+                        onChange={e => setNewLink(prev => ({ ...prev, url: e.target.value }))}
+                        size="sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="primary"
+                        size="sm"
+                        onClick={handleAddLink}
+                        disabled={!newLink.name || !newLink.url}
+                      >
+                        Add Link
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </>
           )}
 
-            <div className={styles.modalActions}>
+          <div className={styles.modalActions}>
             <Button variant="outline" onClick={onClose} disabled={saving}>
               Cancel
             </Button>

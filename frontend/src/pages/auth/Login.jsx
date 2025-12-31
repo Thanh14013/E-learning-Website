@@ -90,6 +90,10 @@ const Login = () => {
         setError("Your profile has been rejected. Please contact the administrator.");
         return;
       }
+
+      const teacherTarget = from.startsWith("/teacher") ? from : "/teacher/dashboard";
+      navigate(teacherTarget, { replace: true });
+      return;
     }
 
     navigate(from, { replace: true });

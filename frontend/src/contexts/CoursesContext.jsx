@@ -27,7 +27,7 @@ export const CourseProvider = ({ children }) => {
           console.log("CONTEXT: User is logged in, fetching my-courses...");
           const myCoursesEndpoint = user.role === 'student'
             ? '/courses/enrolled'
-            : '/courses/my-courses';
+            : '/teacher/courses';
           const myCoursesRes = await api.get(myCoursesEndpoint);
           console.log("CONTEXT: Response từ my-courses:", myCoursesRes);
           setMyCourses(myCoursesRes.data.data || myCoursesRes.data || []);
@@ -60,7 +60,7 @@ export const CourseProvider = ({ children }) => {
       if (user) {
         const myCoursesEndpoint = user.role === 'student'
           ? '/courses/enrolled'
-          : '/courses/my-courses';
+          : '/teacher/courses';
         const myCoursesRes = await api.get(myCoursesEndpoint);
         setMyCourses(myCoursesRes.data.data || myCoursesRes.data || []);
       }

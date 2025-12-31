@@ -6,7 +6,7 @@ const TeacherApprovalPending = () => {
     const navigate = useNavigate();
 
     const handleBackToHome = () => {
-        navigate("/");
+        navigate("/login", { replace: true });
     };
 
     return (
@@ -37,7 +37,7 @@ const TeacherApprovalPending = () => {
                     Your profile is being reviewed by our admin team. This may take <strong>24-48 hours</strong>.
                 </p>
                 <p className={styles.subMessage}>
-                    We'll email you once your profile is approved or rejected.
+                    No email notifications are sent. Please come back and sign in to check your status.
                 </p>
                 <button onClick={handleBackToHome} className={styles.button}>
                     Back to home

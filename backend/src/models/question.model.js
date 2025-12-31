@@ -46,6 +46,11 @@ const questionSchema = new mongoose.Schema(
       maxlength: [1000, "Explanation cannot exceed 1000 characters"],
     },
 
+    order: {
+        type: Number,
+        default: 1
+    },
+
     // Essay: no correct answer stored
   },
   {

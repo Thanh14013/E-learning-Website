@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toastService from '../../services/toastService';
+import api from '../../services/api';
 import {
     BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -92,7 +93,7 @@ const AdminDashboard = () => {
         }
     ]);
 
-    const [userGrowthData] = useState([
+    const [userGrowthData, setUserGrowthData] = useState([
         { month: 'Jan', users: 8500 },
         { month: 'Feb', users: 9200 },
         { month: 'Mar', users: 9800 },
@@ -148,11 +149,24 @@ const AdminDashboard = () => {
     const loadDashboardData = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/analytics/dashboard');
-            if (response.data.success) {
-                // Cập nhật dữ liệu thực từ API
-                // setPlatformStats(response.data.data.stats);
-                // setSystemHealth(response.data.data.health);
+            const response = await api.get('/admin/analytics/dashboard');
+            if (response.data.success && response.data.data) {
+                const data = response.data.data;
+                if (data.platformStats) {
+                    setPlatformStats(prev => ({ ...prev, ...data.platformStats }));
+                }
+                if (data.userStats) {
+                    setUserStats(prev => ({ ...prev, ...data.userStats }));
+                }
+                if (data.systemHealth) {
+                    setSystemHealth(prev => ({ ...prev, ...data.systemHealth }));
+                }
+                if (data.activities) {
+                    setLiveActivities(data.activities);
+                }
+                if (data.userGrowth) {
+                    setUserGrowthData(data.userGrowth);
+                }
             }
         } catch (error) {
             console.error('[AdminDashboard] Error loading data:', error);
@@ -339,7 +353,7 @@ const AdminDashboard = () => {
                             </button>
                             <button
                                 className={styles.actionBtn}
-                                onClick={() => navigate('/admin/courses')}
+                                onClick={() => navigate('/admin/courses/approval')}
                             >
                                 📚 Manage Courses
                             </button>

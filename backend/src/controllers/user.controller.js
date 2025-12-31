@@ -113,6 +113,16 @@ export const updateUserProfile = async (req, res) => {
       };
     }
 
+    // Teacher specific fields
+    if (req.user.role === 'teacher') {
+        if (req.body.expertise) {
+            profile.expertise = req.body.expertise.trim();
+        }
+        if (req.body.qualifications) {
+            profile.qualifications = req.body.qualifications.trim();
+        }
+    }
+
     await profile.save();
 
     return res.status(200).json({
@@ -149,7 +159,7 @@ export const uploadAvatar = async (req, res) => {
 
     // ✅ Upload to Cloudinary
     const filePath = path.resolve(req.file.path);
-    const imageUrl = await uploadFile(filePath, {
+    const imageUpload = await uploadFile(filePath, {
       folder: "avatars",
       resource_type: "image",
       transformation: [{ width: 400, height: 400, crop: "fill" }],
@@ -177,19 +187,19 @@ export const uploadAvatar = async (req, res) => {
       }
     }
 
-    user.avatar = imageUrl;
+    user.avatar = imageUpload.secure_url;
     await user.save({ validateBeforeSave: false });
 
     return res.status(200).json({
       success: true,
       message: "Avatar uploaded successfully.",
       data: {
-        avatar: imageUrl,
+        avatar: imageUpload.secure_url,
         user: {
           id: user._id,
           fullName: user.fullName,
           email: user.email,
-          avatar: imageUrl,
+          avatar: imageUpload.secure_url,
         },
       },
     });
@@ -384,6 +394,59 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Server error while deleting user." });
   }
 };
+
+/**
+ * PUT /api/users/teachers/:id/approval
+ * @desc Admin updates teacher profile approval status
+ * @access Admin
+ */
+export const updateTeacherApprovalStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowed = ["approved", "rejected", "pending"];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ message: "Invalid status." });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid user ID." });
+    }
+
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (user.role !== "teacher") {
+      return res
+        .status(400)
+        .json({ message: "Only teacher profiles can be reviewed." });
+    }
+
+    user.profileApprovalStatus = status;
+    if (status === "approved") {
+      user.profileCompleted = true;
+      user.isVerified = true;
+    }
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+      success: true,
+      message: `Teacher profile marked as ${status}.`,
+      data: {
+        id: user._id,
+        profileApprovalStatus: user.profileApprovalStatus,
+      },
+    });
+  } catch (error) {
+    console.error("Update teacher approval status error:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error while updating approval status." });
+  }
+};
 /**
  * POST /api/users/complete-teacher-profile
  * @desc Submit teacher profile completion with CV
@@ -413,12 +476,6 @@ export const completeTeacherProfile = async (req, res) => {
         .json({ message: "Only teachers can complete this profile." });
     }
 
-    if (!user.isVerified) {
-      return res
-        .status(403)
-        .json({ message: "Please verify your email first." });
-    }
-
     if (user.profileCompleted) {
       return res
         .status(400)
@@ -438,7 +495,10 @@ export const completeTeacherProfile = async (req, res) => {
     // Upload CV to Cloudinary
     let cvUrl, cvPublicId;
     try {
-      const result = await uploadFile(req.file.path, "cvs");
+      const result = await uploadFile(req.file.path, {
+        folder: "cvs",
+        resource_type: "raw",
+      });
       cvUrl = result.secure_url;
       cvPublicId = result.public_id;
 

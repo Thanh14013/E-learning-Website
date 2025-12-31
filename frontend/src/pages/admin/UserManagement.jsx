@@ -21,6 +21,7 @@ const UserManagement = () => {
     const [actionLoading, setActionLoading] = useState({});
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
+    const [brokenAvatars, setBrokenAvatars] = useState({});
 
     // Fetch users with filters
     const fetchUsers = async (page = 1) => {
@@ -35,7 +36,7 @@ const UserManagement = () => {
             if (roleFilter !== 'all') params.role = roleFilter;
             if (statusFilter !== 'all') params.isVerified = statusFilter === 'verified';
 
-            const response = await api.get('/users/list', { params });
+            const response = await api.get('/admin/users', { params });
             const data = response.data;
 
             setUsers(data.users || []);
@@ -87,9 +88,9 @@ const UserManagement = () => {
 
         try {
             setActionLoading({ ...actionLoading, [userId]: 'role' });
-            await api.put(`/users/${userId}/role`, { role: newRole });
+            await api.put(`/admin/users/${userId}/role`, { role: newRole });
             toastService.success(`User role updated to ${newRole}`);
-            fetchUsers(pagination.page);
+            await fetchUsers(pagination.page);
         } catch (error) {
             console.error('[UserManagement] Error changing role:', error);
             toastService.error(error.response?.data?.message || 'Failed to update role');
@@ -107,9 +108,9 @@ const UserManagement = () => {
 
         try {
             setActionLoading({ ...actionLoading, [userId]: 'ban' });
-            await api.put(`/users/${userId}/ban`, { isBanned: !currentStatus });
+            await api.put(`/admin/users/${userId}/ban`, { isBanned: !currentStatus });
             toastService.success(`User ${action}ned successfully`);
-            fetchUsers(pagination.page);
+            await fetchUsers(pagination.page);
         } catch (error) {
             console.error('[UserManagement] Error toggling ban:', error);
             toastService.error(error.response?.data?.message || `Failed to ${action} user`);
@@ -129,11 +130,11 @@ const UserManagement = () => {
 
         try {
             setActionLoading({ ...actionLoading, [userToDelete._id]: 'delete' });
-            await api.delete(`/users/${userToDelete._id}`);
+            await api.delete(`/admin/users/${userToDelete._id}`);
             toastService.success('User deleted successfully');
             setShowDeleteModal(false);
             setUserToDelete(null);
-            fetchUsers(pagination.page);
+            await fetchUsers(pagination.page);
         } catch (error) {
             console.error('[UserManagement] Error deleting user:', error);
             toastService.error(error.response?.data?.message || 'Failed to delete user');
@@ -153,6 +154,33 @@ const UserManagement = () => {
         if (user.isBanned) return <span className={styles.statusBanned}>Banned</span>;
         if (user.isVerified) return <span className={styles.statusActive}>Active</span>;
         return <span className={styles.statusPending}>Pending</span>;
+    };
+
+    const getTeacherApprovalBadge = (user) => {
+        if (user.role !== 'teacher') return <span className={styles.statusMuted}>N/A</span>;
+        const status = user.profileApprovalStatus || 'pending';
+        if (status === 'approved') return <span className={styles.statusActive}>Approved</span>;
+        if (status === 'rejected') return <span className={styles.statusBanned}>Rejected</span>;
+        return <span className={styles.statusPending}>Pending</span>;
+    };
+
+    const handleTeacherApproval = async (userId, status) => {
+        if (!window.confirm(`Mark this teacher as ${status}?`)) return;
+        try {
+            setActionLoading({ ...actionLoading, [userId]: 'approval' });
+            await api.put(`/admin/users/teachers/${userId}/approval`, { status });
+            toastService.success(`Teacher ${status}`);
+            await fetchUsers(pagination.page);
+        } catch (error) {
+            console.error('[UserManagement] Error approving teacher:', error);
+            toastService.error(error.response?.data?.message || 'Failed to update teacher status');
+        } finally {
+            setActionLoading({ ...actionLoading, [userId]: null });
+        }
+    };
+
+    const handleAvatarError = (id) => {
+        setBrokenAvatars((prev) => ({ ...prev, [id]: true }));
     };
 
     if (loading && users.length === 0) {
@@ -230,6 +258,7 @@ const UserManagement = () => {
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Status</th>
+                                <th>Teacher Approval</th>
                                 <th>Joined</th>
                                 <th>Actions</th>
                             </tr>
@@ -240,8 +269,12 @@ const UserManagement = () => {
                                     <td>
                                         <div className={styles.userCell}>
                                             <div className={styles.userAvatar}>
-                                                {user.avatar ? (
-                                                    <img src={user.avatar} alt={user.fullName} />
+                                                {user.avatar && !brokenAvatars[user._id] ? (
+                                                    <img
+                                                        src={user.avatar}
+                                                        alt={user.fullName}
+                                                        onError={() => handleAvatarError(user._id)}
+                                                    />
                                                 ) : (
                                                     <div className={styles.avatarPlaceholder}>
                                                         {user.fullName?.charAt(0).toUpperCase()}
@@ -254,7 +287,7 @@ const UserManagement = () => {
                                     <td>{user.email}</td>
                                     <td>
                                         <select
-                                            value={user.role}
+                                            value={user.role || 'student'}
                                             onChange={(e) => handleRoleChange(user._id, e.target.value)}
                                             className={styles.roleSelect}
                                             disabled={actionLoading[user._id] === 'role'}
@@ -265,6 +298,29 @@ const UserManagement = () => {
                                         </select>
                                     </td>
                                     <td>{getStatusBadge(user)}</td>
+                                    <td>
+                                        <div className={styles.approvalCell}>
+                                            {getTeacherApprovalBadge(user)}
+                                            {user.role === 'teacher' && (user.profileApprovalStatus || 'pending') === 'pending' && (
+                                                <div className={styles.approvalActions}>
+                                                    <button
+                                                        className={styles.btnSmall}
+                                                        onClick={() => handleTeacherApproval(user._id, 'approved')}
+                                                        disabled={actionLoading[user._id] === 'approval'}
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        className={styles.btnSmallSecondary}
+                                                        onClick={() => handleTeacherApproval(user._id, 'rejected')}
+                                                        disabled={actionLoading[user._id] === 'approval'}
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td>{new Date(user.createdAt).toLocaleDateString()}</td>
                                     <td>
                                         <div className={styles.actions}>

@@ -30,7 +30,7 @@ const lessonSchema = new mongoose.Schema(
                 url: { type: String, required: true },
                 type: {
                     type: String,
-                    enum: ["pdf", "ppt", "doc", "image"],
+                    enum: ["pdf", "ppt", "doc", "image", "link", "video"],
                     required: true,
                 },
             },

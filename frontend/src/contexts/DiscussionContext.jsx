@@ -17,7 +17,7 @@ export const useDiscussions = () => {
 
 export const DiscussionProvider = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
-  
+
   // State
   const [discussions, setDiscussions] = useState([]);
   const [currentDiscussion, setCurrentDiscussion] = useState(null);
@@ -34,14 +34,14 @@ export const DiscussionProvider = ({ children }) => {
   // ============================================================================
   // SOCKET.IO ROOM MANAGEMENT
   // ============================================================================
-  
+
   const joinCourseRoom = useCallback((courseId) => {
     if (courseId && courseId !== currentCourseId) {
       // Leave previous room if any
       if (currentCourseId) {
         socketService.leaveRoom('discussion', currentCourseId);
       }
-      
+
       // Join new room
       socketService.joinRoom('discussion', courseId);
       setCurrentCourseId(courseId);
@@ -66,17 +66,17 @@ export const DiscussionProvider = ({ children }) => {
     setLoading(true);
     try {
       const { page = 1, limit = 10, search = '', sortBy = 'createdAt', order = 'desc' } = params;
-      
+
       const response = await api.get(`/discussions/course/${courseId}`, {
         params: { page, limit, search, sortBy, order }
       });
-      
+
       setDiscussions(response.data.data.discussions);
       setPagination(response.data.data.pagination);
-      
+
       // Join socket room for this course
       joinCourseRoom(courseId);
-      
+
       return response.data.data.discussions;
     } catch (error) {
       const parsedError = handleApiError(error, 'Fetch Discussions');
@@ -93,18 +93,18 @@ export const DiscussionProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await api.get(`/discussions/${discussionId}`);
-      
+
       setCurrentDiscussion({
         discussion: response.data.data.discussion,
         comments: response.data.data.comments,
         totalComments: response.data.data.totalComments
       });
-      
+
       // Join socket room for the discussion's course
       if (response.data.data.discussion.courseId) {
         joinCourseRoom(response.data.data.discussion.courseId);
       }
-      
+
       return response.data.data.discussion;
     } catch (error) {
       const parsedError = handleApiError(error, 'Fetch Discussion Detail');
@@ -123,12 +123,12 @@ export const DiscussionProvider = ({ children }) => {
         courseId,
         ...discussionData
       });
-      
+
       toastService.success('Discussion created successfully!');
-      
+
       // Update local state immediately
       setDiscussions(prev => [response.data.data.discussion, ...prev]);
-      
+
       return response.data.data.discussion;
     } catch (error) {
       const parsedError = handleApiError(error, 'Create Discussion');
@@ -141,21 +141,21 @@ export const DiscussionProvider = ({ children }) => {
   const updateDiscussion = useCallback(async (discussionId, updateData) => {
     try {
       const response = await api.put(`/discussions/${discussionId}`, updateData);
-      
+
       toastService.success('Discussion updated successfully!');
-      
+
       // Update local state
-      setDiscussions(prev => prev.map(d => 
+      setDiscussions(prev => prev.map(d =>
         d._id === discussionId ? response.data.data.discussion : d
       ));
-      
+
       if (currentDiscussion?.discussion?._id === discussionId) {
         setCurrentDiscussion(prev => ({
           ...prev,
           discussion: response.data.data.discussion
         }));
       }
-      
+
       return response.data.data.discussion;
     } catch (error) {
       const parsedError = handleApiError(error, 'Update Discussion');
@@ -168,7 +168,7 @@ export const DiscussionProvider = ({ children }) => {
   const deleteDiscussion = useCallback(async (discussionId) => {
     try {
       await api.delete(`/discussions/${discussionId}`);
-      
+
       setDiscussions(prev => prev.filter(d => d._id !== discussionId));
       toastService.success('Discussion deleted successfully!');
     } catch (error) {
@@ -178,17 +178,36 @@ export const DiscussionProvider = ({ children }) => {
     }
   }, []);
 
+  // Pin/Unpin discussion
+  const pinDiscussion = useCallback(async (discussionId) => {
+    try {
+      const response = await api.put(`/discussions/${discussionId}/pin`);
+
+      const { isPinned } = response.data.data;
+
+      setDiscussions(prev => prev.map(d =>
+        d._id === discussionId ? { ...d, isPinned } : d
+      ));
+
+      toastService.success(isPinned ? 'Discussion pinned' : 'Discussion unpinned');
+    } catch (error) {
+      const parsedError = handleApiError(error, 'Pin Discussion');
+      toastService.error(parsedError.message);
+      throw error;
+    }
+  }, []);
+
   // Like/Unlike discussion
   const toggleLikeDiscussion = useCallback(async (discussionId) => {
     if (!user) return;
-    
+
     try {
       const response = await api.put(`/discussions/${discussionId}/like`);
       const { isLiked, likesCount } = response.data.data;
-      
+
       // Update local state
-      setDiscussions(prev => prev.map(d => 
-        d._id === discussionId 
+      setDiscussions(prev => prev.map(d =>
+        d._id === discussionId
           ? { ...d, likesCount }
           : d
       ));
@@ -238,9 +257,9 @@ export const DiscussionProvider = ({ children }) => {
     // Update UI immediately
     setCurrentDiscussion(prev => {
       if (!prev || prev.discussion._id !== discussionId) return prev;
-      
+
       const comments = [...(prev.comments || [])];
-      
+
       if (!parentId) {
         // Top-level comment - add to end
         comments.push(newComment);
@@ -266,7 +285,7 @@ export const DiscussionProvider = ({ children }) => {
           totalComments: (prev.totalComments || 0) + 1
         };
       }
-      
+
       return {
         ...prev,
         comments,
@@ -280,13 +299,13 @@ export const DiscussionProvider = ({ children }) => {
         content,
         parentId
       });
-      
+
       // Replace temp comment with real one from backend
       const realComment = response.data.data.comment;
-      
+
       setCurrentDiscussion(prev => {
         if (!prev) return prev;
-        
+
         const replaceTemp = (commentList) => {
           return commentList.map(comment => {
             if (comment._id === newComment._id) {
@@ -298,16 +317,16 @@ export const DiscussionProvider = ({ children }) => {
             return comment;
           });
         };
-        
+
         return { ...prev, comments: replaceTemp(prev.comments || []) };
       });
-      
+
       return realComment;
     } catch (error) {
       // Remove failed comment from UI
       setCurrentDiscussion(prev => {
         if (!prev) return prev;
-        
+
         const removeTemp = (commentList) => {
           return commentList.filter(c => c._id !== newComment._id).map(comment => {
             if (comment.replies?.length) {
@@ -316,14 +335,14 @@ export const DiscussionProvider = ({ children }) => {
             return comment;
           });
         };
-        
+
         return {
           ...prev,
           comments: removeTemp(prev.comments || []),
           totalComments: Math.max(0, (prev.totalComments || 0) - 1)
         };
       });
-      
+
       const parsedError = handleApiError(error, 'Create Comment');
       toastService.error(parsedError.message);
       throw error;
@@ -334,7 +353,7 @@ export const DiscussionProvider = ({ children }) => {
   const updateComment = useCallback(async (commentId, content) => {
     try {
       const response = await api.put(`/comments/${commentId}`, { content });
-      
+
       toastService.success('Comment updated successfully!');
       return response.data.data.comment;
     } catch (error) {
@@ -347,18 +366,18 @@ export const DiscussionProvider = ({ children }) => {
   // Like comment
   const toggleLikeComment = useCallback(async (commentId) => {
     if (!user) return;
-    
+
     try {
       await api.put(`/comments/${commentId}/like`);
-      
+
       // Update comment in currentDiscussion state
       if (currentDiscussion?.comments) {
         const updateCommentLikes = (comments) => {
           return comments.map(comment => {
             if (comment._id === commentId) {
               const currentLikes = comment.likesCount || 0;
-              return { 
-                ...comment, 
+              return {
+                ...comment,
                 likesCount: currentLikes + 1
               };
             }
@@ -411,7 +430,7 @@ export const DiscussionProvider = ({ children }) => {
         if (exists) return prev;
         return [data.discussion, ...prev];
       });
-      
+
       // Show toast notification if not created by current user
       if (data.discussion.userId?._id !== user?.id) {
         toastService.info(`New discussion: ${data.discussion.title}`);
@@ -424,7 +443,7 @@ export const DiscussionProvider = ({ children }) => {
       setDiscussions((prev) =>
         prev.map((d) => (d._id === data._id ? { ...d, ...data } : d))
       );
-      
+
       if (currentDiscussion?.discussion?._id === data._id) {
         setCurrentDiscussion(prev => ({
           ...prev,
@@ -443,7 +462,7 @@ export const DiscussionProvider = ({ children }) => {
             : d
         )
       );
-      
+
       if (currentDiscussion?.discussion?._id === data.discussionId) {
         setCurrentDiscussion(prev => ({
           ...prev,
@@ -455,20 +474,20 @@ export const DiscussionProvider = ({ children }) => {
     // Handle new comment
     const handleCommentCreated = (data) => {
       console.log('[DiscussionContext] comment:created', data);
-      
+
       // Update discussion comment count
       setDiscussions((prev) =>
         prev.map((d) =>
           d._id === data.discussionId
             ? {
-                ...d,
-                commentCount: (d.commentCount || 0) + 1,
-                lastCommentAt: new Date().toISOString(),
-              }
+              ...d,
+              commentCount: (d.commentCount || 0) + 1,
+              lastCommentAt: new Date().toISOString(),
+            }
             : d
         )
       );
-      
+
       // DON'T refresh - optimistic UI already handled it
       // Show toast if not by current user
       if (data.comment?.userId?._id !== user?.id) {
@@ -479,7 +498,7 @@ export const DiscussionProvider = ({ children }) => {
     // Handle comment liked
     const handleCommentLiked = (data) => {
       console.log('[DiscussionContext] comment:liked', data);
-      
+
       if (currentDiscussion?.comments) {
         const updateCommentLikes = (comments) => {
           return comments.map(comment => {
@@ -529,7 +548,7 @@ export const DiscussionProvider = ({ children }) => {
       currentCourseId,
       loading,
       pagination,
-      
+
       // API Methods
       fetchDiscussionsByCourse,
       fetchDiscussionDetail,
@@ -541,11 +560,11 @@ export const DiscussionProvider = ({ children }) => {
       updateComment,
       toggleLikeComment,
       deleteComment,
-      
+
       // Socket Methods
       joinCourseRoom,
       leaveCourseRoom,
-      
+
       // State Setters
       setDiscussions,
       setCurrentDiscussion,

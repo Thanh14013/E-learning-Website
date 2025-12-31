@@ -222,9 +222,7 @@ export const notifyDiscussionReply = async (
       },
       false
     );
-      discussionOwner.email,
-      discussionOwner.fullName
-    );
+    discussionOwner.email, discussionOwner.fullName;
 
     console.log(
       `💬 Discussion reply notification sent to ${discussionOwnerId}`

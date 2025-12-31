@@ -192,8 +192,10 @@ const CoursesPage = () => {
 
                                             {/* Description */}
                                             <p className={styles.courseDescription}>
-                                                {course.description?.substring(0, 100)}
-                                                {course.description?.length > 100 ? '...' : ''}
+                                                {course.description
+                                                    ? course.description.replace(/<[^>]*>/g, '').substring(0, 100)
+                                                    : ''}
+                                                {course.description && course.description.replace(/<[^>]*>/g, '').length > 100 ? '...' : ''}
                                             </p>
 
                                             {/* Teacher Info */}

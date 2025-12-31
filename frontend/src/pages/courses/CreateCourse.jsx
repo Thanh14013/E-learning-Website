@@ -34,7 +34,13 @@ const CreateCourse = () => {
   const [errors, setErrors] = useState({});
 
   // Categories and levels
-  const categories = ['Programming', 'Design', 'Business', 'Language', 'Other'];
+  // Categories and levels
+  const categories = [
+    "Programming", "Frontend", "Full Stack", "Backend", "DevOps",
+    "Nodejs", "Reactjs", "Java", "Python", "C++",
+    "Data Science", "Machine Learning", "Cloud Computing", "Cybersecurity",
+    "Mobile Development", "Other"
+  ].sort();
   const levels = [
     { value: 'beginner', label: 'Beginner' },
     { value: 'intermediate', label: 'Intermediate' },
@@ -176,7 +182,7 @@ const CreateCourse = () => {
 
     setLoading(true);
     try {
-      const response = await api.post('/courses', {
+      const response = await api.post('/teacher/courses', {
         title: formData.title,
         description: formData.description,
         category: formData.category,
@@ -190,15 +196,15 @@ const CreateCourse = () => {
         const formData = new FormData();
         formData.append('thumbnail', thumbnailFile);
 
-        await api.post(`/courses/${courseId}/thumbnail`, formData, {
+        await api.post(`/teacher/courses/${courseId}/thumbnail`, formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
           },
         });
       }
 
-      toastService.success('Course saved as draft');
-      navigate(`/dashboard`);
+      toastService.success('Course created! Now add your content.');
+      navigate(`/teacher/courses/${courseId}/edit`);
     } catch (error) {
       console.error('Create course error:', error);
       toastService.error(error.response?.data?.message || 'Failed to create course');
@@ -207,54 +213,7 @@ const CreateCourse = () => {
     }
   };
 
-  // Handle publish
-  const handlePublish = async () => {
-    if (!validateForm()) {
-      return;
-    }
 
-    setLoading(true);
-    try {
-      // Create course
-      const response = await api.post('/courses', {
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        level: formData.level,
-      });
-
-      const courseId = response.data.data._id;
-
-      // Upload thumbnail if exists
-      if (thumbnailFile && courseId) {
-        const formData = new FormData();
-        formData.append('thumbnail', thumbnailFile);
-
-        await api.post(`/courses/${courseId}/thumbnail`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-      }
-
-      // Publish course
-      try {
-        await api.put(`/courses/${courseId}/publish`);
-        toastService.success('Course created and published successfully!');
-        navigate(`/dashboard`);
-      } catch (publishError) {
-        // If publish fails (e.g., no chapters/lessons), still show success for course creation
-        const publishMessage = publishError.response?.data?.message || 'Unable to publish course';
-        toastService.warning(`Course created but: ${publishMessage}. Please add chapters and lessons before publishing.`);
-        navigate(`/dashboard`);
-      }
-    } catch (error) {
-      console.error('Publish course error:', error);
-      toastService.error(error.response?.data?.message || 'Failed to publish course');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Check if user is teacher
   if (user && user.role !== 'teacher' && user.role !== 'admin') {
@@ -293,7 +252,7 @@ const CreateCourse = () => {
             <h2>Basic Information</h2>
 
             <div className={styles.formGroup}>
-                <Input
+              <Input
                 name="title"
                 label="Course title"
                 value={formData.title}
@@ -446,18 +405,11 @@ const CreateCourse = () => {
           ) : (
             <div className={styles.finalActions}>
               <Button
-                variant="outline"
+                variant="primary"
                 onClick={handleSaveDraft}
                 disabled={loading}
               >
-                {loading ? 'Saving...' : 'Save draft'}
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handlePublish}
-                disabled={loading}
-              >
-                {loading ? 'Publishing...' : 'Publish'}
+                {loading ? 'Creating...' : 'Create & Continue'}
               </Button>
             </div>
           )}

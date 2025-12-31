@@ -62,7 +62,14 @@ export default function StudentHeader() {
   return (
     <nav className={styles.StudentHeader}>
       {/* Logo */}
-      <NavLink to="/" className={styles.logo}>
+      <NavLink
+        to={
+          user?.role === 'teacher' ? "/teacher/dashboard" :
+            user?.role === 'admin' ? "/admin/dashboard" :
+              "/"
+        }
+        className={styles.logo}
+      >
         MasterDev
       </NavLink>
 
@@ -143,7 +150,7 @@ export default function StudentHeader() {
                               </div>
                             </div>
                             <div className={styles.notifActions}>
-                                {!n.isRead && (
+                              {!n.isRead && (
                                 <button
                                   className={styles.actionBtn}
                                   title="Mark as read"
@@ -208,15 +215,22 @@ export default function StudentHeader() {
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <NavLink to="/dashboard" onClick={() => setMenuOpen(false)}>
+                  <NavLink to={user?.role === 'teacher' ? "/teacher/dashboard" : "/dashboard"} onClick={() => setMenuOpen(false)}>
                     📊 Dashboard
                   </NavLink>
                   <NavLink to="/profile" onClick={() => setMenuOpen(false)}>
                     👤 Profile
                   </NavLink>
-                  <NavLink to="/courses" onClick={() => setMenuOpen(false)}>
-                    📚 Browse Courses
-                  </NavLink>
+                  {user?.role === 'teacher' && (
+                    <NavLink to="/teacher/courses" onClick={() => setMenuOpen(false)}>
+                      📚 My Courses
+                    </NavLink>
+                  )}
+                  {user?.role !== 'teacher' && (
+                    <NavLink to="/courses" onClick={() => setMenuOpen(false)}>
+                      📚 Browse Courses
+                    </NavLink>
+                  )}
                   <div className={styles.divider}></div>
                   <button
                     onClick={() => {

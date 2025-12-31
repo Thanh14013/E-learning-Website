@@ -41,6 +41,11 @@ const quizSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+
+        order: {
+            type: Number,
+            default: 1
+        },
     },
     {
         timestamps: true,

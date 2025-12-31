@@ -21,6 +21,9 @@ export default function Profile() {
         address: "",
         city: "",
         country: "",
+        expertise: "",
+        qualifications: "",
+        socialLinks: { facebook: "", twitter: "", linkedin: "" },
     });
 
     // Password form state
@@ -47,12 +50,31 @@ export default function Profile() {
                 address: addressParts[0] || "",
                 city: addressParts[1] || "",
                 country: addressParts[2] || "",
+                expertise: user.profile?.expertise || "",
+                qualifications: user.profile?.qualifications || "",
+                socialLinks: {
+                    facebook: user.profile?.socialLinks?.facebook || "",
+                    twitter: user.profile?.socialLinks?.twitter || "",
+                    linkedin: user.profile?.socialLinks?.linkedin || "",
+                },
             });
         }
     }, [user]);
 
     const handleProfileChange = (e) => {
-        setProfileData({ ...profileData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        if (name.startsWith("social_")) {
+            const socialField = name.split("_")[1];
+            setProfileData(prev => ({
+                ...prev,
+                socialLinks: {
+                    ...prev.socialLinks,
+                    [socialField]: value
+                }
+            }));
+        } else {
+            setProfileData({ ...profileData, [name]: value });
+        }
     };
 
     const handlePasswordChange = (e) => {
@@ -119,7 +141,11 @@ export default function Profile() {
                 bio: profileData.bio,
                 phone: profileData.phoneNumber,
                 dateOfBirth: profileData.dateOfBirth,
+                dateOfBirth: profileData.dateOfBirth,
                 address: `${profileData.address}${profileData.city ? ', ' + profileData.city : ''}${profileData.country ? ', ' + profileData.country : ''}`,
+                expertise: profileData.expertise,
+                qualifications: profileData.qualifications,
+                socialLinks: profileData.socialLinks,
             });
 
             if (res.data) {
@@ -259,6 +285,8 @@ export default function Profile() {
                                         value={profileData.fullName}
                                         onChange={handleProfileChange}
                                         required
+                                        disabled={user?.role === 'teacher'}
+                                        title={user?.role === 'teacher' ? "Name cannot be changed" : ""}
                                     />
                                 </div>
 
@@ -270,6 +298,8 @@ export default function Profile() {
                                         value={profileData.email}
                                         onChange={handleProfileChange}
                                         required
+                                        disabled={user?.role === 'teacher'}
+                                        title={user?.role === 'teacher' ? "Email cannot be changed" : ""}
                                     />
                                 </div>
 
@@ -333,6 +363,58 @@ export default function Profile() {
                                     onChange={handleProfileChange}
                                     placeholder="Tell us about yourself..."
                                 />
+                            </div>
+
+                            {user?.role === 'teacher' && (
+                                <>
+                                    <div className={styles.formGroup}>
+                                        <label>Expertise</label>
+                                        <input
+                                            type="text"
+                                            name="expertise"
+                                            value={profileData.expertise}
+                                            onChange={handleProfileChange}
+                                            placeholder="E.g. Web Development, Data Science"
+                                        />
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label>Qualifications</label>
+                                        <textarea
+                                            name="qualifications"
+                                            rows="3"
+                                            value={profileData.qualifications}
+                                            onChange={handleProfileChange}
+                                            placeholder="Your degrees and certifications..."
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            <div className={styles.formGroup}>
+                                <label>Social Links</label>
+                                <div style={{ display: 'grid', gap: '10px' }}>
+                                    <input
+                                        type="url"
+                                        name="social_facebook"
+                                        value={profileData.socialLinks.facebook}
+                                        onChange={handleProfileChange}
+                                        placeholder="Facebook URL"
+                                    />
+                                    <input
+                                        type="url"
+                                        name="social_twitter"
+                                        value={profileData.socialLinks.twitter}
+                                        onChange={handleProfileChange}
+                                        placeholder="Twitter/X URL"
+                                    />
+                                    <input
+                                        type="url"
+                                        name="social_linkedin"
+                                        value={profileData.socialLinks.linkedin}
+                                        onChange={handleProfileChange}
+                                        placeholder="LinkedIn URL"
+                                    />
+                                </div>
                             </div>
 
                             <button type="submit" className={styles.submitBtn} disabled={loading}>

@@ -12,14 +12,14 @@ import styles from './QuizBuilder.module.css';
  * Allows teachers to create and edit quizzes with questions
  * Supports: Multiple Choice, True/False, Essay, Fill-in-the-Blank
  */
-export default function QuizBuilder({ courseId, quizId = null, onClose }) {
+export default function QuizBuilder({ courseId, quizId = null, lessonId = null, onClose }) {
 
 
     // Quiz metadata
     const [quizData, setQuizData] = useState({
         title: '',
         courseId: courseId || '',
-        lessonId: '',
+        lessonId: lessonId || '',
         duration: 30,
         passingScore: 70,
         attemptsAllowed: 3,
@@ -43,7 +43,7 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
     const loadQuiz = async () => {
         try {
             setLoading(true);
-            const response = await api.get(`/quizzes/${quizId}`);
+            const response = await api.get(`/teacher/quizzes/${quizId}`);
             const quiz = response.data.quiz;
 
             setQuizData({
@@ -86,16 +86,35 @@ export default function QuizBuilder({ courseId, quizId = null, onClose }) {
 
             if (quizId) {
                 // Update existing quiz
-                await api.put(`/quizzes/${quizId}`, quizData);
+                await api.put(`/teacher/quizzes/${quizId}`, quizData);
                 toastService.success('Quiz updated successfully');
             } else {
                 // Create new quiz
-                const response = await api.post('/quizzes', quizData);
+                const response = await api.post('/teacher/quizzes', quizData);
                 const newQuizId = response.data.quiz._id;
 
                 // Create questions for the new quiz
-                for (const question of questions) {
-                    await api.post(`/questions/quiz/${newQuizId}`, question);
+                for (const q of questions) {
+                    // Transform frontend data to backend format
+                    const backendQuestion = {
+                        quizId: newQuizId,
+                        type: q.type,
+                        questionText: q.question, // Map 'question' to 'questionText'
+                        explanation: q.explanation,
+                        order: q.order // If we supported manual order in frontend
+                    };
+
+                    if (q.type === 'multiple_choice') {
+                        backendQuestion.options = q.options;
+                        backendQuestion.correctOption = q.options.indexOf(q.correctAnswer);
+                    } else if (q.type === 'true_false') {
+                        // Ensure boolean
+                        backendQuestion.correctBoolean = q.correctAnswer === 'true' || q.correctAnswer === true;
+                    } else if (q.type === 'fill_blank') {
+                        backendQuestion.correctText = q.correctAnswer;
+                    }
+
+                    await api.post(`/teacher/questions/quiz/${newQuizId}`, backendQuestion);
                 }
 
                 toastService.success('Quiz created successfully');
@@ -396,7 +415,7 @@ function QuestionModal({ question, onSave, onClose }) {
                                     checked={questionData.correctAnswer === option}
                                     onChange={() => handleChange('correctAnswer', option)}
                                 />
-                                    <Input
+                                <Input
                                     value={option}
                                     onChange={(e) => handleOptionChange(index, e.target.value)}
                                     placeholder={`Option ${index + 1}`}
@@ -424,8 +443,8 @@ function QuestionModal({ question, onSave, onClose }) {
                             className={styles.select}
                         >
                             <option value="">-- Select --</option>
-                                <option value="true">True</option>
-                                <option value="false">False</option>
+                            <option value="true">True</option>
+                            <option value="false">False</option>
                         </select>
                     </div>
                 )}

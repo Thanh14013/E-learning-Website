@@ -59,13 +59,13 @@ const CourseCard = ({ course, analytics }) => {
         </div>
         <div className={styles.courseActions}>
           <Link
-            to={`/courses/${course._id || course.id}/manage`}
+            to={`/teacher/courses/${course._id || course.id}/edit`}
             className={styles.manageBtn}
           >
             Manage
           </Link>
           <Link
-            to={`/courses/${course._id || course.id}/analytics`}
+            to={`/teacher/courses/${course._id || course.id}/analytics`}
             className={styles.analyticsBtn}
           >
             Analytics
@@ -124,7 +124,7 @@ const CourseCarousel = ({ courses, analyticsMap }) => {
   if (!Array.isArray(courses) || courses.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <p>You have no courses. <Link to="/courses/create">Create a new course</Link></p>
+        <p>You have no courses. <Link to="/teacher/courses/create">Create a new course</Link></p>
       </div>
     );
   }
@@ -288,9 +288,9 @@ const PendingQuizzes = ({ quizzes }) => {
             <Link
               to={`/quiz/${quiz.quizId}/grade/${quiz.attemptId}`}
               className={styles.gradeBtn}
-              >
-                Grade
-              </Link>
+            >
+              Grade
+            </Link>
           </div>
         </div>
       ))}
@@ -322,7 +322,7 @@ const NewDiscussions = ({ discussions }) => {
             <p className={styles.discussionMeta}>
               {discussion.authorName} • {discussion.courseName} • {discussion.timestamp}
             </p>
-                {discussion.commentCount > 0 && (
+            {discussion.commentCount > 0 && (
               <p className={styles.discussionComments}>
                 {discussion.commentCount} new comments
               </p>
@@ -358,7 +358,7 @@ const TeacherView = () => {
     setLoading(true);
     try {
       // Fetch dashboard data from backend
-      const dashboardRes = await api.get('/analytics/dashboard');
+      const dashboardRes = await api.get('/teacher/dashboard');
       const dashboardData = dashboardRes.data;
 
       // Set stats from dashboard data
@@ -431,7 +431,7 @@ const TeacherView = () => {
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <h3 className={styles.sectionTitle}>My Courses ({myCourses?.length || 0})</h3>
-          <Link to="/courses/create" className={styles.createCourseBtn}>
+          <Link to="/teacher/courses/create" className={styles.createCourseBtn}>
             + Create new course
           </Link>
         </div>

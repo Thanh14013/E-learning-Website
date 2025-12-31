@@ -99,101 +99,7 @@
   border-color: var(--color-gray-400);
 }
 
-/* Bulk Actions Bar - 新增的 CSS 类 1 */
-.bulkActionsBar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-3);
-  margin-bottom: var(--spacing-3);
-  padding: var(--spacing-3) var(--spacing-4);
-  background: linear-gradient(135deg, var(--color-teacher-primary-light) 0%, rgba(124, 58, 237, 0.1) 100%);
-  border: 2px solid var(--color-teacher-primary);
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.15);
-  animation: slideDown 0.3s ease;
-}
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.bulkActionsInfo {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
-}
-
-.bulkActionsCount {
-  font-weight: 600;
-  color: var(--color-teacher-primary);
-  font-size: 0.95rem;
-}
-
-.bulkActionsClear {
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  color: var(--color-gray-600);
-  background: transparent;
-  border: 1px solid var(--color-gray-300);
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  transition: var(--transition-base);
-}
-
-.bulkActionsClear:hover {
-  background: var(--color-gray-100);
-  border-color: var(--color-gray-400);
-}
-
-.bulkActionsButtons {
-  display: flex;
-  gap: var(--spacing-2);
-}
-
-.bulkActionBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-1);
-  padding: 10px 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  border: none;
-  border-radius: var(--border-radius-md);
-  cursor: pointer;
-  transition: var(--transition-base);
-  background: var(--color-teacher-primary);
-  color: white;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
-}
-
-.bulkActionBtn:hover:not(:disabled) {
-  background: var(--color-teacher-primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
-}
-
-.bulkActionBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.bulkActionBtnDanger {
-  background: var(--color-error);
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
-}
-
-.bulkActionBtnDanger:hover:not(:disabled) {
-  background: var(--color-error-hover);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-}
 
 /* Filters Bar */
 .filtersBar {
@@ -263,30 +169,7 @@
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
 
-.selectAllWrapper {
-  display: flex;
-  align-items: center;
-  padding: var(--spacing-2) 0;
-  border-top: 1px solid var(--color-gray-200);
-}
 
-.selectAllLabel {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-gray-700);
-  cursor: pointer;
-  user-select: none;
-}
-
-.selectAllCheckbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--color-teacher-primary);
-}
 
 /* Stats Summary */
 .statsSummary {
@@ -361,29 +244,7 @@
   border-color: var(--color-teacher-primary);
 }
 
-.courseCardSelected {
-  border: 2px solid var(--color-teacher-primary);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
-}
 
-.cardCheckbox {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 10;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 4px;
-  padding: 4px;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.cardCheckbox input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--color-teacher-primary);
-}
 
 .cardImage {
   position: relative;
@@ -428,12 +289,20 @@
   color: var(--color-success-hover);
 }
 
+.statusPending {
+  color: #d97706; /* amber-600 */
+}
+
+.statusRejected {
+  color: var(--color-error-hover);
+}
+
 .statusDraft {
-  color: var(--color-warning-hover);
+  color: var(--color-gray-500);
 }
 
 .statusUnpublished {
-  color: var(--color-gray-500);
+  color: var(--color-gray-400);
 }
 
 /* Card Content */
@@ -783,28 +652,7 @@
     border-color: var(--color-gray-700);
   }
 
-  .bulkActionsBar {
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(124, 58, 237, 0.1) 100%);
-    border-color: var(--color-teacher-primary);
-  }
 
-  .bulkActionsCount {
-    color: var(--color-teacher-primary-light);
-  }
-
-  .bulkActionsClear {
-    color: var(--color-gray-300);
-    border-color: var(--color-gray-600);
-  }
-
-  .bulkActionsClear:hover {
-    background: var(--color-gray-700);
-    border-color: var(--color-gray-500);
-  }
-
-  .selectAllLabel {
-    color: var(--color-gray-300);
-  }
 
   .quickActionsTrigger {
     background: var(--color-gray-800);

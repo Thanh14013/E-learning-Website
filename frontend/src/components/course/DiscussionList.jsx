@@ -20,7 +20,7 @@ const formatTimeAgo = (dateString) => {
 // Discussion Card Component
 const DiscussionCard = ({ discussion, onSelect }) => {
   const { user } = useAuth();
-  const { toggleLikeDiscussion, updateDiscussion, deleteDiscussion } = useDiscussions();
+  const { toggleLikeDiscussion, updateDiscussion, deleteDiscussion, pinDiscussion } = useDiscussions();
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editTitle, setEditTitle] = useState(discussion.title);
@@ -75,6 +75,17 @@ const DiscussionCard = ({ discussion, onSelect }) => {
         <h4 className={styles.title}>{discussion.title}</h4>
         {canEdit && (
           <div className={styles.actionIcons}>
+            {(user?.role === 'teacher' || user?.role === 'admin') && (
+              <button
+                className={styles.iconButton}
+                onClick={(e) => { e.stopPropagation(); pinDiscussion(discussion._id); }}
+                title={discussion.isPinned ? "Unpin" : "Pin"}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill={discussion.isPinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+                  <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z" />
+                </svg>
+              </button>
+            )}
             <button
               className={styles.iconButton}
               onClick={(e) => { e.stopPropagation(); setShowEditForm(!showEditForm); }}

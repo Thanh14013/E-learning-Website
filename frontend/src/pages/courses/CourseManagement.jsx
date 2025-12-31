@@ -14,6 +14,16 @@ const StatusBadge = ({ status }) => {
       className: styles.statusPublished,
       icon: '✓',
     },
+    pending: {
+      label: 'Pending Review',
+      className: styles.statusPending,
+      icon: '⏳',
+    },
+    rejected: {
+      label: 'Rejected',
+      className: styles.statusRejected,
+      icon: '❌',
+    },
     draft: {
       label: 'Draft',
       className: styles.statusDraft,
@@ -37,9 +47,13 @@ const StatusBadge = ({ status }) => {
 };
 
 // Course Card Component
-const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview, isSelected, onSelect }) => {
+const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview }) => {
   const studentCount = course.enrolledStudents?.length || 0;
-  const status = course.isPublished ? 'published' : 'draft';
+
+  let status = 'draft';
+  if (course.isPublished) status = 'published';
+  else if (course.approvalStatus === 'pending') status = 'pending';
+  else if (course.approvalStatus === 'rejected') status = 'rejected';
 
   const handleDelete = async (e) => {
     e.preventDefault();
@@ -47,7 +61,7 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
 
     if (window.confirm(`Are you sure you want to delete the course "${course.title || course.name}"?`)) {
       try {
-        await api.delete(`/courses/${course._id || course.id}`);
+        await api.delete(`/teacher/courses/${course._id || course.id}`);
         toastService.success('Course deleted successfully');
         onDelete?.(course._id || course.id);
       } catch (error) {
@@ -58,18 +72,8 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
   };
 
   return (
-    <div className={`${styles.courseCard} ${isSelected ? styles.courseCardSelected : ''}`}>
-      {/* Selection Checkbox */}
-      {onSelect && (
-        <div className={styles.cardCheckbox}>
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => onSelect(course._id || course.id)}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+    <div className={styles.courseCard}>
+
 
       {/* Course Image */}
       <div
@@ -178,7 +182,13 @@ const CourseManagementCard = ({ course, onEdit, onDelete, onAnalytics, onPreview
           <button
             className={`${styles.actionBtn} ${styles.deleteBtn}`}
             onClick={handleDelete}
-            title="Delete"
+            title={course.approvalStatus === 'approved' ? "Cannot delete approved course" : "Delete"}
+            disabled={course.approvalStatus === 'approved'}
+            style={{
+              opacity: course.approvalStatus === 'approved' ? 0.5 : 1,
+              cursor: course.approvalStatus === 'approved' ? 'not-allowed' : 'pointer',
+              display: course.approvalStatus === 'approved' ? 'none' : 'flex' // Or just hide it? User said "teacher cannot delete", hiding is safer.
+            }}
           >
             <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -202,8 +212,7 @@ const CourseManagement = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('updated');
   const [loading, setLoading] = useState(false);
-  const [selectedCourses, setSelectedCourses] = useState([]);
-  const [showBulkActions, setShowBulkActions] = useState(false);
+
 
   // Filter and sort courses
   const filteredCourses = useMemo(() => {
@@ -225,7 +234,9 @@ const CourseManagement = () => {
     if (statusFilter !== 'all') {
       filtered = filtered.filter((course) => {
         if (statusFilter === 'published') return course.isPublished === true;
-        if (statusFilter === 'draft') return course.isPublished === false;
+        if (statusFilter === 'pending') return course.approvalStatus === 'pending';
+        if (statusFilter === 'rejected') return course.approvalStatus === 'rejected';
+        if (statusFilter === 'draft') return !course.isPublished && !course.approvalStatus;
         return true;
       });
     }
@@ -276,11 +287,11 @@ const CourseManagement = () => {
 
   // Handle course actions
   const handleEdit = (course) => {
-    navigate(`/courses/${course._id || course.id}/edit`);
+    navigate(`/teacher/courses/${course._id || course.id}/edit`);
   };
 
   const handleAnalytics = (course) => {
-    navigate(`/courses/${course._id || course.id}/analytics`);
+    navigate(`/teacher/courses/${course._id || course.id}/analytics`);
   };
 
   const handlePreview = (course) => {
@@ -293,71 +304,7 @@ const CourseManagement = () => {
     window.location.reload();
   };
 
-  // Handle course selection
-  const handleSelectCourse = (courseId) => {
-    setSelectedCourses((prev) => {
-      if (prev.includes(courseId)) {
-        return prev.filter((id) => id !== courseId);
-      }
-      return [...prev, courseId];
-    });
-  };
 
-  const handleSelectAll = () => {
-    if (selectedCourses.length === filteredCourses.length) {
-      setSelectedCourses([]);
-    } else {
-      setSelectedCourses(filteredCourses.map((c) => c._id || c.id));
-    }
-  };
-
-  // Bulk actions
-  const handleBulkPublish = async () => {
-    if (selectedCourses.length === 0) return;
-
-    setLoading(true);
-    try {
-      await Promise.all(
-        selectedCourses.map((id) => api.put(`/courses/${id}/publish`))
-      );
-      toastService.success(`Published ${selectedCourses.length} courses`);
-      setSelectedCourses([]);
-      setShowBulkActions(false);
-      window.location.reload();
-    } catch {
-      toastService.error('An error occurred while publishing courses');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedCourses.length === 0) return;
-
-    if (!window.confirm(`Are you sure you want to delete ${selectedCourses.length} courses?`)) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await Promise.all(
-        selectedCourses.map((id) => api.delete(`/courses/${id}`))
-      );
-      toastService.success(`Deleted ${selectedCourses.length} courses`);
-      setSelectedCourses([]);
-      setShowBulkActions(false);
-      window.location.reload();
-    } catch {
-      toastService.error('An error occurred while deleting courses');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Update showBulkActions when selection changes
-  useEffect(() => {
-    setShowBulkActions(selectedCourses.length > 0);
-  }, [selectedCourses]);
 
   // Check if user is a teacher
   useEffect(() => {
@@ -396,7 +343,12 @@ const CourseManagement = () => {
       displayedCourses.forEach(course => {
         const title = (course.title || course.name || '').replace(/"/g, '""'); // Escape quotes
         const description = (course.description || '').replace(/"/g, '""').substring(0, 100); // Limit length
-        const status = course.isPublished ? 'Published' : 'Draft';
+
+        let status = 'Draft';
+        if (course.isPublished) status = 'Published';
+        else if (course.approvalStatus === 'pending') status = 'Pending Review';
+        else if (course.approvalStatus === 'rejected') status = 'Rejected';
+        else status = 'Draft';
         const studentCount = course.enrolledStudents?.length || 0;
         const category = course.category?.name || course.category || 'N/A';
         const level = course.level || 'N/A';
@@ -443,7 +395,7 @@ const CourseManagement = () => {
   };
 
   const handleCreateCourse = () => {
-    navigate('/courses/create');
+    navigate('/teacher/courses/create');
   };
 
   // Loading state
@@ -490,44 +442,7 @@ const CourseManagement = () => {
         </div>
       </div>
 
-      {/* Bulk Actions Bar */}
-      {showBulkActions && (
-        <div className={styles.bulkActionsBar}>
-          <div className={styles.bulkActionsInfo}>
-            <span className={styles.bulkActionsCount}>
-              Selected {selectedCourses.length} courses
-            </span>
-            <button
-              className={styles.bulkActionsClear}
-              onClick={() => setSelectedCourses([])}
-            >
-              Deselect all
-            </button>
-          </div>
-          <div className={styles.bulkActionsButtons}>
-            <button
-              className={styles.bulkActionBtn}
-              onClick={handleBulkPublish}
-              disabled={loading}
-            >
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              Publish
-            </button>
-            <button
-              className={`${styles.bulkActionBtn} ${styles.bulkActionBtnDanger}`}
-              onClick={handleBulkDelete}
-              disabled={loading}
-            >
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Delete
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* Filters & Search */}
       <div className={styles.filtersBar}>
@@ -535,7 +450,7 @@ const CourseManagement = () => {
           <svg className={styles.searchIcon} width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-            <input
+          <input
             type="text"
             className={styles.searchInput}
             placeholder="Search courses..."
@@ -544,17 +459,7 @@ const CourseManagement = () => {
           />
         </div>
 
-        <div className={styles.selectAllWrapper}>
-          <label className={styles.selectAllLabel}>
-            <input
-              type="checkbox"
-              checked={selectedCourses.length === filteredCourses.length && filteredCourses.length > 0}
-              onChange={handleSelectAll}
-              className={styles.selectAllCheckbox}
-            />
-            <span>Select all</span>
-          </label>
-        </div>
+
 
         <div className={styles.filtersGroup}>
           <select
@@ -564,7 +469,8 @@ const CourseManagement = () => {
           >
             <option value="all">All statuses</option>
             <option value="published">Published</option>
-            <option value="draft">Draft</option>
+            <option value="pending">Pending Review</option>
+            <option value="rejected">Rejected</option>
           </select>
 
           <select
@@ -613,12 +519,12 @@ const CourseManagement = () => {
           </div>
         </div>
         <div className={styles.statCard}>
-          <div className={styles.statIcon}>📝</div>
+          <div className={styles.statIcon}>⏳</div>
           <div className={styles.statContent}>
             <div className={styles.statValue}>
-              {myCourses?.filter((c) => !c.isPublished).length || 0}
+              {myCourses?.filter((c) => c.approvalStatus === 'pending').length || 0}
             </div>
-            <div className={styles.statLabel}>Drafts</div>
+            <div className={styles.statLabel}>Pending</div>
           </div>
         </div>
         <div className={styles.statCard}>
@@ -662,8 +568,6 @@ const CourseManagement = () => {
               onDelete={handleDelete}
               onAnalytics={handleAnalytics}
               onPreview={handlePreview}
-              isSelected={selectedCourses.includes(course._id || course.id)}
-              onSelect={handleSelectCourse}
             />
           ))}
         </div>

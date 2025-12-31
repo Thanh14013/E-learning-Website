@@ -79,8 +79,11 @@ export const updateLesson = async (req, res) => {
 
     lesson.title = title ?? lesson.title;
     lesson.content = content ?? lesson.content;
-    lesson.isPreview =
-      typeof isPreview === "boolean" ? isPreview : lesson.isPreview;
+    lesson.isPreview = typeof isPreview === "boolean" ? isPreview : lesson.isPreview;
+    
+    if (req.body.resources) {
+      lesson.resources = req.body.resources;
+    }
 
     await lesson.save();
 

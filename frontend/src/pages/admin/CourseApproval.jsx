@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toastService from '../../services/toastService';
+import api from '../../services/api';
 import styles from './CourseApproval.module.css';
 
 /**
@@ -13,64 +14,9 @@ const CourseApproval = () => {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('pending'); // pending, approved, rejected
-    const [courses, setCourses] = useState([
-        {
-            id: '1',
-            title: 'Advanced React Patterns',
-            teacher: {
-                name: 'John Doe',
-                email: 'john@example.com'
-            },
-            description: 'Learn advanced React patterns including HOCs, Render Props, and Hooks',
-            category: 'Web Development',
-            level: 'Advanced',
-            price: 99,
-            lessons: 24,
-            duration: '12 hours',
-            thumbnail: '/assets/course-1.jpg',
-            status: 'pending',
-            submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-            enrollments: 0
-        },
-        {
-            id: '2',
-            title: 'Coding Mastery',
-            teacher: {
-                name: 'Jane Smith',
-                email: 'jane@example.com'
-            },
-            description: 'Master IELTS Speaking with AI-powered feedback',
-            category: 'Language',
-            level: 'Intermediate',
-            price: 149,
-            lessons: 30,
-            duration: '15 hours',
-            thumbnail: '/assets/course-2.jpg',
-            status: 'pending',
-            submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-            enrollments: 0
-        },
-        {
-            id: '3',
-            title: 'Python for Data Science',
-            teacher: {
-                name: 'Bob Wilson',
-                email: 'bob@example.com'
-            },
-            description: 'Complete Python course for data analysis and visualization',
-            category: 'Data Science',
-            level: 'Beginner',
-            price: 79,
-            lessons: 40,
-            duration: '20 hours',
-            thumbnail: '/assets/course-3.jpg',
-            status: 'approved',
-            submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-            approvedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-            enrollments: 45
-        }
-    ]);
+    const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
+    const [courses, setCourses] = useState([]);
+    const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
 
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -84,20 +30,26 @@ const CourseApproval = () => {
         }
 
         loadCourses();
-    }, [user, navigate]);
+    }, [user, navigate, filter]);
 
     const loadCourses = async () => {
         try {
             setLoading(true);
-            const response = await api.get('/admin/courses/pending', {
-                params: { status: filter === 'all' ? undefined : filter }
+            const response = await api.get('/admin/courses', {
+                params: { status: filter === 'all' ? undefined : filter, limit: 50 },
             });
             if (response.data.success) {
-                setCourses(response.data.data);
+                setCourses(response.data.data || []);
+                if (response.data.stats) {
+                    setStats(response.data.stats);
+                }
+            } else {
+                setCourses([]);
             }
         } catch (error) {
             console.error('[CourseApproval] Error loading:', error);
             toastService.error('Unable to load course list');
+            setCourses([]);
         } finally {
             setLoading(false);
         }
@@ -105,7 +57,7 @@ const CourseApproval = () => {
 
     const filteredCourses = courses.filter(course => {
         if (filter === 'all') return true;
-        return course.status === filter;
+        return (course.approvalStatus || course.status || 'pending') === filter;
     });
 
     const handleReview = (course) => {
@@ -116,14 +68,10 @@ const CourseApproval = () => {
 
     const handleApprove = async () => {
         try {
-            const response = await api.put(`/courses/${selectedCourse._id}/approve`, { notes: reviewNotes });
+            const response = await api.put(`/admin/courses/${selectedCourse._id}/approve`, { notes: reviewNotes });
             if (response.data.success) {
-                setCourses(prev => prev.map(c =>
-                    c._id === selectedCourse._id
-                        ? { ...c, approvalStatus: 'approved', approvedAt: new Date() }
-                        : c
-                ));
                 toastService.success(`Course "${selectedCourse.title}" has been approved`);
+                loadCourses(); // Refresh list to ensure data consistency
             }
             setShowReviewModal(false);
             setSelectedCourse(null);
@@ -140,14 +88,10 @@ const CourseApproval = () => {
         }
 
         try {
-            const response = await api.put(`/courses/${selectedCourse._id}/reject`, { notes: reviewNotes });
+            const response = await api.put(`/admin/courses/${selectedCourse._id}/reject`, { notes: reviewNotes });
             if (response.data.success) {
-                setCourses(prev => prev.map(c =>
-                    c._id === selectedCourse._id
-                        ? { ...c, approvalStatus: 'rejected', rejectedAt: new Date(), rejectionReason: reviewNotes }
-                        : c
-                ));
                 toastService.success(`Course "${selectedCourse.title}" has been rejected`);
+                loadCourses(); // Refresh list to ensure data consistency
             }
             setShowReviewModal(false);
             setSelectedCourse(null);
@@ -162,6 +106,7 @@ const CourseApproval = () => {
     };
 
     const formatDate = (date) => {
+        if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
@@ -178,11 +123,8 @@ const CourseApproval = () => {
         return badges[status] || badges.pending;
     };
 
-    const stats = {
-        pending: courses.filter(c => c.status === 'pending').length,
-        approved: courses.filter(c => c.status === 'approved').length,
-        rejected: courses.filter(c => c.status === 'rejected').length
-    };
+    // Removed local stats calculation to prevent inconsistency when filtering
+    // const stats = { ... }
 
     if (loading) {
         return (
@@ -256,14 +198,17 @@ const CourseApproval = () => {
                     </div>
                 ) : (
                     filteredCourses.map(course => {
-                        const statusBadge = getStatusBadge(course.status);
+                        const status = course.approvalStatus || course.status || 'pending';
+                        const statusBadge = getStatusBadge(status);
+                        const teacher = course.teacher || course.teacherId || {};
+                        const key = course._id || course.id;
                         return (
-                            <div key={course.id} className={styles.courseCard}>
+                            <div key={key} className={styles.courseCard}>
                                 <div className={styles.courseHeader}>
                                     <div className={styles.courseInfo}>
                                         <h3 className={styles.courseTitle}>{course.title}</h3>
                                         <p className={styles.courseTeacher}>
-                                            by {course.teacher.fullName}
+                                            by {teacher.fullName || teacher.name || 'Unknown'}
                                         </p>
                                     </div>
                                     <span className={`${styles.statusBadge} ${statusBadge.className}`}>
@@ -275,22 +220,22 @@ const CourseApproval = () => {
 
                                 <div className={styles.courseMeta}>
                                     <span className={styles.metaItem}>
-                                        📚 {course.lessons} lessons
+                                        📊 {course.level || 'N/A'}
                                     </span>
                                     <span className={styles.metaItem}>
-                                        ⏱️ {course.duration}
+                                        🏷️ {course.category || 'Uncategorized'}
                                     </span>
                                     <span className={styles.metaItem}>
-                                        📊 {course.level}
+                                        📢 {course.isPublished ? 'Published' : 'Not Published'}
                                     </span>
                                     <span className={styles.metaItem}>
-                                        💰 ${course.price}
+                                        👥 {course.enrolledStudents?.length || 0} learners
                                     </span>
                                 </div>
 
                                 <div className={styles.courseFooter}>
                                     <div className={styles.courseDate}>
-                                        Submitted: {formatDate(course.submittedAt)}
+                                        Submitted: {formatDate(course.submittedAt || course.createdAt)}
                                         {course.approvedAt && (
                                             <> • Approved: {formatDate(course.approvedAt)}</>
                                         )}
@@ -298,11 +243,11 @@ const CourseApproval = () => {
                                     <div className={styles.courseActions}>
                                         <button
                                             className={styles.viewBtn}
-                                            onClick={() => handleViewCourse(course.id)}
+                                            onClick={() => handleViewCourse(course._id || course.id)}
                                         >
                                             View Details
                                         </button>
-                                        {course.status === 'pending' && (
+                                        {status === 'pending' && (
                                             <button
                                                 className={styles.reviewBtn}
                                                 onClick={() => handleReview(course)}
@@ -335,7 +280,7 @@ const CourseApproval = () => {
                         <div className={styles.modalContent}>
                             <div className={styles.reviewCourse}>
                                 <h3>{selectedCourse.title}</h3>
-                                <p>by {selectedCourse.teacher.fullName}</p>
+                                <p>by {(selectedCourse.teacher || selectedCourse.teacherId)?.fullName}</p>
                             </div>
 
                             <div className={styles.field}>

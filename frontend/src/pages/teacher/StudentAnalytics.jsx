@@ -24,7 +24,7 @@ export default function StudentAnalytics() {
     useEffect(() => {
         if (user?.role !== 'teacher' && user?.role !== 'admin') {
             toastService.error('You do not have access');
-            navigate('/dashboard');
+            navigate('/teacher/dashboard');
             return;
         }
 
@@ -36,7 +36,7 @@ export default function StudentAnalytics() {
             setLoading(true);
 
             // Fetch analytics from backend
-            const response = await api.get(`/analytics/student/${studentId}`, {
+            const response = await api.get(`/teacher/analytics/student/${studentId}`, {
                 params: { courseId }
             });
             const data = response.data;

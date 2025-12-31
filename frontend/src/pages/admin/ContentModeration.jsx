@@ -15,7 +15,8 @@ const ContentModeration = () => {
 
     useEffect(() => {
         fetchReports();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab]);
 
     const fetchReports = async () => {
         try {
@@ -25,8 +26,9 @@ const ContentModeration = () => {
             });
             if (response.data.success) {
                 setReports(response.data.data || []);
+            } else {
+                setReports([]);
             }
-            setReports([]);
         } finally {
             setLoading(false);
         }
@@ -44,16 +46,13 @@ const ContentModeration = () => {
 
         try {
             setActionLoading({ ...actionLoading, [reportId]: 'approve' });
-            // TODO: Tạo API endpoint /admin/reports/:id/approve ở backend
-            // const response = await api.put(`/admin/reports/${reportId}/approve`);
-            // if (response.data.success) {
-            //     setReports(reports.map(r =>
-            //         r._id === reportId ? { ...r, status: 'approved' } : r
-            //     ));
-            //     toastService.success('Báo cáo đã được duyệt');
-            // }
-
-            toastService.warning('This feature is not connected to the backend');
+            const response = await api.put(`/admin/reports/${reportId}/approve`);
+            if (response.data.success) {
+                setReports(reports.map(r =>
+                    r._id === reportId ? { ...r, status: 'approved' } : r
+                ));
+                toastService.success('Report approved');
+            }
         } catch (error) {
             console.error('[ContentModeration] Error approving report:', error);
             toastService.error('Failed to approve report');
@@ -113,7 +112,7 @@ const ContentModeration = () => {
 
         try {
             setActionLoading({ ...actionLoading, [report._id]: 'ban' });
-            await api.put(`/users/${report.author._id}/ban`, { isBanned: true });
+            await api.put(`/admin/users/${report.author._id}/ban`, { isBanned: true });
             toastService.success(`User ${report.author.fullName} has been banned`);
         } catch (error) {
             console.error('[ContentModeration] Error banning user:', error);

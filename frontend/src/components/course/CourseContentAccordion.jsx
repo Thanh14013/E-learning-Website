@@ -20,7 +20,7 @@ const CourseContentAccordion = ({ modules, courseId }) => {
 
     return (
         <div className={styles.accordionContainer}>
-            {modules.map(module => {
+            {modules.map((module, index) => {
                 const totalDuration = formatTotalMinutes(
                     module.lessons.reduce((sum, lesson) => sum + (lesson.duration || 0), 0)
                 );
@@ -35,21 +35,21 @@ const CourseContentAccordion = ({ modules, courseId }) => {
                                 ) : (
                                     <svg className={styles.accordionIcon} width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fillRule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z" /></svg>
                                 )}
-                                {module.title}
+                                {`Chapter ${index + 1}: ${module.title}`}
                             </span>
                             <span className={styles.moduleMeta}>{module.lessons.length} lectures • {totalDuration}</span>
                         </div>
                         {isOpen && (
                             <div className={styles.accordionContent}>
                                 {module.lessons && module.lessons.length > 0 ? (
-                                    module.lessons.map(lesson => (
+                                    module.lessons.map((lesson, lessonIndex) => (
                                         <Link
                                             to={`/courses/${courseId}/lessons/${lesson._id}`}
                                             key={lesson._id}
                                             className={styles.lessonItem}
                                         >
                                             <span className={styles.lessonTitle}>
-                                                {lesson.title}
+                                                {`Lesson ${lessonIndex + 1}: ${lesson.title}`}
                                                 {lesson.isPreview && <span className={styles.previewBadge}>Preview</span>}
                                             </span>
                                             <span className={styles.lessonDuration}>

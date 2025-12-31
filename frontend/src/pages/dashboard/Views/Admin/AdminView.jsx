@@ -11,21 +11,22 @@ const AdminView = ({ user }) => {
     activeToday: 0,
   });
   const [recentUsers, setRecentUsers] = useState([]);
+  const [brokenAvatars, setBrokenAvatars] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAdminData = async () => {
       try {
         // Fetch platform statistics using analytics dashboard
-        const dashboardRes = await api.get('/analytics/dashboard');
-        const dashboardData = dashboardRes.data;
+        const dashboardRes = await api.get('/admin/analytics/dashboard');
+        const dashboardData = dashboardRes.data?.data || {};
 
         // Also fetch users list for recent users display
-        const usersRes = await api.get('/users/list', { params: { page: 1, limit: 5, sortBy: 'createdAt', order: 'desc' } });
+        const usersRes = await api.get('/admin/users', { params: { page: 1, limit: 5, sortBy: 'createdAt', order: 'desc' } });
 
         const users = usersRes.data.users || [];
-        const totalUsers = usersRes.data.pagination?.total || users.length;
-        const totalCourses = dashboardData.totalCourses || 0;
+        const totalUsers = usersRes.data.total ?? users.length;
+        const totalCourses = dashboardData.totalCourses || dashboardData?.platformStats?.totalCourses || 0;
         const totalEnrollments = dashboardData.totalEnrollments || 0;
 
         // Set stats from dashboard
@@ -48,6 +49,10 @@ const AdminView = ({ user }) => {
 
     fetchAdminData();
   }, []);
+
+  const handleAvatarError = (id) => {
+    setBrokenAvatars((prev) => ({ ...prev, [id]: true }));
+  };
 
   if (loading) {
     return (
@@ -155,8 +160,12 @@ const AdminView = ({ user }) => {
             recentUsers.map((user) => (
               <div key={user._id} className={styles.userCard}>
                 <div className={styles.userAvatar}>
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.fullName} />
+                  {user.avatar && !brokenAvatars[user._id] ? (
+                    <img
+                      src={user.avatar}
+                      alt={user.fullName}
+                      onError={() => handleAvatarError(user._id)}
+                    />
                   ) : (
                     <div className={styles.avatarPlaceholder}>
                       {user.fullName.charAt(0).toUpperCase()}
