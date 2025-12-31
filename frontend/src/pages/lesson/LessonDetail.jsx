@@ -442,7 +442,7 @@ const LessonDetail = () => {
                 {/* Main Content */}
                 <div className={styles.lessonMain}>
                     {/* Video or Media Section */}
-                    {lesson.videoUrl && (
+                    {lesson.videoUrl ? (
                         <div className={styles.videoContainer}>
                             <video
                                 controls
@@ -452,6 +452,21 @@ const LessonDetail = () => {
                             >
                                 Your browser does not support the video.
                             </video>
+                        </div>
+                    ) : (
+                        <div className={styles.videoContainer} style={{
+                            backgroundColor: '#f8f9fa',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minHeight: '400px',
+                            border: '1px solid #e9ecef',
+                            borderRadius: '8px'
+                        }}>
+                            <div style={{ textAlign: 'center', color: '#6c757d' }}>
+                                <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>📹</span>
+                                <h3 style={{ fontSize: '1.25rem', fontWeight: '500' }}>This lesson has no video lecture</h3>
+                            </div>
                         </div>
                     )}
 
@@ -541,7 +556,7 @@ const LessonDetail = () => {
                     {quizzes.length > 0 && (
                         <div className={styles.quizSection}>
                             <h3>📝 Quizzes</h3>
-                            {quizzes.map(quiz => (
+                            {quizzes.map((quiz, index) => (
                                 <div key={quiz._id} className={styles.quizCard}>
                                     <div
                                         className={styles.quizHeader}
@@ -553,7 +568,7 @@ const LessonDetail = () => {
                                                 <span style={{ color: '#28a745', fontSize: '20px', fontWeight: 'bold' }}>✓</span>
                                             )}
                                             <h4 style={{ color: completedQuizzes.has(quiz._id) ? '#28a745' : 'inherit' }}>
-                                                {quiz.title}
+                                                {`Quiz ${index + 1}: ${quiz.title}`}
                                             </h4>
                                         </div>
                                         {!completedQuizzes.has(quiz._id) && (
@@ -568,7 +583,7 @@ const LessonDetail = () => {
                                             {quizQuestions[quiz._id].map((question, idx) => (
                                                 <div key={question._id} className={styles.questionCard}>
                                                     <p className={styles.questionText}>
-                                                        {idx + 1}. {question.questionText}
+                                                        {`Question ${idx + 1}: ${question.questionText}`}
                                                     </p>
 
                                                     {question.type === 'multiple_choice' && question.options && question.options.length > 0 && (
@@ -779,6 +794,75 @@ const LessonDetail = () => {
                         </div>
                     )}
 
+
+
+                    {/* Discussion Modal */}
+                    {selectedDiscussionId && (
+                        <DiscussionModal
+                            discussionId={selectedDiscussionId}
+                            isEnrolled={(() => {
+                                const enrolled = myCourses.some(c => c._id === courseId);
+                                console.log('🔍 Enrollment check for lesson discussion:', {
+                                    courseId,
+                                    myCourses: myCourses.map(c => c._id),
+                                    enrolled
+                                });
+                                return enrolled;
+                            })()}
+                            onClose={() => setSelectedDiscussionId(null)}
+                        />
+                    )}
+
+                    {/* Create Discussion Modal */}
+                    {showCreateDiscussion && (
+                        <div className="modal-overlay" onClick={() => setShowCreateDiscussion(false)}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
+                                <DiscussionForm
+                                    courseId={courseId}
+                                    lessonId={lessonId}
+                                    onSuccess={(newDiscussion) => {
+                                        setShowCreateDiscussion(false);
+                                        toast.success('Discussion created successfully!');
+                                        // Add new discussion to the beginning and refetch
+                                        setDiscussions(prev => [newDiscussion, ...prev]);
+                                        // Also refetch to ensure sync with server
+                                        fetchLessonDiscussions();
+                                    }}
+                                    onCancel={() => setShowCreateDiscussion(false)}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Navigation Buttons */}
+                    <div className={styles.lessonNavigation} style={{ marginTop: '30px' }}>
+                        <button
+                            className={`btn ${styles.navBtn}`}
+                            onClick={() => navigateLesson('prev')}
+                            disabled={!hasPrev}
+                        >
+                            ← Previous lesson
+                        </button>
+
+                        {user && user.role === 'student' && (
+                            <button
+                                className={`btn ${isCompleted ? 'btn-success' : 'btn-primary-student'}`}
+                                onClick={handleMarkComplete}
+                                disabled={isCompleted}
+                            >
+                                {isCompleted ? '✓ Completed' : 'Mark complete'}
+                            </button>
+                        )}
+
+                        <button
+                            className={`btn ${styles.navBtn}`}
+                            onClick={() => navigateLesson('next')}
+                            disabled={!hasNext}
+                        >
+                            Next lesson →
+                        </button>
+                    </div>
+
                     {/* Discussion Section */}
                     <div className={styles.discussionSection} style={{ marginTop: '40px', borderTop: '2px solid #e0e0e0', paddingTop: '30px' }}>
                         <div className={styles.discussionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -879,73 +963,6 @@ const LessonDetail = () => {
                                 </>
                             )}
                         </div>
-                    </div>
-
-                    {/* Discussion Modal */}
-                    {selectedDiscussionId && (
-                        <DiscussionModal
-                            discussionId={selectedDiscussionId}
-                            isEnrolled={(() => {
-                                const enrolled = myCourses.some(c => c._id === courseId);
-                                console.log('🔍 Enrollment check for lesson discussion:', {
-                                    courseId,
-                                    myCourses: myCourses.map(c => c._id),
-                                    enrolled
-                                });
-                                return enrolled;
-                            })()}
-                            onClose={() => setSelectedDiscussionId(null)}
-                        />
-                    )}
-
-                    {/* Create Discussion Modal */}
-                    {showCreateDiscussion && (
-                        <div className="modal-overlay" onClick={() => setShowCreateDiscussion(false)}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
-                                <DiscussionForm
-                                    courseId={courseId}
-                                    lessonId={lessonId}
-                                    onSuccess={(newDiscussion) => {
-                                        setShowCreateDiscussion(false);
-                                        toast.success('Discussion created successfully!');
-                                        // Add new discussion to the beginning and refetch
-                                        setDiscussions(prev => [newDiscussion, ...prev]);
-                                        // Also refetch to ensure sync with server
-                                        fetchLessonDiscussions();
-                                    }}
-                                    onCancel={() => setShowCreateDiscussion(false)}
-                                />
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Navigation Buttons */}
-                    <div className={styles.lessonNavigation} style={{ marginTop: '30px' }}>
-                        <button
-                            className={`btn ${styles.navBtn}`}
-                            onClick={() => navigateLesson('prev')}
-                            disabled={!hasPrev}
-                        >
-                            ← Previous lesson
-                        </button>
-
-                        {user && user.role === 'student' && (
-                            <button
-                                className={`btn ${isCompleted ? 'btn-success' : 'btn-primary-student'}`}
-                                onClick={handleMarkComplete}
-                                disabled={isCompleted}
-                            >
-                                {isCompleted ? '✓ Completed' : 'Mark complete'}
-                            </button>
-                        )}
-
-                        <button
-                            className={`btn ${styles.navBtn}`}
-                            onClick={() => navigateLesson('next')}
-                            disabled={!hasNext}
-                        >
-                            Next lesson →
-                        </button>
                     </div>
                 </div>
 
