@@ -25,7 +25,7 @@ export default function SessionScheduler() {
     useEffect(() => {
         if (user?.role !== 'teacher' && user?.role !== 'admin') {
             toastService.error('You do not have access');
-            navigate('/dashboard');
+            navigate('/teacher/dashboard');
             return;
         }
 
@@ -37,11 +37,11 @@ export default function SessionScheduler() {
             setLoading(true);
 
             // Fetch teacher's courses
-            const coursesResponse = await api.get('/courses/my-courses');
+            const coursesResponse = await api.get('/teacher/courses');
             setCourses(coursesResponse.data.data || []);
 
             // Fetch sessions
-            const sessionsResponse = await api.get('/sessions/my-sessions');
+            const sessionsResponse = await api.get('/teacher/sessions');
             setSessions(sessionsResponse.data.data || []);
 
         } catch (error) {
@@ -68,7 +68,7 @@ export default function SessionScheduler() {
         }
 
         try {
-            await api.delete(`/sessions/${sessionId}`);
+            await api.delete(`/teacher/sessions/${sessionId}`);
             setSessions(prev => prev.filter(s => s._id !== sessionId));
             toastService.success('Session deleted');
         } catch (error) {
@@ -79,7 +79,7 @@ export default function SessionScheduler() {
 
     const handleStartSession = async (sessionId) => {
         try {
-            await api.put(`/sessions/${sessionId}/start`);
+            await api.put(`/teacher/sessions/${sessionId}/start`);
             toastService.success('Session started');
 
             // Navigate to video room
@@ -96,7 +96,7 @@ export default function SessionScheduler() {
         }
 
         try {
-            await api.put(`/sessions/${sessionId}/end`);
+            await api.put(`/teacher/sessions/${sessionId}/end`);
             toastService.success('Session ended');
             fetchData();
         } catch (error) {
@@ -282,7 +282,7 @@ function SessionModal({ session, courses, onSave, onClose }) {
         }
 
         const scheduledDate = new Date(formData.scheduledAt);
-            if (scheduledDate <= new Date()) {
+        if (scheduledDate <= new Date()) {
             toastService.error('Scheduled time must be in the future');
             return;
         }
@@ -291,10 +291,10 @@ function SessionModal({ session, courses, onSave, onClose }) {
             setSaving(true);
 
             if (session) {
-                await api.put(`/sessions/${session._id}`, formData);
+                await api.put(`/teacher/sessions/${session._id}`, formData);
                 toastService.success('Session updated');
             } else {
-                await api.post('/sessions', formData);
+                await api.post('/teacher/sessions', formData);
                 toastService.success('Session created');
             }
 

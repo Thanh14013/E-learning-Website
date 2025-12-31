@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "../components/layout/Layout.jsx";
+import RoleBlocker from "../components/RoleBlocker.jsx";
 import HomePage from "../pages/homepage/Home.jsx";
 import Login from "../pages/auth/Login.jsx";
 import Register from "../pages/auth/Register.jsx";
@@ -18,8 +19,12 @@ import LessonPlayer from "../pages/lesson/LessonPlayer.jsx";
 import LessonDetail from "../pages/lesson/LessonDetail.jsx";
 import DiscussionDetailPage from "../pages/courses/DiscussionDetailPage.jsx";
 import QuizBuilder from "../components/quiz/QuizBuilder.jsx";
+import CourseManagement from "../pages/courses/CourseManagement.jsx";
+import CourseEditor from "../pages/courses/CourseEditor.jsx";
 import StudentAnalytics from "../pages/teacher/StudentAnalytics.jsx";
 import SessionScheduler from "../pages/teacher/SessionScheduler.jsx";
+import CourseAnalytics from "../pages/teacher/CourseAnalytics.jsx";
+import TeacherDashboard from "../pages/dashboard/Views/Teacher/TeacherView.jsx";
 import VideoRoom from "../components/video-call/VideoRoom.jsx";
 import UserManagement from "../pages/admin/UserManagement.jsx";
 import ContentModeration from "../pages/admin/ContentModeration.jsx";
@@ -27,17 +32,26 @@ import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
 import SystemSettings from "../pages/admin/SystemSettings.jsx";
 import CourseApproval from "../pages/admin/CourseApproval.jsx";
 import AdminLayout from "../components/layout/AdminLayout.jsx";
+import AdminRoute from "../components/AdminRoute.jsx";
+import TeacherRoute from "../components/TeacherRoute.jsx";
+import AdminLogin from "../pages/admin/AdminLogin.jsx";
 import ApiDocs from "../pages/ApiDocs.jsx";
 import Profile from "../pages/profile/Profile.jsx";
+import StudentRoute from "../components/StudentRoute.jsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: (
+      <RoleBlocker>
+        <Layout />
+      </RoleBlocker>
+    ),
     children: [
       { index: true, element: <HomePage /> },
       { path: "login", element: <Login /> },
       { path: "register", element: <Register /> },
+      { path: "admin/login", element: <AdminLogin /> },
 
       { path: "teacher/complete-profile", element: <CompleteTeacherProfile /> },
       { path: "teacher/approval-pending", element: <TeacherApprovalPending /> },
@@ -60,26 +74,55 @@ const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           { path: "profile", element: <Profile /> },
-          { path: "dashboard", element: <Dashboard /> },
-          { path: "courses/create", element: <CreateCourse /> },
-
-          // Live Video Session
+          // Live Video Session (Shared)
           { path: "session/:sessionId", element: <VideoRoom /> },
-
-          // Teacher routes
-          { path: "teacher/quiz-builder", element: <QuizBuilder /> },
-          { path: "teacher/quiz-builder/:quizId", element: <QuizBuilder /> },
-          { path: "teacher/students/:studentId/analytics", element: <StudentAnalytics /> },
-          { path: "teacher/sessions", element: <SessionScheduler /> },
         ],
       },
+
+      // Student Only Routes
+      {
+        element: <StudentRoute />,
+        children: [
+          { path: "dashboard", element: <Dashboard /> },
+        ]
+      },
+    ],
+  },
+
+  // Teacher routes grouped under /teacher
+  {
+    path: "/teacher",
+    element: (
+      <TeacherRoute>
+        <Layout />
+      </TeacherRoute>
+    ),
+    children: [
+      { index: true, element: <TeacherDashboard /> },
+      { path: "dashboard", element: <TeacherDashboard /> },
+      { path: "courses", element: <CourseManagement /> },
+      { path: "courses/create", element: <CreateCourse /> },
+      { path: "courses/:courseId/edit", element: <CourseEditor /> },
+      { path: "courses/:courseId/analytics", element: <CourseAnalytics /> },
+      {
+        path: "courses/:courseId/students/:studentId/analytics",
+        element: <StudentAnalytics />,
+      },
+      { path: "quiz-builder", element: <QuizBuilder /> },
+      { path: "quiz-builder/:quizId", element: <QuizBuilder /> },
+      { path: "sessions", element: <SessionScheduler /> },
+      { path: "sessions/:sessionId", element: <VideoRoom /> },
     ],
   },
 
   // Admin Routes with AdminLayout
   {
     path: "/admin",
-    element: <ProtectedRoute><AdminLayout /></ProtectedRoute>,
+    element: (
+      <AdminRoute>
+        <AdminLayout />
+      </AdminRoute>
+    ),
     children: [
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <UserManagement /> },
