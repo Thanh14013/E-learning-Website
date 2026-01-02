@@ -318,6 +318,7 @@
   background: white;
   border-radius: 6px;
   overflow: hidden;
+  color: #000000; /* Ensure base color is black */
 }
 
 .quillEditor .ql-toolbar {
@@ -329,7 +330,18 @@
   min-height: 200px;
   font-size: 1rem;
   border-color: #d1d5db !important;
-  color: #111827;
+  color: #000000 !important; /* Force black text */
+}
+
+/* Ensure the editor content itself is black */
+.quillEditor :global(.ql-editor) {
+  color: #000000 !important;
+}
+
+/* Darken placeholder for better visibility */
+.quillEditor :global(.ql-editor.ql-blank::before) {
+  color: #4b5563 !important; /* Darker grey for placeholder */
+  font-style: normal;
 }
 
 /* Thumbnail */

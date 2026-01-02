@@ -582,26 +582,22 @@ export const notifyCommentCreated = async (
   discussionTitle
 ) => {
   try {
-    const io = getSocketIOInstance();
-
-    // Notification data for discussion owner
-    const notification = {
-      type: "discussion",
-      title: "New Comment on Your Discussion",
-      content: `${commenter.fullName} commented on your discussion: "${discussionTitle}"`,
-      link: `/discussions/${comment.discussionId}`,
-      metadata: {
-        courseId,
-        discussionId: comment.discussionId,
-        commentId: comment._id,
-        createdBy: commenter._id,
+    await createAndSendNotification(
+      discussionOwnerId,
+      {
+        type: "discussion",
+        title: "New Comment on Your Discussion",
+        content: `${commenter.fullName} commented on your discussion: "${discussionTitle}"`,
+        link: `/discussions/${comment.discussionId}`,
+        metadata: {
+          courseId,
+          discussionId: comment.discussionId,
+          commentId: comment._id,
+          createdBy: commenter._id,
+        },
       },
-    };
-
-    // Send notification to discussion owner (if not the commenter)
-    if (discussionOwnerId.toString() !== commenter._id.toString()) {
-      sendNotificationToUser(io, discussionOwnerId.toString(), notification);
-    }
+      false
+    );
 
     console.log(`📢 Comment creation notification sent to discussion owner`);
   } catch (error) {
@@ -628,27 +624,23 @@ export const notifyCommentReply = async (
   discussionTitle
 ) => {
   try {
-    const io = getSocketIOInstance();
-
-    // Notification data for parent comment owner
-    const notification = {
-      type: "discussion",
-      title: "New Reply to Your Comment",
-      content: `${replier.fullName} replied to your comment on "${discussionTitle}"`,
-      link: `/discussions/${reply.discussionId}`,
-      metadata: {
-        courseId,
-        discussionId: reply.discussionId,
-        commentId: reply._id,
-        parentCommentId: reply.parentId,
-        createdBy: replier._id,
+    await createAndSendNotification(
+      parentCommentOwnerId,
+      {
+        type: "discussion",
+        title: "New Reply to Your Comment",
+        content: `${replier.fullName} replied to your comment on "${discussionTitle}"`,
+        link: `/discussions/${reply.discussionId}`,
+        metadata: {
+          courseId,
+          discussionId: reply.discussionId,
+          commentId: reply._id,
+          parentCommentId: reply.parentId,
+          createdBy: replier._id,
+        },
       },
-    };
-
-    // Send notification to parent comment owner (if not the replier)
-    if (parentCommentOwnerId.toString() !== replier._id.toString()) {
-      sendNotificationToUser(io, parentCommentOwnerId.toString(), notification);
-    }
+      false
+    );
 
     console.log(`📢 Comment reply notification sent to parent comment owner`);
   } catch (error) {
@@ -670,25 +662,21 @@ export const notifyDiscussionLiked = async (
   liker
 ) => {
   try {
-    const io = getSocketIOInstance();
-
-    // Notification data
-    const notification = {
-      type: "discussion",
-      title: "Discussion Liked",
-      content: `${liker.fullName} liked your discussion: "${discussion.title}"`,
-      link: `/discussions/${discussion._id}`,
-      metadata: {
-        courseId,
-        discussionId: discussion._id,
-        likedBy: liker._id,
+    await createAndSendNotification(
+      discussionOwnerId,
+      {
+        type: "discussion",
+        title: "Discussion Liked",
+        content: `${liker.fullName} liked your discussion: "${discussion.title}"`,
+        link: `/discussions/${discussion._id}`,
+        metadata: {
+          courseId,
+          discussionId: discussion._id,
+          likedBy: liker._id,
+        },
       },
-    };
-
-    // Send notification to discussion owner (if not the liker)
-    if (discussionOwnerId.toString() !== liker._id.toString()) {
-      sendNotificationToUser(io, discussionOwnerId.toString(), notification);
-    }
+      false
+    );
 
     console.log(`👍 Discussion liked notification sent to discussion owner`);
   } catch (error) {

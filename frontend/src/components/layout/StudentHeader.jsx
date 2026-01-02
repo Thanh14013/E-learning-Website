@@ -99,13 +99,6 @@ export default function StudentHeader() {
                 >
                   <div className={styles.notifHeader}>
                     <p className={styles.notifTitle}>Notifications</p>
-                    <button
-                      className={styles.refreshBtn}
-                      onClick={() => refresh && refresh()}
-                      title="Refresh"
-                    >
-                      ⟳
-                    </button>
                   </div>
                   <div className={styles.notifList}>
                     {(notifications || []).length === 0 ? (
@@ -128,9 +121,6 @@ export default function StudentHeader() {
                             <div
                               className={styles.notifMain}
                               onClick={() => {
-                                if (!n.isRead && markRead) {
-                                  markRead(n._id);
-                                }
                                 if (n.link) {
                                   navigate(n.link);
                                   setNotifOpen(false);

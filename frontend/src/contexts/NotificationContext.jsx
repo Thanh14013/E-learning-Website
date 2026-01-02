@@ -40,8 +40,8 @@ export const NotificationProvider = ({ children }) => {
   const fetchUnreadCount = async () => {
     try {
       const response = await notificationService.getUnreadCount();
-      // Backend returns { success, data: number }
-      const count = response?.data ?? 0;
+      // Backend returns { success, data: { unreadCount: number } }
+      const count = response?.data?.unreadCount ?? 0;
       setUnreadCount(count);
     } catch (error) {
       console.error('[NotificationContext] Failed to fetch unread count:', error);

@@ -78,10 +78,12 @@
   margin-bottom: var(--spacing-6);
 }
 
-.statsRowTop {
+/* KPI Row - 3 Columns (Revenue removed) */
+.kpiRow {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--spacing-2);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6); /* Increased spacing between rows */
 }
 
 .statsRowBottom {
@@ -100,7 +102,7 @@
 
 .chartCard {
   background-color: var(--color-surface);
-  border-radius: var(--radius-lg);
+  border-radius: 16px; /* Softer borders */
   padding: var(--spacing-4);
   border: 1px solid var(--color-border);
 }
@@ -125,49 +127,151 @@
 }
 
 @media (max-width: 640px) {
-  .statsRowTop, .statsRowBottom {
+  .kpiRow, .statsRowBottom {
     grid-template-columns: 1fr;
   }
 }
 
+/* Stat Card Premium Styles (Compacted) */
 .statCard {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-2);
-  background: var(--color-gray-50);
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--color-gray-200);
-  transition: var(--transition-base);
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 16px; /* Reduced padding */
+  background: var(--color-surface);
+  border-radius: 16px; /* Softer/Rounder corners */
+  border: 1px solid var(--color-border); /* Explicit border */
+  transition: all 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
+  min-height: 120px; /* Limit height */
 }
 
 .statCard:hover {
-  background: var(--color-gray-100);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-teacher-primary);
 }
 
-.statIcon {
-  font-size: 2rem;
-  line-height: 1;
+.statHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
 }
 
-.statContent {
-  flex: 1;
+.statIconBox {
+  width: 36px; /* Smaller icon box */
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 1.2rem; /* Smaller icon */
+  transition: transform 0.2s;
+}
+
+.statCard:hover .statIconBox {
+  transform: scale(1.1);
 }
 
 .statValue {
-  font-size: 1.5rem;
+  font-size: 1.5rem; /* Smaller number */
   font-weight: 700;
-  color: var(--color-gray-900);
-  line-height: 1.2;
+  color: var(--color-text-primary);
+  line-height: 1;
+  margin-bottom: 2px;
 }
 
 .statLabel {
-  font-size: 0.875rem;
-  color: var(--color-gray-700);
-  font-weight: 500;
-  margin-top: 2px;
+  font-size: 0.75rem; /* Smaller label */
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statTrend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+.trendUp {
+  color: #10b981;
+}
+
+.trendDown {
+  color: #ef4444;
+}
+
+.trendNeutral {
+  color: #6b7280;
+}
+
+/* Secondary Stats Row (Grouped) */
+.secondaryStatsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+@media (max-width: 768px) {
+  .secondaryStatsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.groupedCard {
+  background: var(--color-surface);
+  border-radius: 16px; /* Softer borders */
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+}
+
+.groupedHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.groupedTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.groupedList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupedItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.groupedLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+}
+
+.groupedValue {
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 /* Course Carousel */

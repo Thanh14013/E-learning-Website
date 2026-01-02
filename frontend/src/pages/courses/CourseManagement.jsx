@@ -108,8 +108,14 @@ const CourseManagementCard = ({ course, user, onEdit, onDelete, onAnalytics, onP
         <div className={styles.cardStats}>
           <div className={styles.statItem}>
             <span className={styles.statIcon}>👥</span>
-            <span className={styles.statValue}>{studentCount}</span>
-            <span className={styles.statLabel}>Students</span>
+            {course.approvalStatus === 'pending' ? (
+              <span className={styles.statValue} style={{ fontSize: '1rem', color: '#f59e0b' }}>Pending</span>
+            ) : (
+              <>
+                <span className={styles.statValue}>{studentCount}</span>
+                <span className={styles.statLabel}>Students</span>
+              </>
+            )}
           </div>
           {/* Rating Display Fixed */}
           {(course.rating > 0 || course.totalReviews > 0) && (
@@ -137,24 +143,21 @@ const CourseManagementCard = ({ course, user, onEdit, onDelete, onAnalytics, onP
 
         {/* Action Buttons */}
         <div className={styles.cardActions}>
-          <button
-            className={`${styles.actionBtn} ${styles.editBtn}`}
-            onClick={(e) => {
-              e.preventDefault();
-              onEdit?.(course);
-            }}
-            title={course.isPublished && user?.role !== 'admin' ? "Cannot edit published course" : "Edit"}
-            disabled={course.isPublished && user?.role !== 'admin'}
-            style={{
-              opacity: (course.isPublished && user?.role !== 'admin') ? 0.5 : 1,
-              cursor: (course.isPublished && user?.role !== 'admin') ? 'not-allowed' : 'pointer'
-            }}
-          >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit
-          </button>
+          {!course.isPublished && (
+            <button
+              className={`${styles.actionBtn} ${styles.editBtn}`}
+              onClick={(e) => {
+                e.preventDefault();
+                onEdit?.(course);
+              }}
+              title="Edit"
+            >
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </button>
+          )}
 
           {course.isPublished && (
             <button
@@ -312,80 +315,7 @@ const CourseManagement = () => {
     return null;
   }
 
-  /**
-   * Export courses data to CSV file
-   * Includes: Title, Description, Status, Students, Category, Level, Created Date
-   */
-  const handleExportCourses = () => {
-    try {
-      // Prepare CSV data
-      const csvData = [];
 
-      // CSV Header
-      csvData.push([
-        'Title',
-        'Description',
-        'Status',
-        'Students',
-        'Category',
-        'Level',
-        'Created Date'
-      ]);
-
-      // Course data rows
-      displayedCourses.forEach(course => {
-        const title = (course.title || course.name || '').replace(/"/g, '""'); // Escape quotes
-        const description = (course.description || '').replace(/"/g, '""').substring(0, 100); // Limit length
-
-        let status = 'Draft';
-        if (course.isPublished) status = 'Published';
-        else if (course.approvalStatus === 'pending') status = 'Pending Review';
-        else if (course.approvalStatus === 'rejected') status = 'Rejected';
-        else status = 'Draft';
-        const studentCount = course.enrolledStudents?.length || 0;
-        const category = course.category?.name || course.category || 'N/A';
-        const level = course.level || 'N/A';
-        const createdDate = course.createdAt
-          ? new Date(course.createdAt).toLocaleDateString('en-US')
-          : 'N/A';
-
-        csvData.push([
-          `"${title}"`,
-          `"${description}"`,
-          status,
-          studentCount,
-          category,
-          level,
-          createdDate
-        ]);
-      });
-
-      // Convert to CSV string
-      const csvContent = csvData.map(row => row.join(',')).join('\n');
-
-      // Add BOM for UTF-8 encoding (Excel compatibility)
-      const BOM = '\uFEFF';
-      const csvWithBOM = BOM + csvContent;
-
-      // Create blob and download
-      const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-
-      link.setAttribute('href', url);
-      link.setAttribute('download', `courses_export_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      toastService.success(`Exported ${displayedCourses.length} courses successfully`);
-    } catch (error) {
-      console.error('[CourseManagement] Export error:', error);
-      toastService.error('Unable to export data. Please try again.');
-    }
-  };
 
   const handleCreateCourse = () => {
     navigate('/teacher/courses/create');
@@ -414,15 +344,6 @@ const CourseManagement = () => {
           </p>
         </div>
         <div className={styles.headerActions}>
-          <button
-            className={styles.exportBtn}
-            onClick={handleExportCourses}
-          >
-            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export data
-          </button>
           <button
             className={styles.createBtn}
             onClick={handleCreateCourse}

@@ -135,7 +135,7 @@ const CourseAnalytics = () => {
                         <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
                             <option value={7}>Last 7 days</option>
                             <option value={30}>Last 30 days</option>
-                            <option value={90}>Last 90 days</option>
+                            <option value={60}>Last 60 days</option>
                         </select>
                     </label>
                     <Button variant="secondary" onClick={() => navigate(-1)}>

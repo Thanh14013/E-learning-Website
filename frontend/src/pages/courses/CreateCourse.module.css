@@ -133,6 +133,18 @@
   border-bottom-left-radius: var(--border-radius-md);
   border-bottom-right-radius: var(--border-radius-md);
   font-size: 1rem;
+  color: #000000 !important; /* Force black text */
+}
+
+/* Ensure the editor content itself is black */
+.quillEditor :global(.ql-editor) {
+  color: #000000 !important;
+}
+
+/* Darken placeholder for better visibility */
+.quillEditor :global(.ql-editor.ql-blank::before) {
+  color: #4b5563 !important; /* Darker grey for placeholder */
+  font-style: normal;
 }
 
 .quillEditor .ql-editor {

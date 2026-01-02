@@ -58,14 +58,15 @@
   font-size: 10px;
   font-weight: 700;
   color: white;
-  background: #ef4444;
-  border-radius: 10px;
+  background: #ff4d4f; /* Vibrant red */
+  border-radius: 50%;
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: 2px;
+  right: 4px;
   border: 2px solid var(--bg-card);
   z-index: 10;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
 }
 
 /* --- DROPDOWN (NOTIFICATIONS) --- */

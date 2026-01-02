@@ -20,254 +20,141 @@ import styles from './teacherView.module.css';
  * - Quick stats (total students, courses, etc.)
  */
 
-// Course Card Component
-// Course Card Component
-const CourseCard = ({ course, analytics, user }) => {
-  const completionRate = analytics?.completionRate || 0;
-  const avgScore = analytics?.avgScore || analytics?.rating || 0;
-  const studentCount = analytics?.students || analytics?.studentCount || 0;
 
-  const isPublished = course.isPublished;
-  const canEdit = !isPublished || user?.role === 'admin';
-
-  return (
-    <div className={styles.courseCard}>
-      <div
-        className={styles.courseCardImage}
-        style={{ backgroundColor: course.color || '#ddd6fe' }}
-      >
-        {course.thumbnail && (
-          <img src={course.thumbnail} alt={course.title} />
-        )}
-      </div>
-      <div className={styles.courseCardContent}>
-        <h4>
-          <Link to={`/courses/${course._id || course.id}`}>
-            {course.title || course.name}
-          </Link>
-        </h4>
-        <div className={styles.courseStats}>
-          {isPublished ? (
-            <>
-              <div className={styles.statItem}>
-                <span className={styles.statIcon}>👥</span>
-                <span className={styles.statValue}>{studentCount}</span>
-                <span className={styles.statLabel}>Students</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statIcon}>✓</span>
-                <span className={styles.statValue}>{completionRate}%</span>
-                <span className={styles.statLabel}>Completion</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statIcon}>⭐</span>
-                <span className={styles.statValue}>{avgScore.toFixed(1)}</span>
-                <span className={styles.statLabel}>Avg Score</span>
-              </div>
-            </>
-          ) : (
-            <div style={{ width: '100%', textAlign: 'center', color: 'var(--color-gray-500)', fontStyle: 'italic', padding: '10px 0' }}>
-              Pending Approval
-            </div>
-          )}
-        </div>
-        <div className={styles.courseActions}>
-          {canEdit && (
-            <Link
-              to={`/teacher/courses/${course._id || course.id}/edit`}
-              className={styles.manageBtn}
-            >
-              Edit
-            </Link>
-          )}
-          {course.isPublished && (
-            <Link
-              to={`/teacher/courses/${course._id || course.id}/analytics`}
-              className={styles.analyticsBtn}
-            >
-              Analytics
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Course Carousel Component
-const CourseCarousel = ({ courses, analyticsMap, user }) => {
-  const scrollContainerRef = useRef(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const CARD_WIDTH_PX = 280;
-  const GAP_PX = 24;
-  const SCROLL_PAGE_SIZE = 4;
-
-  const checkScrollability = () => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      const isScrollable = el.scrollWidth > el.clientWidth;
-      setCanScrollLeft(el.scrollLeft > 0);
-      setCanScrollRight(isScrollable && el.scrollLeft < (el.scrollWidth - el.clientWidth));
-    }
-  };
-
-  const handleScroll = (direction) => {
-    const el = scrollContainerRef.current;
-    if (el) {
-      const scrollAmount = (CARD_WIDTH_PX + GAP_PX) * SCROLL_PAGE_SIZE;
-      el.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  useEffect(() => {
-    const el = scrollContainerRef.current;
-    if (!el) return;
-
-    const observer = new ResizeObserver(checkScrollability);
-    observer.observe(el);
-    el.addEventListener('scroll', checkScrollability);
-    checkScrollability();
-
-    return () => {
-      observer.disconnect();
-      el.removeEventListener('scroll', checkScrollability);
-    };
-  }, [courses]);
-
-  if (!Array.isArray(courses) || courses.length === 0) {
-    return (
-      <div className={styles.emptyState}>
-        <p>You have no courses. <Link to="/teacher/courses/create">Create a new course</Link></p>
-      </div>
-    );
-  }
-
-  if (courses.length <= 4) {
-    return (
-      <div className={styles.courseList}>
-        {courses.map(course => (
-          <CourseCard
-            key={course._id || course.id}
-            course={course}
-            analytics={analyticsMap?.[course._id || course.id]}
-            user={user}
-          />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className={styles.carouselContainer}>
-      <button
-        className={`${styles.navButton} ${styles.left}`}
-        onClick={() => handleScroll('left')}
-        disabled={!canScrollLeft}
-        aria-label="Scroll left"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-        </svg>
-      </button>
-      <div className={styles.scrollWrapper} ref={scrollContainerRef}>
-        <div className={styles.courseList}>
-          {courses.map(course => (
-            <CourseCard
-              key={course._id || course.id}
-              course={course}
-              analytics={analyticsMap?.[course._id || course.id]}
-              user={user}
-            />
-          ))}
-        </div>
-      </div>
-      <button
-        className={`${styles.navButton} ${styles.right}`}
-        onClick={() => handleScroll('right')}
-        disabled={!canScrollRight}
-        aria-label="Scroll right"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-        </svg>
-      </button>
-    </div>
-  );
-};
 
 // Quick Stats Component
-const QuickStats = ({ stats }) => {
-  const statItems = [
+const QuickStats = ({ stats, courses }) => {
+  // Safe Trend Calculation
+  const calculateTrend = (dataArray) => {
+    if (!dataArray || dataArray.length < 2) return null;
+    const current = dataArray[dataArray.length - 1] || 0;
+    const previous = dataArray[dataArray.length - 2] || 0;
+
+    if (previous === 0) {
+      return current > 0 ? { value: 100, isNew: true } : { value: 0 };
+    }
+
+    const change = ((current - previous) / previous) * 100;
+    return { value: change.toFixed(1) };
+  };
+
+  const studentTrend = calculateTrend(stats.trend?.activeStudents); // Using active students history or total? Usually total for growth.
+  // stats.trend.totalStudents is likely available
+  const totalStudentsTrend = calculateTrend(stats.trend?.totalStudents);
+
+  const kpis = [
     {
-      label: 'Total courses',
-      value: stats.totalCourses || 0,
-      icon: '📚',
-      color: 'var(--color-teacher-primary)',
-    },
-    {
-      label: 'Total chapters',
-      value: stats.totalChapters || 0,
-      icon: '📑',
-      color: '#8b5cf6', // Violet
-    },
-    {
-      label: 'Total lessons',
-      value: stats.totalLessons || 0,
-      icon: '🎬',
-      color: '#10b981', // Emerald
-    },
-    {
-      label: 'Total students',
-      value: stats.totalStudents || 0,
+      label: 'Total Students',
+      value: stats.totalStudents?.toLocaleString() || 0,
       icon: '👥',
-      color: 'var(--color-info)',
+      color: '#3b82f6', // blue
+      bg: '#eff6ff',
+      trendData: totalStudentsTrend,
+      trendLabel: 'vs last period'
     },
     {
-      label: 'Published courses',
+      label: 'Published Courses',
       value: stats.publishedCourses || 0,
-      icon: '✅',
-      color: 'var(--color-success)',
+      icon: '📘',
+      color: '#10b981', // green
+      bg: '#ecfdf5',
+      // No fake trend for courses
     },
     {
       label: 'Avg Rating',
-      value: stats.averageRating || 0,
+      value: stats.averageRating?.toFixed(1) || '0.0',
       icon: '⭐',
-      color: 'var(--color-warning)',
-    },
-    {
-      label: 'New discussions',
-      value: stats.newDiscussions || 0,
-      icon: '💬',
-      color: 'var(--color-success)',
-    },
+      color: '#f59e0b', // amber
+      bg: '#fffbeb',
+      trendData: { value: 0 }, // Placeholder or calculate if data available
+      trendLabel: 'vs last mo'
+    }
   ];
 
-  const renderCard = (item, index) => (
-    <div key={index} className={styles.statCard}>
-      <div className={styles.statIcon} style={{ color: item.color }}>
-        {item.icon}
-      </div>
-      <div className={styles.statContent}>
-        <div className={styles.statValue}>{item.value}</div>
-        <div className={styles.statLabel}>{item.label}</div>
-      </div>
-    </div>
-  );
+  const renderTrend = (trendObj, label) => {
+    if (!trendObj) return null;
+    if (trendObj.isNew) return <span className={`${styles.statTrend} ${styles.trendUp}`}>New</span>;
+
+    const num = parseFloat(trendObj.value);
+    if (isNaN(num)) return null;
+
+    const isPositive = num > 0;
+    const isNeutral = num === 0;
+
+    return (
+      <span className={`${styles.statTrend} ${isPositive ? styles.trendUp : isNeutral ? styles.trendNeutral : styles.trendDown}`}>
+      </span>
+    );
+  };
 
   return (
-    <div className={styles.statsContainer}>
-      <div className={styles.statsRowTop}>
-        {statItems.slice(0, 4).map((item, index) => renderCard(item, `top-${index}`))}
+    <>
+      <div className={styles.kpiRow}>
+        {kpis.map((item, index) => (
+          <div key={index} className={styles.statCard} style={{ borderTop: `4px solid ${item.color}` }}>
+            <div className={styles.statHeader}>
+              <div className={styles.statIconBox} style={{ color: item.color, backgroundColor: item.bg }}>
+                {item.icon}
+              </div>
+              {renderTrend(item.trendData, item.trendLabel)}
+            </div>
+
+            <div>
+              <div className={styles.statValue}>{item.value}</div>
+              <div className={styles.statLabel}>{item.label}</div>
+            </div>
+          </div>
+        ))}
       </div>
-      <div className={styles.statsRowBottom}>
-        {statItems.slice(4).map((item, index) => renderCard(item, `bottom-${index}`))}
+
+      <div className={styles.secondaryStatsRow}>
+        {/* Content Breakdown */}
+        <div className={styles.groupedCard}>
+          <div className={styles.groupedHeader}>
+            <span style={{ fontSize: '1.2rem' }}>📂</span>
+            <h4 className={styles.groupedTitle}>Content Breakdown</h4>
+          </div>
+          <div className={styles.groupedList}>
+            <div className={styles.groupedItem}>
+              <div className={styles.groupedLabel}>📘 Courses</div>
+              <div className={styles.groupedValue}>{stats.totalCourses || 0}</div>
+            </div>
+            <div className={styles.groupedItem}>
+              <div className={styles.groupedLabel}>📑 Chapters</div>
+              <div className={styles.groupedValue}>{stats.totalChapters || 0}</div>
+            </div>
+            <div className={styles.groupedItem}>
+              <div className={styles.groupedLabel}>🎥 Lessons</div>
+              <div className={styles.groupedValue}>{stats.totalLessons || 0}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Engagement */}
+        <div className={styles.groupedCard}>
+          <div className={styles.groupedHeader}>
+            <span style={{ fontSize: '1.2rem' }}>💬</span>
+            <h4 className={styles.groupedTitle}>Engagement</h4>
+          </div>
+          <div className={styles.groupedList}>
+            <div className={styles.groupedItem}>
+              <div className={styles.groupedLabel}>🔥 New Discussions</div>
+              <div className={styles.groupedValue}>{stats.newDiscussions || 0}</div>
+            </div>
+            <div className={styles.groupedItem}>
+              <div className={styles.groupedLabel}>⚡ Active Students</div>
+              <div className={styles.groupedValue}>{stats.activeStudents || 0}</div>
+            </div>
+            <div className={styles.groupedItem}>
+              <div className={styles.groupedLabel}>⏱️ Avg Completion</div>
+              <div className={styles.groupedValue}>
+                {stats.trend?.completionRate?.[stats.trend.completionRate.length - 1] || 0}%
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -421,7 +308,8 @@ const TeacherView = () => {
       {/* Quick Stats Section */}
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>Quick Stats</h3>
-        <QuickStats stats={stats} />
+        <br />
+        <QuickStats stats={stats} courses={myCourses} />
       </section>
 
       {/* Aggregate Charts Section */}
@@ -429,20 +317,7 @@ const TeacherView = () => {
         <AggregateCharts trend={stats.trend} />
       </section>
 
-      {/* My Courses Section */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>My Courses ({myCourses?.length || 0})</h3>
-          <Link to="/teacher/courses/create" className={styles.createCourseBtn}>
-            + Create new course
-          </Link>
-        </div>
-        <CourseCarousel
-          courses={myCourses || []}
-          analyticsMap={analyticsMap}
-          user={user}
-        />
-      </section>
+
 
 
 
