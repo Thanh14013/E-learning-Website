@@ -4,6 +4,7 @@ import Progress from "../models/progress.model.js";
 import Chapter from "../models/chapter.model.js";
 import Lesson from "../models/lesson.model.js";
 import Discussion from "../models/discussion.model.js";
+import QuizAttempt from "../models/quizAttempt.model.js";
 
 /**
  * Calculate analytics data for a specific course on a specific date
@@ -22,15 +23,29 @@ export const calculateCourseAnalytics = async (courseId, date) => {
     // Get total enrolled students
     const totalStudents = course.enrolledStudents?.length || 0;
 
-    // Get active students (students who made progress in the last 7 days)
+    // Get active students (students who completed at least 1 quiz in the last 7 days)
     const sevenDaysAgo = new Date(date);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const activeStudentsProgress = await Progress.distinct("userId", {
-      courseId,
-      lastWatchedAt: { $gte: sevenDaysAgo, $lte: date },
+    // Use QuizAttempt instead of Progress
+    const activeStudentsList = await QuizAttempt.distinct("userId", {
+        // We need to find quizzes belonging to this course first
+        // But QuizAttempt has quizId, not courseId directly. 
+        // We can filter by quizId where quiz belongs to course.
+        // Optimization: Find all quizIds for this course first.
     });
-    const activeStudents = activeStudentsProgress.length;
+    
+    // Allow me to query efficiently. 
+    // Optimization: QuizAttempt doesn't have courseId. Quiz has courseId.
+    // So: Find quizzes for course -> Find attempts for those quizzes.
+    const courseQuizIds = await (await import("../models/quiz.model.js")).default.distinct("_id", { courseId });
+    
+    const activeStudentsCount = await QuizAttempt.distinct("userId", {
+      quizId: { $in: courseQuizIds },
+      updatedAt: { $gte: sevenDaysAgo, $lte: date } // updatedAt implies "completed" or "attempted" recently
+    });
+    
+    const activeStudents = activeStudentsCount.length;
 
     // Get all chapters and lessons
     const chapters = await Chapter.find({ courseId });
@@ -550,10 +565,20 @@ export const getTeacherDashboard = async (teacherId) => {
     const trendActiveStudents = [];
     const trendCompletionRate = [];
 
-    // Fetch all progress for teacher's courses ONCE
+    // Fetch all progress for teacher's courses ONCE (for Enrollment trend)
     const allTeacherProgress = await Progress.find({ 
         courseId: { $in: courseIds } 
-    }).select('userId courseId isCompleted updatedAt');
+    }).select('userId courseId isCompleted updatedAt createdAt');
+
+    // Fetch all quiz attempts for teacher's courses ONCE (for Active Students trend)
+    // 1. Get all quizzes for these courses
+    const Quiz = (await import("../models/quiz.model.js")).default;
+    const allTeacherQuizIds = await Quiz.distinct('_id', { courseId: { $in: courseIds } });
+    
+    // 2. Get attempts
+    const allTeacherAttempts = await QuizAttempt.find({
+        quizId: { $in: allTeacherQuizIds }
+    }).select('userId updatedAt');
 
     // Pre-calculate total lessons per course
     const courseLessonCounts = {};
@@ -581,11 +606,25 @@ export const getTeacherDashboard = async (teacherId) => {
         trendDates.push(startOfDay);
 
         // 1. Active Students (Unique users active on this day)
+        // 1. Active Students (Unique users active on this day via Quiz)
         const activeUsersSet = new Set();
-        allTeacherProgress.forEach(p => {
-             const pDate = new Date(p.updatedAt);
-             if (pDate >= startOfDay && pDate <= endOfDay) {
-                 activeUsersSet.add(p.userId.toString());
+        // Check past 7 days window relative to 'startOfDay'? 
+        // User said "Active students is ... in the last week". 
+        // So for the trend point at 'startOfDay', we should look at [startOfDay - 6 days, startOfDay].
+        // Or if the trend is "Daily Active Users", it's just that day. 
+        // "Active Students" card usually implies "Currently Active" (Last 7 days).
+        // If the chart plots "Active Students", it usually plots the rolling 7-day count OR daily active users.
+        // Given the scale (0-4), let's assume it's Daily Active or Rolling. 
+        // Let's stick to the definition: "Active ... in last week". 
+        // So for each data point `date`, we count users who did a quiz in [date - 7 days, date].
+        
+        const trendWindowStart = new Date(startOfDay);
+        trendWindowStart.setDate(trendWindowStart.getDate() - 7);
+
+        allTeacherAttempts.forEach(a => {
+             const aDate = new Date(a.updatedAt);
+             if (aDate >= trendWindowStart && aDate <= endOfDay) {
+                 activeUsersSet.add(a.userId.toString());
              }
         });
         trendActiveStudents.push(activeUsersSet.size);
@@ -633,6 +672,7 @@ export const getTeacherDashboard = async (teacherId) => {
       pendingQuizzes: 0, 
       newDiscussions: newDiscussionsCount,
       recentActivities: [],
+      activeStudents: trendActiveStudents[trendActiveStudents.length - 1] || 0,
       trend: {
           dates: trendDates,
           totalStudents: trendTotalStudents,

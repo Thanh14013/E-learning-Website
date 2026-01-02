@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import VideoPlayer from '../../components/lesson/VideoPlayer';
+import VideoProgressBar from '../../components/lesson/VideoProgressBar';
 import LessonSidebar from '../../components/lesson/LessonSidebar';
 import LessonResources from '../../components/lesson/LessonResources';
 import ProgressBar from '../../components/lesson/ProgressBar';
@@ -36,6 +37,9 @@ const LessonPlayer = () => {
     const [currentVideoTime, setCurrentVideoTime] = useState(0);
     const videoPlayerRef = useRef(null);
 
+    const [watchedSegments, setWatchedSegments] = useState(new Set());
+    const [quizzes, setQuizzes] = useState([]);
+
     /**
      * Fetch lesson data from backend API
      */
@@ -46,6 +50,23 @@ const LessonPlayer = () => {
             // Fetch lesson data from backend
             const lessonRes = await api.get(`/lessons/${lessonId}`);
             const lesson = lessonRes.data.data || lessonRes.data.lesson || lessonRes.data;
+
+            // Fetch quizzes for this lesson
+            const quizzesRes = await api.get(`/quizzes/lesson/${lessonId}`);
+            const quizzesData = quizzesRes.data.data || [];
+
+            // Check pass status for each quiz
+            const quizzesWithStatus = await Promise.all(quizzesData.map(async (quiz) => {
+                try {
+                    const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts`);
+                    const attempts = attemptsRes.data.attempts || [];
+                    const isPassed = attempts.some(a => a.isPassed);
+                    return { ...quiz, isPassed };
+                } catch (err) {
+                    return { ...quiz, isPassed: false };
+                }
+            }));
+            setQuizzes(quizzesWithStatus);
 
             // Fetch course structure (chapters and lessons)
             const courseRes = await api.get(`/courses/${courseId}`);
@@ -70,13 +91,17 @@ const LessonPlayer = () => {
             // Load user's progress for this lesson
             const lessonProgress = progressData?.lessonProgress?.find(lp => lp.lessonId === lessonId);
             if (lessonProgress) {
-                setProgress(lessonProgress.progressPercentage || 0);
-                setWatchedTime(lessonProgress.lastWatchedAt || 0);
+                setProgress(lessonProgress.videoProgressPercent || 0);
+                setWatchedTime(lessonProgress.watchedDuration || 0);
                 setIsCompleted(lessonProgress.completed || false);
+
+                // If we have previous segment data, we could load it here. 
+                // For now, we'll start fresh or assume progressPercentage is a decent fallback.
             } else {
                 setProgress(0);
                 setWatchedTime(0);
                 setIsCompleted(false);
+                setWatchedSegments(new Set());
             }
 
             setLoading(false);
@@ -92,73 +117,108 @@ const LessonPlayer = () => {
     useEffect(() => {
         loadLessonData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lessonId, courseId]);    /**
+    }, [lessonId, courseId]);
+
+    /**
      * Handle video progress updates
      * @param {number} currentTime - Current playback time in seconds
      * @param {number} duration - Total video duration in seconds
      */
     const handleVideoProgress = (currentTime, duration) => {
         if (duration > 0) {
-            const progressPercent = (currentTime / duration) * 100;
-            setProgress(progressPercent);
-            setWatchedTime(currentTime);
+            setCurrentVideoTime(currentTime);
 
-            // Auto-mark as completed when 90% watched
-            if (progressPercent >= 90 && !isCompleted) {
-                markLessonComplete();
+            // Segment tracking (5s intervals)
+            const segment = Math.floor(currentTime / 5);
+            if (!watchedSegments.has(segment)) {
+                const newSegments = new Set(watchedSegments);
+                newSegments.add(segment);
+                setWatchedSegments(newSegments);
+
+                const totalSegments = Math.ceil(duration / 5);
+                const watchedCount = newSegments.size;
+                const realPercent = Math.min(100, Math.round((watchedCount / totalSegments) * 100));
+
+                // If real progress increased, update state and sync to backend soon
+                if (realPercent > progress) {
+                    setProgress(realPercent);
+                    setWatchedTime(currentTime);
+
+                    // Throttled backend sync
+                    if (realPercent === 100 || realPercent % 5 === 0) {
+                        saveProgressToBackend(realPercent, currentTime);
+                    }
+                }
             }
 
-            // Save progress periodically (every 5 seconds)
-            if (Math.floor(currentTime) % 5 === 0) {
-                saveProgress(progressPercent, currentTime);
+            // Time-based periodic save (backup)
+            if (Math.floor(currentTime) % 15 === 0 && Math.floor(currentTime) !== Math.floor(watchedTime)) {
+                saveProgressToBackend(progress, currentTime);
             }
         }
     };
 
     /**
-     * Save lesson progress to localStorage
-     * Uses the progressTracker utility for consistent storage
-     * @param {number} prog - Progress percentage
-     * @param {number} time - Watched time in seconds
+     * Sync progress to backend API
      */
-    const saveProgress = (prog, time) => {
-        const progressData = {
-            progress: prog,
-            watchedTime: time,
-            completed: isCompleted
-        };
-        saveLessonProgress(lessonId, progressData);
+    const saveProgressToBackend = async (percent, time) => {
+        try {
+            const res = await api.put(`/progress/lesson/${lessonId}`, {
+                watchedDuration: time,
+                videoProgressPercent: percent
+            });
+
+            const updatedProgress = res.data.progress;
+            if (updatedProgress.isCompleted && !isCompleted) {
+                setIsCompleted(true);
+                // Trigger any course-wide progress recalculation if needed
+                loadLessonData();
+            }
+        } catch (error) {
+            console.error('Error saving progress to backend:', error);
+        }
     };
 
-    /**
-     * Mark lesson as completed and update course progress
-     * Auto-triggered when video reaches 90% completion
-     */
-    const markLessonComplete = () => {
-        setIsCompleted(true);
-
-        // Save completion to localStorage
-        markLessonAsCompleted(lessonId, currentLesson?.duration || 0);
-
-        // Update course structure and recalculate progress
-        if (courseStructure) {
-            const updatedStructure = updateCourseStructureWithProgress(courseStructure);
-            setCourseStructure(updatedStructure);
-
-            const progressStats = calculateCourseProgress(updatedStructure);
-            setCourseProgress(progressStats);
+    // Persistence for watched segments
+    useEffect(() => {
+        if (lessonId && watchedSegments.size > 0) {
+            localStorage.setItem(`watched-segments-${lessonId}`, JSON.stringify(Array.from(watchedSegments)));
         }
+    }, [watchedSegments, lessonId]);
 
-        // In production, this would also be an API call
-        updateCourseProgress();
+    useEffect(() => {
+        if (lessonId) {
+            const saved = localStorage.getItem(`watched-segments-${lessonId}`);
+            if (saved) {
+                setWatchedSegments(new Set(JSON.parse(saved)));
+            } else {
+                setWatchedSegments(new Set());
+            }
+        }
+    }, [lessonId]);
+
+    /**
+     * Manual marking - still goes through backend validation
+     */
+    const markLessonComplete = async () => {
+        try {
+            const res = await api.post(`/progress/complete/${lessonId}`);
+            if (res.data.success || res.status === 200) {
+                setIsCompleted(true);
+                loadLessonData();
+            }
+        } catch (error) {
+            console.error('Error marking lesson as complete:', error);
+            alert("Requirements not met: Watch 100% video and pass all quizzes.");
+        }
     };
 
     /**
      * Update overall course progress
      */
     const updateCourseProgress = () => {
-        // In production, this would be an API call
-        console.log('Course progress updated');
+        // This is now handled by loadLessonData which fetches from backend
+        console.log('Course progress updated via sync');
     };
 
     /**
@@ -246,6 +306,9 @@ const LessonPlayer = () => {
                         videoQualities={currentLesson.qualities}
                     />
 
+                    {/* Persistent Video Progress Bar */}
+                    <VideoProgressBar progress={progress} isCompleted={isCompleted} />
+
                     {/* Lesson information */}
                     <div className={styles.lessonInfo}>
                         <div className={styles.lessonHeader}>
@@ -254,6 +317,40 @@ const LessonPlayer = () => {
                                 <span className={styles.completedBadge}>✓ Completed</span>
                             )}
                         </div>
+
+                        {/* Quizzes Section */}
+                        {quizzes.length > 0 && (
+                            <div className={styles.quizzesSection}>
+                                <h3 className={styles.sectionTitle}>Lesson Quizzes</h3>
+                                <div className={styles.quizzesList}>
+                                    {quizzes.map(quiz => (
+                                        <div key={quiz._id} className={styles.quizCard}>
+                                            <div className={styles.quizInfo}>
+                                                <span className={styles.quizIcon}>📝</span>
+                                                <div className={styles.quizDetails}>
+                                                    <span className={styles.quizTitle}>{quiz.title}</span>
+                                                    <span className={styles.quizMeta}>
+                                                        Passing score: {quiz.passingScore}% • Attempts allowed: {quiz.attemptsAllowed}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className={styles.quizAction}>
+                                                {quiz.isPassed ? (
+                                                    <span className={styles.passedBadge}>✓ Passed</span>
+                                                ) : (
+                                                    <button
+                                                        className={styles.startQuizButton}
+                                                        onClick={() => navigate(`/quizzes/${quiz._id}`)}
+                                                    >
+                                                        Start Quiz
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div className={styles.lessonMeta}>
                             <span className={styles.metaItem}>

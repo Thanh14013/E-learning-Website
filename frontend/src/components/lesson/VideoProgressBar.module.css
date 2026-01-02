@@ -1,0 +1,58 @@
+.container {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.label {
+    font-weight: 600;
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+.percent {
+    font-weight: 700;
+    color: #2563eb;
+    font-size: 1rem;
+}
+
+.barContainer {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.barFill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.barFill.completed {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.hint {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.successHint {
+    font-size: 0.8rem;
+    color: #059669;
+    font-weight: 500;
+    margin: 0;
+}

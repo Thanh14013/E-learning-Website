@@ -47,7 +47,7 @@ export const uploadCV = multer({
 
 export const uploadVideo = multer({
   storage,
-  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB
+  limits: { fileSize: 2 * 1024 * 1024 * 1024 }, // 2GB
   fileFilter: (req, file, cb) => {
     const allowed = ["video/mp4", "video/avi", "video/quicktime"]; // mov = quicktime
     if (!allowed.includes(file.mimetype)) {

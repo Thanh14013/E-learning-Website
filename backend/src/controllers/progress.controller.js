@@ -4,15 +4,64 @@ import User from "../models/user.model.js";
 import Chapter from "../models/chapter.model.js";
 import Notification from "../models/notification.model.js";
 import Course from "../models/course.model.js";
+import Quiz from "../models/quiz.model.js";
+import QuizAttempt from "../models/quizAttempt.model.js";
+
+/**
+ * Reusable helper to check and update lesson completion status
+ */
+export const checkAndUpdateLessonCompletion = async (userId, lessonId, progress) => {
+  try {
+    const lesson = await Lesson.findById(lessonId);
+    if (!lesson) return progress;
+
+    // 1. Check video completion (100% if video exists)
+    const hasVideo = !!lesson.videoUrl;
+    const isVideoDone = hasVideo ? (progress.videoProgressPercent || 0) >= 100 : true;
+
+    // 2. Check all quizzes passed
+    const quizzes = await Quiz.find({ lessonId, isPublished: true });
+    let isQuizzesDone = true;
+
+    if (quizzes.length > 0) {
+      for (const quiz of quizzes) {
+        const passAttempt = await QuizAttempt.findOne({
+          userId,
+          quizId: quiz._id,
+          isPassed: true
+        });
+        if (!passAttempt) {
+          isQuizzesDone = false;
+          break;
+        }
+      }
+    }
+
+    progress.quizzesCompleted = isQuizzesDone;
+
+    // Lesson is only complete if BOTH are done
+    if (isVideoDone && isQuizzesDone) {
+      progress.isCompleted = true;
+    } else {
+      progress.isCompleted = false;
+    }
+
+    await progress.save();
+    return progress;
+  } catch (error) {
+    console.error("Error in checkAndUpdateLessonCompletion:", error);
+    return progress;
+  }
+};
 
 /**
  * @route   PUT /api/progress/lesson/:lessonId
- * @desc    Update watchedDuration and lastWatchedAt for a lesson (Student)
+ * @desc    Update videoProgressPercent and lastWatchedAt for a lesson (Student)
  * @access  Private (Student)
  */
 export const updateLessonProgress = async (req, res) => {
   try {
-    const { watchedDuration, markCompleted } = req.body;
+    const { watchedDuration, videoProgressPercent } = req.body;
     const lessonId = req.params.lessonId;
     const userId = req.user.id;
 
@@ -21,19 +70,15 @@ export const updateLessonProgress = async (req, res) => {
       return res.status(404).json({ message: "Lesson not found" });
     }
 
-    // Lấy course bằng chapter
     const chapter = await Chapter.findById(lesson.chapterId);
     const courseId = chapter.courseId;
 
-    // Check enrolled
     const user = await User.findById(userId);
     const isEnrolled = user?.enrolledCourses?.some(
       (enrolledCourse) => enrolledCourse.toString() === courseId.toString()
     );
     if (!isEnrolled) {
-      return res
-        .status(403)
-        .json({ message: "You are not enrolled in this course" });
+      return res.status(403).json({ message: "You are not enrolled in this course" });
     }
 
     let progress = await Progress.findOne({ userId, lessonId });
@@ -44,23 +89,23 @@ export const updateLessonProgress = async (req, res) => {
         lessonId,
         courseId,
         watchedDuration: 0,
+        videoProgressPercent: 0,
       });
     }
 
     // Update fields
-    if (watchedDuration > progress.watchedDuration) {
+    if (watchedDuration !== undefined && watchedDuration > progress.watchedDuration) {
       progress.watchedDuration = watchedDuration;
+    }
+
+    if (videoProgressPercent !== undefined && videoProgressPercent > progress.videoProgressPercent) {
+      progress.videoProgressPercent = videoProgressPercent;
     }
 
     progress.lastWatchedAt = new Date();
 
-    const isAutoComplete = watchedDuration / lesson.videoDuration >= 0.9;
-
-    if (markCompleted || isAutoComplete) {
-      progress.isCompleted = true;
-    }
-
-    await progress.save();
+    // Check completion
+    await checkAndUpdateLessonCompletion(userId, lessonId, progress);
 
     // Emit socket
     req.io.of("/progress").emit("progress:updated", {
@@ -72,9 +117,7 @@ export const updateLessonProgress = async (req, res) => {
     return res.json({ message: "Progress updated", progress });
   } catch (err) {
     console.error(err);
-    return res
-      .status(500)
-      .json({ message: "Server error when updating progress" });
+    return res.status(500).json({ message: "Server error when updating progress" });
   }
 };
 
@@ -402,13 +445,11 @@ export const getCourseProgress = async (req, res) => {
       return {
         lessonId: lesson._id,
         watchedDuration: prog?.watchedDuration || 0,
+        videoProgressPercent: prog?.videoProgressPercent || 0,
+        quizzesCompleted: prog?.quizzesCompleted || false,
         lastWatchedAt: prog?.lastWatchedAt || null,
         completed: prog?.isCompleted || false,
-        progressPercentage: prog
-          ? Math.round(
-              (prog.watchedDuration / (lesson.videoDuration || 1)) * 100
-            )
-          : 0,
+        progressPercentage: prog ? prog.videoProgressPercent : 0,
       };
     });
 

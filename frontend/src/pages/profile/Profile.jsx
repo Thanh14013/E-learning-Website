@@ -141,7 +141,6 @@ export default function Profile() {
                 bio: profileData.bio,
                 phone: profileData.phoneNumber,
                 dateOfBirth: profileData.dateOfBirth,
-                dateOfBirth: profileData.dateOfBirth,
                 address: `${profileData.address}${profileData.city ? ', ' + profileData.city : ''}${profileData.country ? ', ' + profileData.country : ''}`,
                 expertise: profileData.expertise,
                 qualifications: profileData.qualifications,

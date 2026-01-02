@@ -259,6 +259,7 @@ const TeacherView = () => {
         publishedCourses: dashboardData.publishedCourses || 0, // Use backend count
         averageRating: dashboardData.averageRating || 0,
         newDiscussions: dashboardData.newDiscussions || 0,
+        activeStudents: dashboardData.activeStudents || 0,
         trend: dashboardData.trend || {}, // pass trend data
       });
 

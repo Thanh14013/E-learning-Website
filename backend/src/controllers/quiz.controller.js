@@ -3,6 +3,8 @@ import Quiz from "../models/quiz.model.js";
 import Question from "../models/question.model.js";
 import QuizAttempt from "../models/quizAttempt.model.js";
 import User from "../models/user.model.js";
+import Progress from "../models/progress.model.js";
+import { checkAndUpdateLessonCompletion } from "./progress.controller.js";
 
 /**
  * @route   POST /api/quizzes
@@ -363,6 +365,19 @@ export const submitQuiz = async (req, res) => {
     attempt.submittedAt = new Date();
 
     await attempt.save();
+
+    // If passed, check if lesson is now complete
+    if (isPassed) {
+      try {
+        const lessonId = quiz.lessonId;
+        let progress = await Progress.findOne({ userId, lessonId });
+        if (progress) {
+          await checkAndUpdateLessonCompletion(userId, lessonId, progress);
+        }
+      } catch (progressErr) {
+        console.error("Error updating lesson progress after quiz:", progressErr);
+      }
+    }
 
     return res.json({
       message: "Quiz submitted successfully",

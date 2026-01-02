@@ -1022,8 +1022,8 @@ const LessonModal = ({ lesson, chapterId, onSave, onClose, onUploadComplete }) =
       return;
     }
 
-    if (file.size > 500 * 1024 * 1024) {
-      toastService.error('Video size must not exceed 500MB');
+    if (file.size > 2 * 1024 * 1024 * 1024) {
+      toastService.error('Video size must not exceed 2GB');
       return;
     }
 

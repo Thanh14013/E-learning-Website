@@ -221,6 +221,27 @@
   border-color: #4b5563;
 }
 
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid #1f2937;
+}
+
+.pagination button {
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  height: 32px !important;
+}
+
+.pageInfo {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
 /* Modal Styles */
 .modalOverlay {
   position: fixed;

@@ -91,9 +91,7 @@ const CourseManagementCard = ({ course, user, onEdit, onDelete, onAnalytics, onP
       {/* Course Content */}
       <div className={styles.cardContent}>
         <h3 className={styles.cardTitle}>
-          <Link to={`/courses/${course._id || course.id}`}>
-            {course.title || course.name}
-          </Link>
+          {course.title || course.name}
         </h3>
 
         {course.description && (

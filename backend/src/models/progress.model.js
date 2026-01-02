@@ -28,6 +28,18 @@ const progressSchema = new mongoose.Schema(
             default: 0,
         },
 
+        videoProgressPercent: {
+            type: Number,
+            default: 0,
+            min: 0,
+            max: 100,
+        },
+
+        quizzesCompleted: {
+            type: Boolean,
+            default: false,
+        },
+
         isCompleted: {
             type: Boolean,
             default: false,

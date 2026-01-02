@@ -45,9 +45,9 @@ const CourseCarousel = ({ courses }) => {
     const el = scrollContainerRef.current;
     if (el) {
       const scrollAmount = el.clientWidth * 0.8;
-      el.scrollBy({ 
-        left: direction === 'left' ? -scrollAmount : scrollAmount, 
-        behavior: 'smooth' 
+      el.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
       });
     }
   }, []);
@@ -91,7 +91,7 @@ const CourseCarousel = ({ courses }) => {
     <div className={styles.carouselContainer}>
       <button
         className={`${styles.navButton} ${styles.left}`}
-        onClick={() => handleScroll('left')}
+        onClick={() => scroll('left')}
         disabled={!canScrollLeft}
         aria-label="Scroll left"
       >
@@ -109,7 +109,7 @@ const CourseCarousel = ({ courses }) => {
 
       <button
         className={`${styles.navButton} ${styles.right}`}
-        onClick={() => handleScroll('right')}
+        onClick={() => scroll('right')}
         disabled={!canScrollRight}
         aria-label="Scroll right"
       >
@@ -199,8 +199,8 @@ const StudentView = () => {
                         </span>
                       </div>
                       <div className={styles.progressBar}>
-                        <div 
-                          className={styles.progressFill} 
+                        <div
+                          className={styles.progressFill}
                           style={{ width: `${progress.progressPercentage}%` }}
                         />
                       </div>
@@ -210,10 +210,10 @@ const StudentView = () => {
               );
             })}
           </div>
-          
+
           {totalPages > 1 && (
             <div className={styles.pagination}>
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className={styles.paginationBtn}
@@ -223,7 +223,7 @@ const StudentView = () => {
               <span className={styles.pageInfo}>
                 Page {currentPage} of {totalPages}
               </span>
-              <button 
+              <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className={styles.paginationBtn}
