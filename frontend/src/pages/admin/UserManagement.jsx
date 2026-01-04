@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toastService from '../../services/toastService';
 import { debounce } from '../../utils/performance';
+import { useConfirm } from '../../contexts/ConfirmDialogContext';
 import styles from './UserManagement.module.css';
 
-const UserManagement = () => {
+export default function UserManagement() {
+    const { confirm } = useConfirm();
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -82,7 +84,8 @@ const UserManagement = () => {
 
     // Change user role
     const handleRoleChange = async (userId, newRole) => {
-        if (!window.confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+        const isConfirmed = await confirm(`Are you sure you want to change this user's role to ${newRole}?`, { type: 'warning', title: 'Change Role' });
+        if (!isConfirmed) {
             return;
         }
 
@@ -102,7 +105,8 @@ const UserManagement = () => {
     // Ban/Unban user
     const handleBanToggle = async (userId, currentStatus) => {
         const action = currentStatus ? 'unban' : 'ban';
-        if (!window.confirm(`Are you sure you want to ${action} this user?`)) {
+        const isConfirmed = await confirm(`Are you sure you want to ${action} this user?`, { type: action === 'ban' ? 'danger' : 'info', title: `${action === 'ban' ? 'Ban' : 'Unban'} User` });
+        if (!isConfirmed) {
             return;
         }
 
@@ -165,7 +169,8 @@ const UserManagement = () => {
     };
 
     const handleTeacherApproval = async (userId, status) => {
-        if (!window.confirm(`Mark this teacher as ${status}?`)) return;
+        const isConfirmed = await confirm(`Mark this teacher as ${status}?`, { type: 'warning', title: 'Update Status' });
+        if (!isConfirmed) return;
         try {
             setActionLoading({ ...actionLoading, [userId]: 'approval' });
             await api.put(`/admin/users/teachers/${userId}/approval`, { status });
@@ -402,4 +407,3 @@ const UserManagement = () => {
     );
 };
 
-export default UserManagement;

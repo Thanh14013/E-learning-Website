@@ -809,3 +809,136 @@ export const getPlatformStatistics = async () => {
     throw error;
   }
 };
+
+/**
+ * Get detailed course analytics for a specific student
+ * @param {String} courseId 
+ * @param {String} studentId 
+ */
+export const getStudentCourseDetails = async (courseId, studentId) => {
+    try {
+        const User = (await import("../models/user.model.js")).default;
+        
+        // 1. Get Student Info
+        const student = await User.findById(studentId).select('fullName email avatar createdAt');
+        if (!student) throw new Error('Student not found');
+
+        // 1b. Get Enrollment Date (from Notification)
+        const Notification = (await import("../models/notification.model.js")).default;
+        const enrollmentNotification = await Notification.findOne({
+            userId: studentId,
+            "metadata.courseId": courseId,
+            type: "course"
+        }).sort({ createdAt: 1 });
+        
+        const enrollmentDate = enrollmentNotification ? enrollmentNotification.createdAt : null;
+
+        // 2. Get Course Structure (Chapters & Lessons)
+        const chapters = await Chapter.find({ courseId }).sort({ order: 1 });
+        const chapterIds = chapters.map(c => c._id);
+        const lessons = await Lesson.find({ chapterId: { $in: chapterIds } }).sort({ order: 1 });
+        
+        // Map lessons by chapter for easier frontend consumption
+        const courseStructure = chapters.map(ch => ({
+            id: ch._id,
+            title: ch.title,
+            order: ch.order,
+            lessons: lessons.filter(l => l.chapterId.toString() === ch._id.toString()).map(l => ({
+                id: l._id,
+                title: l.title,
+                order: l.order,
+                videoDuration: l.videoDuration
+            }))
+        }));
+
+        // 3. Get Student Progress (Map to Lesson IDs)
+        const progressList = await Progress.find({ courseId, userId: studentId });
+        const progressMap = {};
+        progressList.forEach(p => {
+            progressMap[p.lessonId.toString()] = {
+                isCompleted: p.isCompleted,
+                watchedDuration: p.watchedDuration,
+                lastWatchedAt: p.lastWatchedAt,
+                videoProgressPercent: p.videoProgressPercent
+            };
+        });
+
+        // 4. Get Quiz Attempts
+        // Find all quizzes for this course
+        const Quiz = (await import("../models/quiz.model.js")).default;
+        const quizzes = await Quiz.find({ courseId }).sort({ order: 1 });
+        const quizIds = quizzes.map(q => q._id);
+
+        const attempts = await QuizAttempt.find({ 
+            userId: studentId, 
+            quizId: { $in: quizIds } 
+        }).sort({ createdAt: -1 });
+
+        // Map attempts by quiz
+        const quizzesData = quizzes.map(q => {
+            const studentAttempts = attempts.filter(a => a.quizId.toString() === q._id.toString());
+            const bestAttempt = studentAttempts.reduce((prev, current) => (prev && prev.score > current.score) ? prev : current, null);
+            const latestAttempt = studentAttempts[0] || null;
+
+            return {
+                id: q._id,
+                title: q.title,
+                lessonId: q.lessonId,
+                passingScore: q.passingScore,
+                attemptsAllowed: q.attemptsAllowed,
+                attemptsUsed: studentAttempts.length,
+                bestScore: bestAttempt ? bestAttempt.score : null,
+                isPassed: bestAttempt ? bestAttempt.isPassed : false,
+                lastAttemptDate: latestAttempt ? latestAttempt.createdAt : null
+            };
+        });
+
+        // 5. Calculate Overviews
+        const totalLessons = lessons.length;
+        const completedLessons = progressList.filter(p => p.isCompleted).length;
+        const completionRate = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
+        
+        const totalWatchTime = progressList.reduce((sum, p) => sum + (p.watchedDuration || 0), 0);
+        
+        const attemptedQuizzes = quizzesData.filter(q => q.attemptsUsed > 0);
+        const avgQuizScore = attemptedQuizzes.length > 0
+            ? attemptedQuizzes.reduce((sum, q) => sum + (q.bestScore || 0), 0) / attemptedQuizzes.length
+            : 0;
+
+        return {
+            student: {
+                ...student.toObject(),
+                enrollmentDate
+            },
+            overview: {
+                completionRate: Math.round(completionRate * 100) / 100,
+                totalWatchTime, // seconds
+                avgQuizScore: Math.round(avgQuizScore * 10), 
+                completedLessons,
+                totalLessons
+            },
+            courseStructure, 
+            progressMap,
+            quizzes: quizzesData
+        };
+
+    } catch (error) {
+        console.error("Get student course details error:", error);
+        throw error;
+    }
+};
+
+/**
+ * Reset quiz attempts for a student
+ * @param {String} quizId 
+ * @param {String} studentId 
+ */
+export const resetQuizAttempts = async (quizId, studentId) => {
+    try {
+        await QuizAttempt.deleteMany({ quizId, userId: studentId });
+        return { success: true };
+    } catch (error) {
+        console.error("Reset quiz attempts error:", error);
+        throw error;
+    }
+};

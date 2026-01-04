@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDiscussions } from '../../contexts/DiscussionContext';
+import { useConfirm } from '../../contexts/ConfirmDialogContext.jsx';
 import toast from '../../services/toastService';
 import styles from './DiscussionModal.module.css';
 
@@ -15,9 +17,12 @@ const formatTimeAgo = (dateString) => {
     return date.toLocaleDateString();
 };
 
-const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll, courseTeacherId }) => {
+const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeacherId, canDelete = false }) => {
+    const { confirm } = useConfirm();
     const { user } = useAuth();
-    const { currentDiscussion, fetchDiscussionDetail, createComment, updateComment, deleteComment, deleteDiscussion, loading: contextLoading } = useDiscussions();
+    const {
+        currentDiscussion,
+        fetchDiscussionDetail, createComment, updateComment, deleteComment, deleteDiscussion, loading: contextLoading } = useDiscussions();
     const [commentContent, setCommentContent] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [editingCommentId, setEditingCommentId] = useState(null);
@@ -37,10 +42,12 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll, courseTe
     // Check permissions
     const isDiscussionOwner = user?._id === discussion?.userId?._id;
     const isCourseTeacher = user?._id === courseTeacherId;
-    const canDeleteDiscussion = isDiscussionOwner || isCourseTeacher;
+    const isActiveAdmin = user?.role === 'admin';
+    const canDeleteDiscussion = isDiscussionOwner || isActiveAdmin || canDelete;
 
     const handleDeleteDiscussion = async () => {
-        if (window.confirm('Are you sure you want to delete this discussion?')) {
+        const isConfirmed = await confirm('Are you sure you want to delete this discussion?', { type: 'danger', confirmText: 'Delete' });
+        if (isConfirmed) {
             try {
                 await deleteDiscussion(discussionId);
                 onClose();
@@ -166,12 +173,8 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll, courseTe
                             <div className={styles.commentsList}>
                                 {comments.map((comment) => {
                                     const isOwner = user?._id === comment.userId?._id;
-                                    // Use courseTeacherId for delete permission logic on comments too if desired
-                                    // User logic was: isOwner || user?.role === 'teacher'
-                                    // Let's refine it to isOwner || user is this course teacher
-                                    const isTeacher = user?._id === courseTeacherId;
                                     const canEdit = isOwner;
-                                    const canDelete = isOwner || isTeacher;
+                                    const canDelete = isOwner;
                                     const isEditing = editingCommentId === comment._id;
 
                                     return (
@@ -218,7 +221,8 @@ const DiscussionModal = ({ discussionId, isEnrolled, onClose, onEnroll, courseTe
                                                             <button
                                                                 className={styles.iconButton}
                                                                 onClick={async () => {
-                                                                    if (window.confirm('Delete this comment?')) {
+                                                                    const isConfirmed = await confirm('Delete this comment?');
+                                                                    if (isConfirmed) {
                                                                         try {
                                                                             await deleteComment(comment._id);
                                                                             fetchDiscussionDetail(discussionId);

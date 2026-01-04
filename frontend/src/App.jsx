@@ -1,14 +1,34 @@
 import { RouterProvider } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { DiscussionProvider } from "./contexts/DiscussionContext";
+import { ConfirmDialogProvider } from "./contexts/ConfirmDialogContext";
 import router from "./routes/Router";
-import { AuthProvider } from "./contexts/AuthContext.jsx";
-import { DiscussionProvider } from "./contexts/DiscussionContext.jsx";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-export function App() {
+function App() {
   return (
     <AuthProvider>
-      <DiscussionProvider>
-        <RouterProvider router={router} />
-      </DiscussionProvider>
+      <NotificationProvider>
+        <ConfirmDialogProvider>
+          <DiscussionProvider>
+            <RouterProvider router={router} />
+            <ToastContainer
+              position="top-right"
+              autoClose={2000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme="dark"
+            />
+          </DiscussionProvider>
+        </ConfirmDialogProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

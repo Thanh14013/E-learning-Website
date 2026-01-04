@@ -655,7 +655,7 @@ export const enrollCourse = async (req, res) => {
     // Get teacher info for notification
     const teacher = await User.findById(course.teacherId);
 
-    // Send enrollment notification to teacher
+    // Send enrollment notification to teacher and student
     if (student && teacher) {
       await notifyEnrollment(
         studentId,
@@ -665,27 +665,6 @@ export const enrollCourse = async (req, res) => {
         course
       );
     }
-
-    // Create notification for student
-    const Notification = (await import("../models/notification.model.js"))
-      .default;
-    await Notification.create({
-      userId: studentId,
-      type: "course",
-      title: "Course Enrolled!",
-      content: `You successfully enrolled in "${course.title}". Start learning now!`,
-      link: `/courses/${courseId}`,
-      isRead: false,
-    });
-
-    // Emit notification
-    req.io
-      ?.of("/notification")
-      .to(studentId.toString())
-      .emit("notification:new", {
-        type: "enrollment",
-        message: `Enrolled in ${course.title}`,
-      });
 
     return res.status(200).json({
       success: true,

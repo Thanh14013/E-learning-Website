@@ -6,6 +6,7 @@ import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
 import { Loading } from '../../components/common/Loading';
 import { useAuth } from '../../contexts/AuthContext';
+import { useConfirm } from '../../contexts/ConfirmDialogContext';
 import api from '../../services/api';
 import toastService from '../../services/toastService';
 import QuizBuilder from '../../components/quiz/QuizBuilder';
@@ -15,6 +16,7 @@ const CourseEditor = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { confirm } = useConfirm();
 
   // State management
   const [loading, setLoading] = useState(true);
@@ -269,7 +271,8 @@ const CourseEditor = () => {
   };
 
   const handleDeleteChapter = async (chapterId) => {
-    if (!window.confirm('Are you sure you want to delete this chapter? All lessons in the chapter will also be deleted.')) {
+    const isConfirmed = await confirm('Are you sure you want to delete this chapter? All lessons in the chapter will also be deleted.', { type: 'danger', title: 'Delete Chapter', confirmText: 'Delete' });
+    if (!isConfirmed) {
       return;
     }
 
@@ -295,7 +298,8 @@ const CourseEditor = () => {
   };
 
   const handleDeleteQuiz = async (quizId) => {
-    if (!window.confirm('Are you sure you want to delete this quiz?')) return;
+    const isConfirmed = await confirm('Are you sure you want to delete this quiz?', { type: 'danger', title: 'Delete Quiz', confirmText: 'Delete' });
+    if (!isConfirmed) return;
     try {
       await api.delete(`/teacher/quizzes/${quizId}`);
       toastService.success('Quiz deleted');
@@ -343,7 +347,8 @@ const CourseEditor = () => {
   };
 
   const handleDeleteLesson = async (lessonId) => {
-    if (!window.confirm('Are you sure you want to delete this lesson?')) {
+    const isConfirmed = await confirm('Are you sure you want to delete this lesson?', { type: 'danger', title: 'Delete Lesson', confirmText: 'Delete' });
+    if (!isConfirmed) {
       return;
     }
 

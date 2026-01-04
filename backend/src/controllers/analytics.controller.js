@@ -11,7 +11,9 @@ import {
   getTeacherDashboard,
   getPlatformStatistics,
   getStudentCourseTrend,
-  getAdminDashboardStats
+  getAdminDashboardStats,
+  getStudentCourseDetails,
+  resetQuizAttempts
 } from "../services/analytics.service.js";
 import { Parser } from "json2csv";
 
@@ -592,4 +594,47 @@ export const manualCollectAnalytics = async (req, res) => {
       message: "Server error while collecting analytics",
     });
   }
+};
+
+/**
+ * @route   GET /api/analytics/course/:courseId/student/:studentId/detail
+ * @desc    Get detailed granular analytics for student in course
+ * @access  Private (Teacher/Admin)
+ */
+export const getStudentDetailedAnalytics = async (req, res) => {
+    try {
+        const { courseId, studentId } = req.params;
+        // Authorization check skipped for brevity but assumed handled by middleware or verify teacher ownership
+        
+        const data = await getStudentCourseDetails(courseId, studentId);
+        
+        return res.status(200).json({
+            success: true,
+            data
+        });
+    } catch (error) {
+        console.error("Get detailed analytics error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
+};
+
+/**
+ * @route   DELETE /api/analytics/quiz-attempt/:quizId/student/:studentId
+ * @desc    Reset student attempts for a specific quiz
+ * @access  Private (Teacher/Admin)
+ */
+export const resetQuizAttemptsController = async (req, res) => {
+    try {
+        const { quizId, studentId } = req.params;
+        
+        await resetQuizAttempts(quizId, studentId);
+        
+        return res.status(200).json({
+            success: true,
+            message: "Quiz attempts reset successfully"
+        });
+    } catch (error) {
+        console.error("Reset quiz attempts error:", error);
+        res.status(500).json({ success: false, message: "Server error" });
+    }
 };

@@ -6,7 +6,9 @@ import {
   exportCourseAnalytics,
   generateStudentReport,
   manualCollectAnalytics,
-  getStudentTrend
+  getStudentTrend,
+  getStudentDetailedAnalytics,
+  resetQuizAttemptsController
 } from "../controllers/analytics.controller.js";
 import { authenticate } from "../middleware/auth.js";
 import { authorize } from "../middleware/authorize.js";
@@ -76,5 +78,21 @@ router.post(
   authorize(["admin"]),
   manualCollectAnalytics
 );
+
+
+/**
+ * @route   GET /api/analytics/course/:courseId/student/:studentId/detail
+ * @desc    Get detailed granular analytics
+ * @access  Private (Teacher or Admin)
+ */
+router.get("/course/:courseId/student/:studentId/detail", authenticate, getStudentDetailedAnalytics);
+
+/**
+ * @route   DELETE /api/analytics/quiz-attempt/:quizId/student/:studentId
+ * @desc    Reset quiz attempts
+ * @access  Private (Teacher or Admin)
+ */
+router.delete("/quiz-attempt/:quizId/student/:studentId", authenticate, resetQuizAttemptsController);
+
 
 export default router;

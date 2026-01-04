@@ -113,6 +113,24 @@ export const markNotificationRead = async (req, res) => {
     notification.readAt = new Date();
     await notification.save();
 
+    // Emit socket event
+    const io = req.io; // Assuming req.io is available, or use getSocketIOInstance
+    if (io) {
+       // Import dynamically to avoid circular dependencies if any, or use the helper from socket/index
+       const { sendNotificationToUser } = (await import("../socket/notification.handler.js"));
+       sendNotificationToUser(io, userId, {
+         type: "notification_updated",
+         notification
+       });
+       
+       // Also emit unread count update
+       const unreadCount = await Notification.countDocuments({ userId, isRead: false });
+       sendNotificationToUser(io, userId, {
+           type: "notification_count",
+           count: unreadCount
+       });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Notification marked as read",
@@ -146,6 +164,20 @@ export const markAllNotificationsRead = async (req, res) => {
         },
       }
     );
+
+    // Emit socket event
+    const io = req.io;
+    if (io) {
+        const { sendNotificationToUser } = (await import("../socket/notification.handler.js"));
+        sendNotificationToUser(io, userId, {
+            type: "notifications_all_read"
+        });
+        
+        sendNotificationToUser(io, userId, {
+            type: "notification_count",
+            count: 0
+        });
+    }
 
     return res.status(200).json({
       success: true,
@@ -184,6 +216,25 @@ export const deleteNotification = async (req, res) => {
         success: false,
         message: "Notification not found",
       });
+    }
+
+    // Emit socket event
+    const io = req.io;
+    if (io) {
+        const { sendNotificationToUser } = (await import("../socket/notification.handler.js"));
+        sendNotificationToUser(io, userId, {
+            type: "notification_deleted",
+            id: notificationId
+        });
+        
+        // Update count if the deleted one was unread
+        if (!notification.isRead) {
+             const unreadCount = await Notification.countDocuments({ userId, isRead: false });
+             sendNotificationToUser(io, userId, {
+                 type: "notification_count",
+                 count: unreadCount
+             });
+        }
     }
 
     return res.status(200).json({

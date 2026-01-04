@@ -129,13 +129,43 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount(count);
     };
 
+    /**
+     * Handle real-time notification updates (read status)
+     */
+    const handleUpdate = (payload) => {
+      const updated = payload.notification;
+      setNotifications(prev => prev.map(n => n._id === updated._id ? { ...n, ...updated } : n));
+    };
+
+    /**
+     * Handle real-time notification deletion
+     */
+    const handleDelete = (payload) => {
+      const id = payload.id;
+      setNotifications(prev => prev.filter(n => n._id !== id));
+    };
+
+    /**
+     * Handle all read event
+     */
+    const handleAllRead = () => {
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    };
+
     // Register callbacks with socketService
     socketService.registerContextCallback('notification:new', handleNew);
     socketService.registerContextCallback('notification:count', handleCount);
+    socketService.registerContextCallback('notification:updated', handleUpdate);
+    socketService.registerContextCallback('notification:deleted', handleDelete);
+    socketService.registerContextCallback('notifications_all_read', handleAllRead);
 
     return () => {
       socketService.unregisterContextCallback('notification:new', handleNew);
       socketService.unregisterContextCallback('notification:count', handleCount);
+      socketService.unregisterContextCallback('notification:updated', handleUpdate);
+      socketService.unregisterContextCallback('notification:deleted', handleDelete);
+      socketService.unregisterContextCallback('notifications_all_read', handleAllRead);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
@@ -189,11 +219,20 @@ export const NotificationProvider = ({ children }) => {
    */
   const remove = async (id) => {
     try {
+      // Optimistic update
+      setNotifications((prev) => {
+        const target = prev.find(n => n._id === id);
+        if (target && !target.isRead) {
+          setUnreadCount((c) => Math.max(0, c - 1));
+        }
+        return prev.filter((n) => n._id !== id);
+      });
+
       await notificationService.deleteNotification(id);
-      setNotifications((prev) => prev.filter((n) => n._id !== id));
     } catch (error) {
       console.error('[NotificationContext] Failed to delete notification:', error);
       toastService.error('Unable to delete notification');
+      // Revert if needed (omitted for simplicity, but could refetch)
     }
   };
 

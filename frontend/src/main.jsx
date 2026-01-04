@@ -7,6 +7,7 @@ import { CourseProvider } from './contexts/CoursesContext';
 import { DiscussionProvider } from './contexts/DiscussionContext.jsx';
 import { ToastProvider } from './contexts/ToastContext.jsx';
 import { NotificationProvider } from './contexts/NotificationContext.jsx';
+import { ConfirmDialogProvider } from './contexts/ConfirmDialogContext.jsx';
 import SocketManager from './components/common/SocketManager.jsx';
 import './index.css';
 import './global.css';
@@ -18,8 +19,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <DiscussionProvider>
           <ToastProvider>
             <NotificationProvider>
-              <SocketManager />
-              <RouterProvider router={router} />
+              <ConfirmDialogProvider>
+                <SocketManager />
+                <RouterProvider router={router} />
+              </ConfirmDialogProvider>
             </NotificationProvider>
           </ToastProvider>
         </DiscussionProvider>

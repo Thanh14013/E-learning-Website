@@ -8,11 +8,13 @@ import { Button } from "../../components/common/Button";
 import styles from "./CourseAnalytics.module.css";
 import StudentAnalyticsModal from "./StudentAnalyticsModal";
 import DiscussionModal from "../../components/discussion/DiscussionModal";
+import { useConfirm } from "../../contexts/ConfirmDialogContext";
 
 const CourseAnalytics = () => {
     const { courseId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { confirm } = useConfirm();
 
     const [loading, setLoading] = useState(true);
     const [analytics, setAnalytics] = useState(null);
@@ -51,7 +53,13 @@ const CourseAnalytics = () => {
 
     const handleDeleteDiscussion = async (discussionId, e) => {
         e.stopPropagation();
-        if (!window.confirm("Are you sure you want to delete this discussion?")) return;
+        const isConfirmed = await confirm("Are you sure you want to delete this discussion?", {
+            type: 'danger',
+            title: 'Delete Discussion',
+            confirmText: 'Delete'
+        });
+
+        if (!isConfirmed) return;
 
         try {
             await api.delete(`/discussions/${discussionId}`);
@@ -271,7 +279,7 @@ const CourseAnalytics = () => {
                                     <td>
                                         <button
                                             className={styles.viewDetailBtn}
-                                            onClick={() => setSelectedStudent(student)}
+                                            onClick={() => navigate(`/teacher/courses/${courseId}/students/${student.id}/analytics`)}
                                         >
                                             View Detail
                                         </button>
