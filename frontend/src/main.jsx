@@ -12,6 +12,8 @@ import SocketManager from './components/common/SocketManager.jsx';
 import './index.css';
 import './global.css';
 
+import { ChatProvider } from './contexts/ChatContext';
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>
@@ -20,8 +22,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <ToastProvider>
             <NotificationProvider>
               <ConfirmDialogProvider>
-                <SocketManager />
-                <RouterProvider router={router} />
+                <ChatProvider>
+                  <SocketManager />
+                  <RouterProvider router={router} />
+                </ChatProvider>
               </ConfirmDialogProvider>
             </NotificationProvider>
           </ToastProvider>

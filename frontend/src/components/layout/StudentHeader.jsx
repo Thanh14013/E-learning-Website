@@ -5,6 +5,7 @@ import { useNotifications } from "../../contexts/NotificationContext.jsx";
 import { AnimatePresence, motion } from "framer-motion";
 import styles from "./StudentHeader.module.css";
 import avatarDefault from "../../assets/default-avatar.png";
+import MessengerIcon from "../chat/MessengerIcon";
 
 export default function StudentHeader() {
   const { user, logout } = useAuth();
@@ -75,6 +76,8 @@ export default function StudentHeader() {
 
       {/*Bên phải */}
       <div className={styles.rightSection}>
+        {user && <MessengerIcon />}
+
         {/* Notification Bell */}
         {user && (
           <div className={styles.notificationWrapper} ref={notifRef}>

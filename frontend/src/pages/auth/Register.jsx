@@ -2,6 +2,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import styles from "./Register.module.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export function Register() {
   const { register } = useAuth();
@@ -91,162 +92,168 @@ export function Register() {
   };
 
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Create Your Account</h1>
-      {error && <p className={styles.error}>{error}</p>}
+    <div className={styles.pageWrapper}>
+      <div className={styles.container}>
+        <h1 className={styles.title}>Join Us</h1>
+        <p className={styles.subtitle}>Create your account to start learning</p>
 
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Full Name</label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className={styles.input}
-            placeholder="Nguyen Van A"
-            required
-          />
-          {fieldErrors.fullName && <p className={styles.fieldError}>{fieldErrors.fullName}</p>}
-          {fieldErrors.name && <p className={styles.fieldError}>{fieldErrors.name}</p>}
-        </div>
+        {error && <div className={styles.fieldError} style={{ textAlign: "center", marginBottom: "12px" }}>{error}</div>}
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            className={styles.input}
-            placeholder="example@email.com"
-            required
-          />
-          {fieldErrors.email && <p className={styles.fieldError}>{fieldErrors.email}</p>}
-        </div>
+        <form className={styles.form} onSubmit={handleSubmit}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Full Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={styles.input}
+              placeholder="Nguyen Van A"
+              required
+            />
+            {(fieldErrors.fullName || fieldErrors.name) && (
+              <p className={styles.fieldError}>{fieldErrors.fullName || fieldErrors.name}</p>
+            )}
+          </div>
 
-        {/* Phân Role gv và hs */}
-        <div className={styles.formGroup}>
-          <div className={styles.radioGroup}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Email Address</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={styles.input}
+              placeholder="name@example.com"
+              required
+            />
+            {fieldErrors.email && <p className={styles.fieldError}>{fieldErrors.email}</p>}
+          </div>
+
+          <div className={styles.formGroup}>
             <label className={styles.label}>I am a:</label>
-            <label className={styles.radioLabel}>
+            <div className={styles.radioGroup}>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="role"
+                  value="student"
+                  checked={formData.role === "student"}
+                  onChange={handleChange}
+                  className={styles.radioInput}
+                />
+                Student
+              </label>
+              <label className={styles.radioLabel}>
+                <input
+                  type="radio"
+                  name="role"
+                  value="teacher"
+                  checked={formData.role === "teacher"}
+                  onChange={handleChange}
+                  className={styles.radioInput}
+                />
+                Teacher
+              </label>
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Date Of Birth</label>
+            <div className={styles.dobGroup}>
               <input
-                type="radio"
-                name="role"
-                value="student"
-                checked={formData.role === "student"}
+                type="number"
+                name="day"
+                placeholder="DD"
+                min="1"
+                max="31"
+                value={formData.day}
                 onChange={handleChange}
-                className={styles.radioInput}
+                className={`${styles.input} ${styles.dobInput}`}
+                required
               />
-              <span className={styles.radioText}>Student</span>
-            </label>
-            <label className={styles.radioLabel}>
               <input
-                type="radio"
-                name="role"
-                value="teacher"
-                checked={formData.role === "teacher"}
+                type="number"
+                name="month"
+                placeholder="MM"
+                min="1"
+                max="12"
+                value={formData.month}
                 onChange={handleChange}
-                className={styles.radioInput}
+                className={`${styles.input} ${styles.dobInput}`}
+                required
               />
-              <span className={styles.radioText}>Teacher</span>
-            </label>
+              <input
+                type="number"
+                name="year"
+                placeholder="YYYY"
+                min="1900"
+                max={new Date().getFullYear()}
+                value={formData.year}
+                onChange={handleChange}
+                className={`${styles.input} ${styles.dobInput}`}
+                required
+              />
+            </div>
           </div>
-        </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Date Of Birth</label>
-          <div className={styles.dobGroup}>
-            <input
-              type="number"
-              name="day"
-              placeholder="DD"
-              min="1"
-              max="31"
-              value={formData.day}
-              onChange={handleChange}
-              className={styles.dobInput}
-              required
-            />
-            <input
-              type="number"
-              name="month"
-              placeholder="MM"
-              min="1"
-              max="12"
-              value={formData.month}
-              onChange={handleChange}
-              className={styles.dobInput}
-              required
-            />
-            <input
-              type="number"
-              name="year"
-              placeholder="YYYY"
-              min="1900"
-              max={new Date().getFullYear()}
-              value={formData.year}
-              onChange={handleChange}
-              className={styles.dobInput}
-              required
-            />
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Password</label>
+            <div className={styles.passwordWrapper}>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="Min. 8 characters"
+                required
+              />
+              {fieldErrors.password && <p className={styles.fieldError}>{fieldErrors.password}</p>}
+              <button
+                type="button"
+                className={styles.toggleBtn}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Password</label>
-          <div className={styles.passwordWrapper}>
-            <input
-              type={showPassword ? "text" : "password"}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={styles.input}
-              required
-            />
-            {fieldErrors.password && <p className={styles.fieldError}>{fieldErrors.password}</p>}
-            <button
-              type="button"
-              className={styles.toggleBtn}
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Confirm Password</label>
+            <div className={styles.passwordWrapper}>
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="Repeat password"
+                required
+              />
+              <button
+                type="button"
+                className={styles.toggleBtn}
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Confirm Password</label>
-          <div className={styles.passwordWrapper}>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={styles.input}
-              required
-            />
-            <button
-              type="button"
-              className={styles.toggleBtn}
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? "Hide" : "Show"}
-            </button>
-          </div>
-        </div>
+          <button type="submit" className={styles.button} disabled={loading}>
+            {loading ? "Creating Account..." : "Create Account"}
+          </button>
+        </form>
 
-        <button type="submit" className={styles.button} disabled={loading}>
-          {loading ? "Registering..." : "Sign Up"}
-        </button>
-      </form>
-
-      <p className={styles.switchText}>
-        Already have an account?{" "}
-        <Link to="/login" className={styles.link}>
-          Login now!
-        </Link>
-      </p>
+        <p className={styles.switchText}>
+          Already have an account?
+          <Link to="/login" className={styles.link}>
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -34,19 +34,18 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.formContainer}>
+        <div className={styles.pageWrapper}>
+            <div className={styles.container}>
                 <h1 className={styles.title}>Admin Login</h1>
-                <p className={styles.subtitle}>Sign in with your admin credentials.</p>
+                <p className={styles.subtitle}>Sign in with your admin credentials</p>
 
-                {error && <p className={styles.error}>{error}</p>}
+                {error && <div className={styles.error}>{error}</div>}
 
                 <form onSubmit={handleLogin} className={styles.form}>
                     <div className={styles.formGroup}>
-                        <label className={styles.label}>Email</label>
+                        <label className={styles.label}>Email Address</label>
                         <input
                             type="email"
-                            name="email"
                             className={styles.input}
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -58,7 +57,6 @@ const AdminLogin = () => {
                         <label className={styles.label}>Password</label>
                         <input
                             type="password"
-                            name="password"
                             className={styles.input}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -66,13 +64,16 @@ const AdminLogin = () => {
                         />
                     </div>
 
-                    <button type="submit" className={styles.button} disabled={loading}>
+                    <button type="submit" className={styles.loginBtn} disabled={loading}>
                         {loading ? "Logging in..." : "Login"}
                     </button>
                 </form>
 
-                <p className={styles.helper} style={{ marginTop: "12px" }}>
-                    Need the student/teacher login? <Link to="/login">Go to user login</Link>
+                <p className={styles.registerText}>
+                    Need the student/teacher login?
+                    <Link to="/login" className={styles.registerLink}>
+                        Go back
+                    </Link>
                 </p>
             </div>
         </div>

@@ -26,6 +26,7 @@ import progressRoutes from "./src/routes/progress.routes.js";
 import quizRoutes from "./src/routes/quiz.routes.js";
 import questionRoutes from "./src/routes/question.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
+import chatRoutes from "./src/routes/chat.routes.js";
 import reportRoutes from "./src/routes/report.routes.js";
 import { generalLimiter } from "./src/middleware/rateLimiter.js";
 import { setupAnalyticsCronJobs } from "./src/services/cron.service.js";
@@ -140,6 +141,13 @@ app.use("/api/lessons", lessonRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/questions", questionRoutes);
+import uploadRoutes from "./src/routes/upload.routes.js";
+
+// ... existing code ...
+
+app.use("/api/questions", questionRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/upload", uploadRoutes); // Register upload route
 // 404 handler - Catch requests to undefined routes
 app.use(notFoundHandler);
 

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import styles from "./login.module.css";
+import { FcGoogle } from "react-icons/fc";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -143,65 +144,70 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    if (window.google && window.google.accounts && window.google.accounts.id) {
+      window.google.accounts.id.prompt();
+    } else {
+      setError("Google SSO is not ready. Please try again.");
+    }
+  };
+
   return (
-    <div className={styles.container}>
-      <h1 className={styles.title}>Login Page</h1>
+    <div className={styles.pageWrapper}>
+      <div className={styles.container}>
+        <h1 className={styles.title}>Welcome Back</h1>
+        <p className={styles.subtitle}>Sign in to continue your learning journey</p>
 
-      {error && <p className={styles.error}>{error}</p>}
+        {error && <div className={styles.error}>{error}</div>}
 
-      <form onSubmit={handleLogin}>
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Email:</label>
-          <input
-            type="email"
-            name="email"
-            className={styles.input}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+        <form onSubmit={handleLogin} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Email Address</label>
+            <input
+              type="email"
+              placeholder="name@example.com"
+              className={styles.input}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              className={styles.input}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+
+
+          <button type="submit" className={styles.loginBtn} disabled={loading}>
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+
+        <div className={styles.divider}>or</div>
+
+        <div className={styles.googleContainer}>
+          <button onClick={handleGoogleLogin} className={styles.googleBtn}>
+            <FcGoogle className={styles.googleIcon} />
+            Continue with Google
+          </button>
         </div>
 
-        <div className={styles.formGroup}>
-          <label className={styles.label}>Password:</label>
-          <input
-            type="password"
-            name="password"
-            className={styles.input}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button type="submit" className={styles.button} disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <div className={styles.divider}>
-        <span></span>
-        <p>Or continue with</p>
-        <span></span>
+        <p className={styles.registerText}>
+          Don't have an account?
+          <Link to="/register" className={styles.registerLink}>
+            Sign up now
+          </Link>
+        </p>
       </div>
-
-      <div className={styles.googleContainer}>
-        {googleClientId ? (
-          <div ref={googleButtonRef} className={styles.googleButton} />
-        ) : (
-          <p className={styles.helper}>
-            Google login is not configured. Please set VITE_GOOGLE_CLIENT_ID.
-          </p>
-        )}
-      </div>
-
-      <p className={styles.switchText}>
-        Don't have an account?{" "}
-        { }
-        <Link to="/register" className={styles.link}>
-          Register now!
-        </Link>
-      </p>
     </div>
   );
 };

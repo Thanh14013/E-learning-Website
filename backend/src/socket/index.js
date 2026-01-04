@@ -10,6 +10,7 @@ import {
   emitDiscussionLiked,
   emitCommentLiked,
 } from './discussion.handler.js';
+import { initializeChatNamespace } from './chat.handler.js';
 import { initializeSessionNamespace } from './session.handler.js';
 import {
   initializeNotificationNamespace,
@@ -35,6 +36,7 @@ export const initializeAllNamespaces = (io) => {
   const sessionNamespace = initializeSessionNamespace(io);
   const notificationNamespace = initializeNotificationNamespace(io);
   const progressNamespace = initializeProgressNamespace(io);
+  const chatNamespace = initializeChatNamespace(io);
 
   console.log('✅ All Socket.IO namespaces initialized successfully');
 
