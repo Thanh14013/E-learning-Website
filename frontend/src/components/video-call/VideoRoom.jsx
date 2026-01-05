@@ -14,12 +14,12 @@ import styles from './VideoRoom.module.css';
 const VideoRoom = () => {
     const { sessionId } = useParams();
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, token } = useAuth();
 
     // State
     const [session, setSession] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [participants, setParticipants] = useState(new Map());
+    const [participants, setParticipants] = useState(new Map()); // Map<userId, { stream, userName }>
     const [isAudioEnabled, setIsAudioEnabled] = useState(true);
     const [isVideoEnabled, setIsVideoEnabled] = useState(true);
     const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -34,19 +34,40 @@ const VideoRoom = () => {
     useEffect(() => {
         const fetchSession = async () => {
             try {
+                // Join session (updates DB for attendance/access control)
+                // We do this before fetching details to ensure we are listed as participant
+                try {
+                    await api.post(`/sessions/${sessionId}/join`);
+                } catch (joinErr) {
+                    console.warn('[VideoRoom] Join API warning:', joinErr);
+                    // Continue even if join fails (e.g. already joined), 
+                    // unless it's 403 (handled by auth check mostly)
+                }
+
                 const response = await api.get(`/sessions/${sessionId}`);
                 setSession(response.data.data);
+
+                // Initialize chat with session history if available (not implemented in backend yet but good practice)
+                // setChatMessages(response.data.data.chatHistory || []);
             } catch (error) {
                 console.error('[VideoRoom] Error fetching session:', error);
                 toastService.error('Failed to load session');
                 navigate('/dashboard');
             } finally {
                 setIsLoading(false);
+                // Pre-populate known participant names
             }
         };
 
         fetchSession();
     }, [sessionId, navigate]);
+
+    // Name lookup helper
+    const getParticipantName = (uid) => {
+        if (!session) return 'Participant';
+        const p = session.participants?.find(p => p.userId._id === uid || p.userId === uid);
+        return p?.userId?.fullName || p?.name || 'Participant';
+    };
 
     // Initialize WebRTC
     useEffect(() => {
@@ -63,11 +84,18 @@ const VideoRoom = () => {
                 }
 
                 // Join session
-                await webrtcService.joinSession(sessionId, user.fullName);
+                await webrtcService.joinSession(sessionId, user.fullName, token);
 
-                // Listen for remote streams
+                // Listen for remote streams & events
                 window.addEventListener('webrtc:stream', handleRemoteStream);
                 window.addEventListener('webrtc:peer-removed', handlePeerRemoved);
+                window.addEventListener('session:chat-message', handleChatMessage);
+                window.addEventListener('session:participant-video-toggled', handleRemoteVideoToggle);
+                window.addEventListener('session:participant-audio-toggled', handleRemoteAudioToggle);
+                window.addEventListener('session:participant-screen-sharing', handleRemoteScreenShare);
+                window.addEventListener('session:error', handleSessionError);
+                window.addEventListener('session:ended', handleSessionEnded);
+                window.addEventListener('session:reconnected', handleReconnected);
             } catch (error) {
                 console.error('[VideoRoom] WebRTC initialization error:', error);
                 toastService.error(error.message || 'Failed to initialize video call');
@@ -80,9 +108,24 @@ const VideoRoom = () => {
         return () => {
             window.removeEventListener('webrtc:stream', handleRemoteStream);
             window.removeEventListener('webrtc:peer-removed', handlePeerRemoved);
+            window.removeEventListener('session:chat-message', handleChatMessage);
+            window.removeEventListener('session:participant-video-toggled', handleRemoteVideoToggle);
+            window.removeEventListener('session:participant-audio-toggled', handleRemoteAudioToggle);
+            window.removeEventListener('session:participant-screen-sharing', handleRemoteScreenShare);
+            window.removeEventListener('session:error', handleSessionError);
+            window.removeEventListener('session:ended', handleSessionEnded);
+            window.removeEventListener('session:reconnected', handleReconnected);
             webrtcService.leaveSession();
         };
     }, [session, sessionId, user]);
+
+    /**
+     * Handle incoming chat message
+     */
+    const handleChatMessage = (event) => {
+        const message = event.detail;
+        setChatMessages(prev => [...prev, message]);
+    };
 
     /**
      * Handle remote stream added
@@ -91,9 +134,13 @@ const VideoRoom = () => {
         const { userId, stream } = event.detail;
         console.log(`[VideoRoom] Adding remote stream for user ${userId}`);
 
+        const userName = getParticipantName(userId);
+
         setParticipants((prev) => {
             const updated = new Map(prev);
-            updated.set(userId, { userId, stream });
+
+            // Default assumes video/audio encoded in stream, but we default flags to true
+            updated.set(userId, { userId, stream, userName, isVideoOn: true, isAudioOn: true });
             return updated;
         });
     };
@@ -110,6 +157,54 @@ const VideoRoom = () => {
             updated.delete(userId);
             return updated;
         });
+    };
+
+    const handleRemoteVideoToggle = (event) => {
+        const { userId, enabled } = event.detail;
+        setParticipants(prev => {
+            const p = prev.get(userId);
+            if (p) {
+                const updated = new Map(prev);
+                updated.set(userId, { ...p, isVideoOn: enabled });
+                return updated;
+            }
+            return prev;
+        });
+    };
+
+    const handleRemoteAudioToggle = (event) => {
+        const { userId, enabled } = event.detail;
+        setParticipants(prev => {
+            const p = prev.get(userId);
+            if (p) {
+                const updated = new Map(prev);
+                updated.set(userId, { ...p, isAudioOn: enabled });
+                return updated;
+            }
+            return prev;
+        });
+    };
+
+    const handleRemoteScreenShare = (event) => {
+        // Not implementing remote screen share UI indicators yet, 
+        // as the video stream replacement handles the content.
+        // But we could show a badge if desired.
+    };
+
+    const handleSessionError = (event) => {
+        toastService.error(event.detail.message);
+    };
+
+    const handleSessionEnded = (event) => {
+        toastService.info('Session has been ended by the host');
+        setTimeout(() => {
+            webrtcService.leaveSession();
+            navigate('/dashboard');
+        }, 2000);
+    };
+
+    const handleReconnected = (event) => {
+        toastService.success('Reconnected to session');
     };
 
     /**
@@ -166,15 +261,16 @@ const VideoRoom = () => {
         e.preventDefault();
         if (!chatInput.trim()) return;
 
-        // TODO: Implement chat via Socket.IO
-        const message = {
-            userId: user._id,
-            userName: user.fullName,
-            text: chatInput,
-            timestamp: new Date().toISOString(),
-        };
+        webrtcService.sendChatMessage(chatInput, user);
 
-        setChatMessages((prev) => [...prev, message]);
+        // Optimistic UI update (optional, but handled by event listener usually)
+        // setChatMessages((prev) => [...prev, {
+        //     userId: user._id,
+        //     userName: user.fullName,
+        //     text: chatInput,
+        //     timestamp: new Date().toISOString(),
+        // }]);
+
         setChatInput('');
     };
 
@@ -284,7 +380,7 @@ const VideoRoom = () => {
                         ) : (
                             chatMessages.map((msg, index) => (
                                 <div key={index} className={styles.chatMessage}>
-                                    <strong>{msg.userName}:</strong> {msg.text}
+                                    <strong>{msg.userName}:</strong> {msg.message}
                                 </div>
                             ))
                         )}
@@ -325,7 +421,9 @@ const RemoteVideo = ({ participant }) => {
         <div className={styles.videoContainer}>
             <video ref={videoRef} autoPlay playsInline className={styles.video} />
             <div className={styles.videoLabel}>
-                <span>Participant {participant.userId.slice(0, 8)}</span>
+                <span>{participant.userName || `Participant ${participant.userId.slice(0, 4)}`}</span>
+                {!participant.isVideoOn && <span className={styles.badge}>📷 Off</span>}
+                {!participant.isAudioOn && <span className={styles.badge}>🎤 Off</span>}
             </div>
         </div>
     );

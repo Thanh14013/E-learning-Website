@@ -98,6 +98,28 @@ const liveSessionSchema = new mongoose.Schema(
       type: Number, // in minutes
       default: 0,
     },
+    messages: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        userName: {
+          type: String,
+          required: true,
+        },
+        message: {
+          type: String,
+          required: true,
+          maxlength: 1000,
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -157,6 +179,23 @@ liveSessionSchema.methods.updateParticipantState = function (userId, state) {
 
   if (participant) {
     Object.assign(participant, state);
+  }
+
+  return this.save();
+};
+
+// Method to add chat message
+liveSessionSchema.methods.addMessage = function (userId, userName, message) {
+  this.messages.push({
+    userId,
+    userName,
+    message,
+    timestamp: new Date(),
+  });
+
+  // Keep only last 500 messages to avoid document size issues
+  if (this.messages.length > 500) {
+    this.messages = this.messages.slice(-500);
   }
 
   return this.save();

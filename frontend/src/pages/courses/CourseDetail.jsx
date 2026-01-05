@@ -9,6 +9,8 @@ import styles from './courseDetail.module.css';
 import CourseContentAccordion from '../../components/course/CourseContentAccordion.jsx';
 import DiscussionModal from '../../components/discussion/DiscussionModal.jsx';
 import DiscussionForm from '../../components/course/DiscussionForm.jsx';
+import SessionForm from '../../components/course/SessionForm.jsx';
+import { useNavigate } from 'react-router-dom';
 
 
 // --- Các Icon SVG ---
@@ -241,76 +243,153 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
 };
 
 // --- Live Sessions Component ---
-const LiveSessionsSection = ({ courseId }) => {
+
+const LiveSessionsSection = ({ courseId, isHost }) => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showScheduler, setShowScheduler] = useState(false);
+  const [editingSession, setEditingSession] = useState(null);
+  const navigate = useNavigate();
+
+  const fetchSessions = async () => {
+    try {
+      setLoading(true);
+      // Fetch upcoming and live sessions
+      const response = await api.get(`/sessions/course/${courseId}?status=scheduled&limit=10`);
+      if (response.data.success) {
+        setSessions(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        const response = await api.get(`/sessions/course/${courseId}?status=scheduled&limit=10`);
-        if (response.data.success) {
-          setSessions(response.data.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch sessions:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (courseId) {
       fetchSessions();
     }
   }, [courseId]);
 
-  if (loading) {
-    return (
-      <div className={styles.sectionBox}>
-        <h3>📅 Upcoming Live Sessions</h3>
-        <p style={{ color: 'var(--text-secondary)' }}>Loading sessions...</p>
-      </div>
-    );
-  }
+  const handleJoinSession = (sessionId) => {
+    navigate(`/session/${sessionId}`);
+  };
 
-  if (sessions.length === 0) {
-    return null; // Don't show section if no sessions
-  }
+  const handleStartSession = async (sessionId) => {
+    // First ensure session is started in backend if needed, or just join as host
+    // Ideally we call start endpoint
+    try {
+      await api.put(`/teacher/sessions/${sessionId}/start`);
+      navigate(`/session/${sessionId}`);
+    } catch (err) {
+      console.error("Failed to start session", err);
+      toast.error("Could not start session");
+    }
+  };
 
   return (
     <div className={styles.sectionBox}>
-      <h3>📅 Upcoming Live Sessions</h3>
-      <div className={styles.sessionsGrid}>
-        {sessions.map(session => (
-          <div key={session._id} className={styles.sessionCard}>
-            <div className={styles.sessionIcon}>🎥</div>
-            <div className={styles.sessionInfo}>
-              <div className={styles.sessionTitle}>{session.title}</div>
-              <div className={styles.sessionTime}>
-                📆 {new Date(session.scheduledAt).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-                {' '}at{' '}
-                {new Date(session.scheduledAt).toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </div>
-              {session.description && (
-                <div className={styles.sessionDescription}>{session.description}</div>
-              )}
-              <div className={styles.sessionHost}>
-                Host: {session.hostId?.fullName || 'Instructor'}
-              </div>
-            </div>
-            <div className={styles.sessionBadge}>
-              {session.status === 'live' ? '🔴 Live' : '⏰ Scheduled'}
-            </div>
-          </div>
-        ))}
+      <div className={styles.sectionHeader}>
+        <h3>📅 Live Sessions</h3>
+        {isHost && (
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowScheduler(true)}
+            style={{ fontSize: '0.9rem', padding: '0.4rem 0.8rem' }}
+          >
+            + Schedule Session
+          </button>
+        )}
       </div>
+
+      {loading && <p>Loading sessions...</p>}
+
+      {!loading && sessions.length === 0 && (
+        <p className={styles.noContent}>No upcoming live sessions scheduled.</p>
+      )}
+
+      {!loading && sessions.length > 0 && (
+        <div className={styles.sessionsGrid}>
+          {sessions.map(session => (
+            <div key={session._id} className={styles.sessionCard}>
+              <div className={styles.sessionIcon}>🎥</div>
+              <div className={styles.sessionInfo}>
+                <div className={styles.sessionTitle}>{session.title}</div>
+                <div className={styles.sessionTime}>
+                  📆 {new Date(session.scheduledAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                  {' '}at{' '}
+                  {new Date(session.scheduledAt).toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
+                {session.description && (
+                  <div className={styles.sessionDescription}>{session.description}</div>
+                )}
+                <div className={styles.sessionHost}>
+                  Host: {session.hostId?.fullName || 'Instructor'}
+                </div>
+              </div>
+              <div className={styles.sessionActions}>
+                <div className={styles.sessionBadge}>
+                  {session.status === 'live' ? '🔴 Live' : '⏰ Scheduled'}
+                </div>
+
+                {session.status === 'live' && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => handleJoinSession(session._id)}
+                  >
+                    Join Now
+                  </button>
+                )}
+
+                {session.status === 'scheduled' && isHost && (
+                  <>
+                    <button
+                      className="btn btn-outline"
+                      onClick={() => handleStartSession(session._id)}
+                    >
+                      Start
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      style={{ marginLeft: '0.5rem', fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}
+                      onClick={() => {
+                        setEditingSession(session);
+                        setShowScheduler(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showScheduler && (
+        <SessionForm
+          courseId={courseId}
+          session={editingSession}
+          onSuccess={() => {
+            setShowScheduler(false);
+            setEditingSession(null);
+            fetchSessions();
+          }}
+          onCancel={() => {
+            setShowScheduler(false);
+            setEditingSession(null);
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -519,9 +598,12 @@ const CourseDetailPage = () => {
             </div>
           )}
 
-          {/* Live Sessions - Only for enrolled students */}
-          {isEnrolled && (
-            <LiveSessionsSection courseId={courseId} />
+          {/* Live Sessions - Only for enrolled students OR Host */}
+          {(isEnrolled || (user && course && (user._id === course.teacherId || user._id === course.teacherId?._id))) && (
+            <LiveSessionsSection
+              courseId={courseId}
+              isHost={user && course && (user._id === course.teacherId || user._id === course.teacherId?._id)}
+            />
           )}
 
           {/* Course Content */}
