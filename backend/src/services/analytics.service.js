@@ -28,12 +28,8 @@ export const calculateCourseAnalytics = async (courseId, date) => {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     // Use QuizAttempt instead of Progress
-    const activeStudentsList = await QuizAttempt.distinct("userId", {
-        // We need to find quizzes belonging to this course first
-        // But QuizAttempt has quizId, not courseId directly. 
-        // We can filter by quizId where quiz belongs to course.
-        // Optimization: Find all quizIds for this course first.
-    });
+    // Use QuizAttempt to calculate active students
+
     
     // Allow me to query efficiently. 
     // Optimization: QuizAttempt doesn't have courseId. Quiz has courseId.
@@ -521,15 +517,12 @@ export const getTeacherDashboard = async (teacherId) => {
           courseId: course._id,
         }).sort({ date: -1 });
 
-        // If no analytics found, calculate on the fly so dashboard isn't empty
+        // If no analytics found, use lightweight fallback instead of heavy calculation
         if (!analyticsData) {
-            try {
-                // Calculate for "now"
-                analyticsData = await calculateCourseAnalytics(course._id, new Date());
-            } catch (err) {
-                console.error(`Failed to calculate analytics for course ${course._id}`, err);
-                analyticsData = null;
-            }
+            analyticsData = {
+                completionRate: 0,
+                activeStudents: 0
+            };
         }
 
         return {

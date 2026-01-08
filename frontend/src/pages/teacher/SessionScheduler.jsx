@@ -124,6 +124,15 @@ export default function SessionScheduler() {
         });
     };
 
+    const [activeTab, setActiveTab] = useState('upcoming');
+
+    // ... existing fetchData ...
+
+    // Helper to get sessions for the currrent view
+    const getCurrentSessions = () => {
+        return filterSessionsByStatus(activeTab);
+    };
+
     if (loading) {
         return <div className={styles.loading}>Loading...</div>;
     }
@@ -137,14 +146,30 @@ export default function SessionScheduler() {
 
             {/* Tabs */}
             <div className={styles.tabs}>
-                <Tab label="Upcoming" sessions={filterSessionsByStatus('upcoming')} />
-                <Tab label="Live" sessions={filterSessionsByStatus('live')} status="live" />
-                <Tab label="Past" sessions={filterSessionsByStatus('past')} />
+                <Tab
+                    label="Upcoming"
+                    count={filterSessionsByStatus('upcoming').length}
+                    isActive={activeTab === 'upcoming'}
+                    onClick={() => setActiveTab('upcoming')}
+                />
+                <Tab
+                    label="Live"
+                    count={filterSessionsByStatus('live').length}
+                    isActive={activeTab === 'live'}
+                    onClick={() => setActiveTab('live')}
+                    variant="danger"
+                />
+                <Tab
+                    label="Past"
+                    count={filterSessionsByStatus('past').length}
+                    isActive={activeTab === 'past'}
+                    onClick={() => setActiveTab('past')}
+                />
             </div>
 
             {/* Sessions Grid */}
             <SessionsView
-                sessions={sessions}
+                sessions={getCurrentSessions()}
                 onEdit={handleEditSession}
                 onDelete={handleDeleteSession}
                 onStart={handleStartSession}
@@ -167,11 +192,14 @@ export default function SessionScheduler() {
     );
 }
 
-function Tab({ label, sessions, status }) {
+function Tab({ label, count, isActive, onClick, variant = 'primary' }) {
     return (
-        <div className={`${styles.tab} ${status === 'live' ? styles.tabLive : ''}`}>
+        <div
+            className={`${styles.tab} ${isActive ? styles.tabActive : ''} ${isActive && variant === 'danger' ? styles.tabActiveDanger : ''}`}
+            onClick={onClick}
+        >
             <span>{label}</span>
-            <span className={styles.tabCount}>{sessions.length}</span>
+            <span className={styles.tabCount}>{count}</span>
         </div>
     );
 }
@@ -240,7 +268,7 @@ function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd }) {
 
                             {isLive && (
                                 <>
-                                    <Button size="small" onClick={() => window.open(`/sessions/${session._id}`, '_blank')}>
+                                    <Button size="small" onClick={() => window.open(`/teacher/sessions/${session._id}`, '_blank')}>
                                         Join room
                                     </Button>
                                     <Button size="small" variant="danger" onClick={() => onEnd(session._id)}>
@@ -308,9 +336,12 @@ function SessionModal({ session, courses, onSave, onClose }) {
     };
 
     return (
-        <Modal isOpen onClose={onClose}>
+        <Modal
+            isOpen
+            onClose={onClose}
+            title={session ? 'Edit Session' : 'Create New Session'}
+        >
             <div className={styles.sessionModal}>
-                <h3>{session ? 'Edit Session' : 'Create New Session'}</h3>
 
                 <div className={styles.formGroup}>
                     <label>Course *</label>

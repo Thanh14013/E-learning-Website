@@ -120,6 +120,33 @@ const liveSessionSchema = new mongoose.Schema(
         },
       },
     ],
+    waitingRoom: [
+      {
+        userId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        socketId: {
+          type: String,
+        },
+        joinedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        userName: String,
+        avatar: String,
+      },
+    ],
+    settings: {
+      waitingRoomEnabled: {
+        type: Boolean,
+        default: true,
+      },
+      isMutedOnEntry: {
+        type: Boolean,
+        default: false,
+      },
+    },
   },
   {
     timestamps: true,
@@ -198,6 +225,36 @@ liveSessionSchema.methods.addMessage = function (userId, userName, message) {
     this.messages = this.messages.slice(-500);
   }
 
+  return this.save();
+};
+
+// Method to add to waiting room
+liveSessionSchema.methods.addToWaitingRoom = function (userId, socketId, userName, avatar) {
+  const existing = this.waitingRoom.find(
+    (p) => p.userId.toString() === userId.toString()
+  );
+
+  if (existing) {
+    existing.socketId = socketId;
+    existing.joinedAt = new Date();
+  } else {
+    this.waitingRoom.push({
+      userId,
+      socketId,
+      userName,
+      avatar,
+      joinedAt: new Date(),
+    });
+  }
+
+  return this.save();
+};
+
+// Method to remove from waiting room
+liveSessionSchema.methods.removeFromWaitingRoom = function (userId) {
+  this.waitingRoom = this.waitingRoom.filter(
+    (p) => p.userId.toString() !== userId.toString()
+  );
   return this.save();
 };
 

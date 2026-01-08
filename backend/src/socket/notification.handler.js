@@ -4,6 +4,8 @@
  * Namespace: /notification
  */
 
+import User from '../models/user.model.js';
+
 /**
  * Initialize Notification Namespace
  * @param {Object} io - Socket.IO server instance
@@ -15,7 +17,7 @@ export const initializeNotificationNamespace = (io) => {
   console.log('🔔 Notification namespace initialized');
 
   // Namespace connection handler
-  notificationNamespace.on('connection', (socket) => {
+  notificationNamespace.on('connection', async (socket) => {
     console.log(`🔔 User ${socket.user.id} connected to notification namespace`);
 
     /**
@@ -25,6 +27,20 @@ export const initializeNotificationNamespace = (io) => {
     const userRoom = `user:${socket.user.id}`;
     socket.join(userRoom);
     console.log(`🔔 User ${socket.user.id} joined notification room: ${userRoom}`);
+
+    // Automatically join enrolled courses rooms
+    try {
+      const user = await User.findById(socket.user.id).select('enrolledCourses');
+      if (user && user.enrolledCourses && user.enrolledCourses.length > 0) {
+        user.enrolledCourses.forEach((courseId) => {
+          const courseRoom = `course:${courseId}`;
+          socket.join(courseRoom);
+          console.log(`🔔 User ${socket.user.id} auto-joined notification room: ${courseRoom}`);
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-joining course rooms:', error);
+    }
 
     // Notify user of successful connection
     socket.emit('notification:connected', {

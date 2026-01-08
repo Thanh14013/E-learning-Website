@@ -228,6 +228,44 @@ class WebRTCService {
       console.log("[WebRTC] Session ended by host");
       window.dispatchEvent(new CustomEvent("session:ended", { detail: data }));
     });
+
+    // --- Waiting Room & Host Events ---
+    
+    // User is in waiting room
+    socket.on("session:waiting", (data) => {
+      console.log("[WebRTC] in Waiting Room");
+      window.dispatchEvent(new CustomEvent("session:waiting", { detail: data }));
+    });
+
+    // User is approved
+    socket.on("session:approved", (data) => {
+      console.log("[WebRTC] Join Request Approved");
+      window.dispatchEvent(new CustomEvent("session:approved", { detail: data }));
+      // The socket might need to re-emit join or backend logic moves them to room? 
+      // Backend: "Make them leave waiting room channel". 
+      // User client: Should treat this as signal to proceed? 
+      // Actually backend "session:approve-request" handler just notifies user. 
+      // It DOES NOT automatically join them to the session participants list in the DB logic shown? 
+      // Let's re-read backend. 
+    });
+
+    // User is denied
+    socket.on("session:denied", (data) => {
+      console.log("[WebRTC] Join Request Denied");
+      window.dispatchEvent(new CustomEvent("session:denied", { detail: data }));
+    });
+
+    // User is kicked
+    socket.on("session:kicked", (data) => {
+      console.log("[WebRTC] Kicked from session");
+      window.dispatchEvent(new CustomEvent("session:kicked", { detail: data }));
+    });
+
+    // Host: New Join Request
+    socket.on("session:join-request", (data) => {
+      console.log("[WebRTC] New Join Request:", data);
+      window.dispatchEvent(new CustomEvent("session:join-request", { detail: data }));
+    });
   }
 
   /**
@@ -547,6 +585,32 @@ class WebRTCService {
       sessionId: this.sessionId,
       message: text,
       // userId inferred from auth on backend
+    });
+  }
+
+  // --- Host Actions ---
+
+  approveJoinRequest(userId) {
+    if (!this.socket || !this.sessionId) return;
+    this.socket.emit("session:approve-request", {
+        sessionId: this.sessionId,
+        userId
+    });
+  }
+
+  denyJoinRequest(userId) {
+    if (!this.socket || !this.sessionId) return;
+    this.socket.emit("session:deny-request", {
+        sessionId: this.sessionId,
+        userId
+    });
+  }
+
+  kickParticipant(userId) {
+    if (!this.socket || !this.sessionId) return;
+    this.socket.emit("session:kick-participant", {
+        sessionId: this.sessionId,
+        userId
     });
   }
 }

@@ -215,9 +215,14 @@ export default function StudentHeader() {
                     👤 Profile
                   </NavLink>
                   {user?.role === 'teacher' && (
-                    <NavLink to="/teacher/courses" onClick={() => setMenuOpen(false)}>
-                      📚 My Courses
-                    </NavLink>
+                    <>
+                      <NavLink to="/teacher/courses" onClick={() => setMenuOpen(false)}>
+                        📚 My Courses
+                      </NavLink>
+                      <NavLink to="/teacher/sessions" onClick={() => setMenuOpen(false)}>
+                        🎥 Online Sessions
+                      </NavLink>
+                    </>
                   )}
                   {user?.role !== 'teacher' && (
                     <NavLink to="/courses" onClick={() => setMenuOpen(false)}>

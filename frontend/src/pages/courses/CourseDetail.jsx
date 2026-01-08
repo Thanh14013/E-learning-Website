@@ -134,6 +134,7 @@ const CourseRating = ({ courseId, isEnrolled, currentRating, totalReviews, userR
 // --- COMPONENT CON CHO SIDEBAR ---
 const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [upcomingSessions, setUpcomingSessions] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
 
@@ -142,13 +143,27 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
       if (!isEnrolled || !course?._id) return;
       setLoadingSessions(true);
       try {
-        const res = await api.get(`/sessions/course/${course._id}?status=scheduled&limit=20`);
-        if (res.data?.success) {
-          const data = res.data.data || [];
-          // Sort by date ascending
-          data.sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
-          setUpcomingSessions(data.slice(0, 6));
+        const [resScheduled, resLive] = await Promise.all([
+          api.get(`/sessions/course/${course._id}?status=scheduled&limit=20`),
+          api.get(`/sessions/course/${course._id}?status=live&limit=5`)
+        ]);
+
+        let allSessions = [];
+        if (resLive.data?.success) {
+          allSessions = [...allSessions, ...resLive.data.data];
         }
+        if (resScheduled.data?.success) {
+          allSessions = [...allSessions, ...resScheduled.data.data];
+        }
+
+        // Sort: Live first, then by date asc
+        allSessions.sort((a, b) => {
+          if (a.status === 'live' && b.status !== 'live') return -1;
+          if (a.status !== 'live' && b.status === 'live') return 1;
+          return new Date(a.scheduledAt) - new Date(b.scheduledAt);
+        });
+
+        setUpcomingSessions(allSessions.slice(0, 6));
       } catch (err) {
         console.error('Failed to load live sessions', err);
       } finally {
@@ -189,38 +204,9 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
           <li>📂 {course.category || 'General'}</li>
         </ul>
 
-        {isEnrolled && (
-          <div className={styles.liveSchedule}>
-            <div className={styles.liveScheduleHeader}>
-              <span>📅 Lịch học trực tuyến</span>
-              {loadingSessions && <span className={styles.liveScheduleHint}>Loading...</span>}
-            </div>
-            {(!loadingSessions && upcomingSessions.length === 0) && (
-              <p className={styles.liveScheduleEmpty}>No upcoming live sessions.</p>
-            )}
-            <div className={styles.liveScheduleList}>
-              {upcomingSessions.map((session) => (
-                <div key={session._id} className={styles.liveScheduleItem}>
-                  <div className={styles.liveScheduleDate}>
-                    {new Date(session.scheduledAt).toLocaleDateString('en-US', {
-                      day: '2-digit', month: 'short'
-                    })}
-                  </div>
-                  <div className={styles.liveScheduleInfo}>
-                    <div className={styles.liveScheduleTitle}>{session.title}</div>
-                    <div className={styles.liveScheduleMeta}>
-                      ⏰ {new Date(session.scheduledAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Teacher Info in Sidebar */}
         {course.teacherId && (
-          <div className={styles.teacherSection}>
+          <div className={styles.teacherSection} style={{ marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>
             <h4 className={styles.includesTitle}>Instructor</h4>
             <div className={styles.teacherCard}>
               <div className={styles.teacherAvatar}>
@@ -234,6 +220,57 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
                 <h5>{course.teacherId.fullName}</h5>
                 <p className={styles.teacherRole}>{course.teacherId.role}</p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Live Schedule Moved to Bottom */}
+        {isEnrolled && (
+          <div className={styles.liveSchedule} style={{ marginTop: '1rem' }}>
+            <div className={styles.liveScheduleHeader}>
+              <span>📅 Online Schedule</span>
+              {loadingSessions && <span className={styles.liveScheduleHint}>Loading...</span>}
+            </div>
+            {(!loadingSessions && upcomingSessions.length === 0) && (
+              <p className={styles.liveScheduleEmpty}>No upcoming live sessions.</p>
+            )}
+            <div className={styles.liveScheduleList}>
+              {upcomingSessions.map((session) => (
+                <div
+                  key={session._id}
+                  className={`${styles.liveScheduleItem} ${session.status === 'live' ? styles.liveItem : ''}`}
+                  style={session.status === 'live' ? { borderColor: '#e53e3e', backgroundColor: '#fff5f5' } : {}}
+                  onClick={() => {
+                    if (session.status === 'live') navigate(`/session/${session._id}`);
+                  }}
+                >
+                  <div className={styles.liveScheduleDate}>
+                    {session.status === 'live' ? (
+                      <span style={{ color: '#e53e3e', fontWeight: 'bold' }}>LIVE</span>
+                    ) : (
+                      new Date(session.scheduledAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
+                    )}
+                  </div>
+                  <div className={styles.liveScheduleInfo}>
+                    <div className={styles.liveScheduleTitle} style={session.status === 'live' ? { color: '#e53e3e' } : {}}>{session.title}</div>
+                    <div className={styles.liveScheduleMeta}>
+                      ⏰ {new Date(session.scheduledAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                  {session.status === 'live' && (
+                    <button
+                      className="btn btn-sm btn-danger"
+                      style={{ padding: '2px 8px', fontSize: '0.7rem', marginLeft: 'auto' }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/session/${session._id}`);
+                      }}
+                    >
+                      JOiN
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

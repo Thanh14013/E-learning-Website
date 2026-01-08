@@ -63,6 +63,39 @@ export const initializeSessionNamespace = (io) => {
           return;
         }
 
+        // Check if host
+        const isHost = session.hostId.toString() === socket.user.id;
+
+        // Check if already participant (active)
+        const isParticipant = session.participants.some(
+          (p) => p.userId.toString() === socket.user.id && !p.leftAt
+        );
+
+        // Waiting Room Logic
+        if (!isHost && !isParticipant && session.settings?.waitingRoomEnabled) {
+          await session.addToWaitingRoom(
+            socket.user.id,
+            socket.id,
+            userName,
+            socket.user.avatar
+          );
+          socket.join(`waiting:${sessionId}`);
+          socket.emit("session:waiting", {
+            message: "Waiting for host to accept...",
+          });
+
+          // Notify Host
+          socket.to(`session:${sessionId}`).emit("session:join-request", {
+            userId: socket.user.id,
+            userName: userName || socket.user.email,
+            socketId: socket.id,
+            avatar: socket.user.avatar,
+            timestamp: new Date(),
+          });
+          console.log(`⏳ User ${socket.user.id} added to waiting room`);
+          return;
+        }
+
         // Add participant to DB
         await session.addParticipant(socket.user.id, socket.id);
         console.log(`✅ User ${socket.user.id} added to DB participants`);
@@ -165,6 +198,162 @@ export const initializeSessionNamespace = (io) => {
       } catch (error) {
         console.error("Error leaving session:", error.message);
         socket.emit("session:error", { message: "Failed to leave session" });
+      }
+    });
+
+    /**
+     * Approve Join Request (Host Only)
+     * Event: session:approve-request
+     * Payload: { sessionId: string, userId: string }
+     */
+    socket.on("session:approve-request", async (data) => {
+      try {
+        const { sessionId, userId } = data;
+        const session = await LiveSession.findById(sessionId);
+        if (!session) return;
+
+        // Verify Host
+        if (session.hostId.toString() !== socket.user.id) {
+          socket.emit("session:error", { message: "Unauthorized" });
+          return;
+        }
+
+        const entry = session.waitingRoom.find(
+          (p) => p.userId.toString() === userId
+        );
+        if (!entry) return;
+
+        await session.removeFromWaitingRoom(userId);
+        
+        // Add to participants + DB
+        await session.addParticipant(userId, entry.socketId, entry.userName, entry.avatar);
+
+        // Notify user
+        if (entry.socketId) {
+           const userSocket = sessionNamespace.sockets.get(entry.socketId);
+           if (userSocket) {
+             userSocket.leave(`waiting:${sessionId}`);
+             userSocket.join(`session:${sessionId}`);
+             
+             // Tell user they are in
+             userSocket.emit("session:approved", {
+                sessionId,
+                message: "Request approved",
+             });
+             
+             // Send them the participants list so they can connect (important!)
+             // We can construct it locally or query DB.
+             // Actually, the user client expects `session:participants-list` to start initiating peers?
+             // Or they wait for `participant-joined` events? 
+             // Usually join flow emits `session:participants-list` to the joiner.
+             // existing participants get `session:participant-joined`.
+             
+             // Let's send participants list to the approved user
+             const updatedSession = await LiveSession.findById(sessionId); // refetch for participants
+             userSocket.emit("session:participants-list", {
+                 participants: updatedSession.participants
+                   .filter(p => !p.leftAt && p.userId.toString() !== userId) // exclude self
+                   .map(p => ({
+                     userId: p.userId,
+                     userName: p.userName || "User",
+                     socketId: p.socketId,
+                     isMuted: p.isMuted,
+                     isVideoOff: p.isVideoOff
+                 }))
+             });
+           }
+        }
+        
+        // Broadcast to others
+        socket.to(`session:${sessionId}`).emit("session:participant-joined", {
+            userId: entry.userId,
+            userName: entry.userName,
+            socketId: entry.socketId,
+            avatar: entry.avatar
+        });
+        
+        console.log(`✅ User ${userId} approved by host`);
+      } catch (error) {
+        console.error("Error approving request:", error.message);
+      }
+    });
+
+    /**
+     * Deny Join Request (Host Only)
+     * Event: session:deny-request
+     * Payload: { sessionId: string, userId: string }
+     */
+    socket.on("session:deny-request", async (data) => {
+      try {
+        const { sessionId, userId } = data;
+        const session = await LiveSession.findById(sessionId);
+        if (!session) return;
+
+        if (session.hostId.toString() !== socket.user.id) return;
+
+        const entry = session.waitingRoom.find(
+          (p) => p.userId.toString() === userId
+        );
+        
+        await session.removeFromWaitingRoom(userId);
+
+        if (entry && entry.socketId) {
+          sessionNamespace.to(entry.socketId).emit("session:denied", {
+            sessionId,
+            message: "Request denied by host",
+          });
+           const userSocket = sessionNamespace.sockets.get(entry.socketId);
+           if (userSocket) {
+             userSocket.leave(`waiting:${sessionId}`);
+           }
+        }
+        console.log(`❌ User ${userId} denied by host`);
+      } catch (error) {
+        console.error("Error denying request:", error.message);
+      }
+    });
+
+    /**
+     * Kick Participant (Host Only)
+     * Event: session:kick-participant
+     * Payload: { sessionId: string, userId: string }
+     */
+    socket.on("session:kick-participant", async (data) => {
+      try {
+        const { sessionId, userId } = data;
+        const session = await LiveSession.findById(sessionId);
+        if (!session) return;
+
+        if (session.hostId.toString() !== socket.user.id) return;
+
+        const participant = session.participants.find(
+          (p) => p.userId.toString() === userId && !p.leftAt
+        );
+
+        if (participant) {
+          await session.removeParticipant(userId);
+          
+          if (participant.socketId) {
+            sessionNamespace.to(participant.socketId).emit("session:kicked", {
+              sessionId,
+              message: "You have been removed from the session",
+            });
+            
+             const userSocket = sessionNamespace.sockets.get(participant.socketId);
+             if (userSocket) {
+               userSocket.leave(`session:${sessionId}`);
+             }
+             
+             // Broadcast to others that they left (or kicked)
+            socket.to(`session:${sessionId}`).emit("session:participant-left", {
+                userId: userId,
+                userName: participant.userName || "User",
+            });
+          }
+        }
+        console.log(`👢 User ${userId} kicked by host`);
+      } catch (error) {
+         console.error("Error kicking participant:", error.message);
       }
     });
 
