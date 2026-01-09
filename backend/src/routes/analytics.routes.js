@@ -44,7 +44,7 @@ router.get("/student/:userId", authenticate, getStudentAnalytics);
 router.get(
   "/dashboard",
   authenticate,
-  authorize(["teacher", "admin"]),
+  authorize("teacher", "admin"),
   getDashboardAnalytics
 );
 
@@ -56,7 +56,7 @@ router.get(
 router.get(
   "/export",
   authenticate,
-  authorize(["teacher", "admin"]),
+  authorize("teacher", "admin"),
   exportCourseAnalytics
 );
 
@@ -75,7 +75,7 @@ router.get("/student-report/:userId", authenticate, generateStudentReport);
 router.post(
   "/collect",
   authenticate,
-  authorize(["admin"]),
+  authorize("admin"),
   manualCollectAnalytics
 );
 

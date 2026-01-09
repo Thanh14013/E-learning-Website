@@ -31,6 +31,7 @@ import ContentModeration from "../pages/admin/ContentModeration.jsx";
 import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
 import SystemSettings from "../pages/admin/SystemSettings.jsx";
 import AdminCourseDetail from "../pages/admin/AdminCourseDetail.jsx";
+import AdminAnalytics from "../pages/admin/AdminAnalytics.jsx";
 import CourseApproval from "../pages/admin/CourseApproval.jsx";
 import AdminLayout from "../components/layout/AdminLayout.jsx";
 import AdminRoute from "../components/AdminRoute.jsx";
@@ -130,6 +131,7 @@ const router = createBrowserRouter([
       { path: "moderation", element: <ContentModeration /> },
       { path: "courses", element: <CourseApproval /> },
       { path: "courses/:id", element: <AdminCourseDetail /> },
+      { path: "analytics", element: <AdminAnalytics /> },
       { path: "settings", element: <SystemSettings /> },
     ],
   },

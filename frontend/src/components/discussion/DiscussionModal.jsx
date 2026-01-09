@@ -17,7 +17,7 @@ const formatTimeAgo = (dateString) => {
     return date.toLocaleDateString();
 };
 
-const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeacherId, canDelete = false }) => {
+const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeacherId, canDelete = false, isReadOnly = false }) => {
     const { confirm } = useConfirm();
     const { user } = useAuth();
     const {
@@ -142,7 +142,7 @@ const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeac
                             </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            {canDeleteDiscussion && (
+                            {canDeleteDiscussion && !isReadOnly && (
                                 <button
                                     className={styles.iconButton}
                                     onClick={handleDeleteDiscussion}
@@ -283,29 +283,31 @@ const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeac
                     </div>
 
                     {/* Comment Form */}
-                    {user ? (
-                        isEnrolled ? (
-                            <form className={styles.commentForm} onSubmit={handleCommentSubmit}>
-                                <textarea
-                                    value={commentContent}
-                                    onChange={(e) => setCommentContent(e.target.value)}
-                                    placeholder="Write your reply..."
-                                    rows="3"
-                                    disabled={submitting}
-                                />
-                                <button type="submit" disabled={submitting || !commentContent.trim()}>
-                                    {submitting ? 'Posting...' : 'Post Reply'}
-                                </button>
-                            </form>
+                    {!isReadOnly && (
+                        user ? (
+                            isEnrolled ? (
+                                <form className={styles.commentForm} onSubmit={handleCommentSubmit}>
+                                    <textarea
+                                        value={commentContent}
+                                        onChange={(e) => setCommentContent(e.target.value)}
+                                        placeholder="Write your reply..."
+                                        rows="3"
+                                        disabled={submitting}
+                                    />
+                                    <button type="submit" disabled={submitting || !commentContent.trim()}>
+                                        {submitting ? 'Posting...' : 'Post Reply'}
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className={styles.enrollPrompt}>
+                                    <p>You need to enroll in this course to comment</p>
+                                </div>
+                            )
                         ) : (
-                            <div className={styles.enrollPrompt}>
-                                <p>You need to enroll in this course to comment</p>
+                            <div className={styles.loginPrompt}>
+                                <p>Please login to comment</p>
                             </div>
                         )
-                    ) : (
-                        <div className={styles.loginPrompt}>
-                            <p>Please login to comment</p>
-                        </div>
                     )}
                 </div>
             </div>

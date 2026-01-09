@@ -175,7 +175,7 @@
 
 .lessonTitle {
   font-weight: 500;
-  color: #374151;
+  color: black;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -196,7 +196,7 @@
 }
 
 .lessonDescription {
-  color: #1f2937; /* Dark gray for good readability */
+  color: black; /* Dark gray for good readability */
   line-height: 1.6;
   font-size: 16px;
   margin-bottom: 24px;
@@ -233,17 +233,18 @@
 }
 
 .quizHeader {
-  background: #f8fafc;
+  background: white;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 24px;
   border: 1px solid #e2e8f0;
+  color: black;
 }
 
 .questionItem {
   margin-bottom: 32px;
   padding: 20px;
-  background: #ffffff;
+  background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
 }
@@ -252,7 +253,7 @@
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #111827;
+  color: black;
 }
 
 .optionsList {
@@ -269,12 +270,13 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  color: black;
 }
 
 .correctOption {
   background-color: #dcfce7;
   border-color: #16a34a;
-  color: #166534;
+  color: black;
   font-weight: 500;
 }
 

@@ -167,18 +167,19 @@ const CourseApproval = () => {
         return badges[status] || badges.pending;
     };
 
-    if (loading) {
+    if (loading && courses.length === 0) {
         return (
             <div className={styles.loading}>
                 <div className={styles.spinner}></div>
-                <p>Loading filter...</p>
+                <p>Loading courses...</p>
             </div>
         );
     }
 
     return (
-        <div className={styles.container}>
+        <div className={styles.container} style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
             <div className={styles.header}>
+
                 <div>
                     <h1 className={styles.title}>All Courses</h1>
                     <p className={styles.subtitle}>
