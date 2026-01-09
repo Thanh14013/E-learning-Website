@@ -114,36 +114,42 @@
   box-shadow: var(--shadow-sm);
 }
 
-.searchWrapper {
+.searchWrapper{
   position: relative;
   flex: 1;
 }
 
-.searchIcon {
+.searchIcon{
   position: absolute;
-  left: 12px;
+  inset-inline-end: 18px; 
   top: 50%;
   transform: translateY(-50%);
   color: var(--color-gray-400);
   pointer-events: none;
+  width: 20px;             
+  height: 20px;
+  display: grid;
+  place-items: center;
 }
 
-.searchInput {
+.searchInput{
   width: 100%;
-  padding: 12px 16px 12px 44px;
+  margin: 0;               
   font-size: 0.95rem;
   border: 1px solid var(--color-gray-300);
   border-radius: var(--border-radius-md);
   transition: var(--transition-base);
   background: var(--color-white);
   color: var(--color-gray-900);
+  padding: 12px 16px 12px 44px;
 }
 
-.searchInput:focus {
+.searchInput:focus{
   outline: none;
   border-color: var(--color-teacher-primary);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
+
 
 .filtersGroup {
   display: flex;
