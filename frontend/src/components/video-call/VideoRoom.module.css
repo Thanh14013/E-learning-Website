@@ -532,6 +532,22 @@
 .lobbyBtn:hover { background: rgba(0,0,0,0.8); }
 .lobbyBtn.off { background: #ef4444; border-color: #ef4444; }
 
+.studentPreview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    background-color: #1a1a1a;
+    color: #a0a0a0;
+}
+
+.avatarLarge {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
 /* Waiting Room */
 .waitingRoom {
     display: flex;
@@ -590,4 +606,42 @@
     padding: 2px 8px;
     border-radius: 4px;
     font-size: 0.8rem;
+}
+
+/* Placeholder for Camera Off / No Stream */
+.videoPlaceholder {
+    width: 100%;
+    height: 100%;
+    background-color: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+}
+
+.avatar {
+    width: 64px;
+    height: 64px;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.placeholderName {
+    font-size: 1.1rem;
+    color: white;
+    font-weight: 500;
+}
+
+.statusText {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 0.25rem;
 }

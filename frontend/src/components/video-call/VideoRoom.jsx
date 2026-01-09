@@ -68,10 +68,20 @@ const VideoRoom = () => {
     }, [sessionId, navigate]);
     // Removed localStream from deps to avoid double cleanup loop
 
-    // 2. Initialize Local Stream (Lobby)
+    // 2. Initialize Waiting Room from Session
+    useEffect(() => {
+        if (session?.waitingRoom && isHost) {
+            setJoinRequests(session.waitingRoom);
+        }
+    }, [session, isHost]);
+
+    // 3. Initialize Local Stream (Lobby) - HOST ONLY
     useEffect(() => {
         if (!isLoading && session) {
             const initLocal = async () => {
+                // Students do NOT init local stream
+                if (!isHost) return;
+
                 try {
                     const stream = await webrtcService.initializeLocalStream();
                     setLocalStream(stream);
@@ -85,7 +95,14 @@ const VideoRoom = () => {
             };
             initLocal();
         }
-    }, [isLoading, session]);
+    }, [isLoading, session, isHost]);
+
+    // Ensure video element gets stream when mounted/available (Fix for Teacher Black Screen)
+    useEffect(() => {
+        if (localVideoRef.current && localStream) {
+            localVideoRef.current.srcObject = localStream;
+        }
+    }, [localStream, isHost]); // Re-run when Host view mounts
 
     // 3. Event Listeners
     useEffect(() => {
@@ -93,10 +110,27 @@ const VideoRoom = () => {
 
         const handleRemoteStream = (e) => {
             const { userId, stream } = e.detail;
-            const userName = getParticipantName(userId);
+
             setParticipants(prev => {
                 const next = new Map(prev);
-                next.set(userId, { userId, stream, userName, isVideoOn: true, isAudioOn: true });
+                const existing = next.get(userId) || {};
+
+                // Fallback: If no name, and it's host, call them Teacher
+                let fallbackName = "User";
+                if (userId === session.hostId || (session.hostId?._id && userId === session.hostId._id)) {
+                    fallbackName = "Teacher (Host)";
+                }
+
+                const userName = existing.userName || getParticipantName(userId) || fallbackName;
+
+                next.set(userId, {
+                    ...existing,
+                    userId,
+                    stream,
+                    userName,
+                    isVideoOn: true,
+                    isAudioOn: true
+                });
                 return next;
             });
         };
@@ -110,12 +144,33 @@ const VideoRoom = () => {
         };
 
         const handleUserJoined = (e) => {
-            // Just a notification or adding placeholder if needed
-            // We wait for stream for video, but can list them in participants
-            // e.detail: { userId, userName }
-            // Update participants list UI even if no video yet?
-            // For now we rely on stream for video grid, but sidebar needs list.
-            // WebrtcService maintains socketMap.
+            const { userId, userName, avatar, isMuted, isVideoOff } = e.detail;
+            console.log("User joined event:", e.detail);
+
+            // Prevent adding self
+            if (userId === user._id) return;
+
+            // Check if it's host -> Override name
+            let finalName = userName || "User";
+            const hostId = session.hostId._id || session.hostId;
+            if (userId === hostId) {
+                finalName = "Teacher (Host)";
+            }
+
+            setParticipants(prev => {
+                const next = new Map(prev);
+                if (!next.has(userId)) {
+                    next.set(userId, {
+                        userId,
+                        userName: finalName,
+                        avatar,
+                        isAudioOn: !isMuted,
+                        isVideoOn: !isVideoOff
+                    });
+                }
+                return next;
+            });
+            toastService.info(`${finalName} joined the session`);
         };
 
         const handleUserLeft = (e) => {
@@ -217,7 +272,12 @@ const VideoRoom = () => {
 
     // Helper: Join Session
     const handleJoinClick = async () => {
-        if (!user || !localStream) return;
+        // Allow joining if user exists (student doesn't need localStream)
+        if (!user) return;
+        if (isHost && !localStream) {
+            toastService.warning("Host must have media enabled.");
+            return;
+        }
         try {
             await webrtcService.joinSession(sessionId, user.fullName, token);
             // Default to room if no waiting event fired immediately
@@ -293,27 +353,36 @@ const VideoRoom = () => {
                 <div className={styles.lobbyCard}>
                     <h2>{session.title}</h2>
                     <div className={styles.lobbyVideoPreview}>
-                        <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoPreview} />
-                        <div className={styles.lobbyControls}>
-                            <button
-                                onClick={() => {
-                                    const enabled = webrtcService.toggleAudio();
-                                    setIsAudioEnabled(enabled);
-                                }}
-                                className={`${styles.lobbyBtn} ${!isAudioEnabled ? styles.off : ''}`}
-                            >
-                                {isAudioEnabled ? '🎤 On' : '🎤 Off'}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    const enabled = webrtcService.toggleVideo();
-                                    setIsVideoEnabled(enabled);
-                                }}
-                                className={`${styles.lobbyBtn} ${!isVideoEnabled ? styles.off : ''}`}
-                            >
-                                {isVideoEnabled ? '📷 On' : '📷 Off'}
-                            </button>
-                        </div>
+                        {isHost ? (
+                            <>
+                                <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoPreview} />
+                                <div className={styles.lobbyControls}>
+                                    <button
+                                        onClick={() => {
+                                            const enabled = webrtcService.toggleAudio();
+                                            setIsAudioEnabled(enabled);
+                                        }}
+                                        className={`${styles.lobbyBtn} ${!isAudioEnabled ? styles.off : ''}`}
+                                    >
+                                        {isAudioEnabled ? '🎤 On' : '🎤 Off'}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            const enabled = webrtcService.toggleVideo();
+                                            setIsVideoEnabled(enabled);
+                                        }}
+                                        className={`${styles.lobbyBtn} ${!isVideoEnabled ? styles.off : ''}`}
+                                    >
+                                        {isVideoEnabled ? '📷 On' : '📷 Off'}
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className={styles.studentPreview}>
+                                <div className={styles.avatarLarge}>🎓</div>
+                                <p>You are joining as a Student (Receive Only)</p>
+                            </div>
+                        )}
                     </div>
                     <div className={styles.lobbyActions}>
                         <Button variant="primary" size="large" onClick={handleJoinClick} style={{ width: '100%' }}>
@@ -340,45 +409,63 @@ const VideoRoom = () => {
                             {/* Could add duration timer here */}
                         </span>
                     </div>
-                    <Button variant="danger" size="small" onClick={() => { webrtcService.leaveSession(); navigate('/dashboard'); }}>
+                    <Button variant="danger" size="small" onClick={() => {
+                        webrtcService.leaveSession();
+                        if (isHost) {
+                            window.close();
+                            // Fallback if browser blocks close: show message or stay
+                            const win = window.open("about:blank", "_self");
+                            win.close();
+                        } else {
+                            navigate('/dashboard');
+                        }
+                    }}>
                         Leave
                     </Button>
                 </div>
 
                 {/* Video Grid */}
                 <div className={styles.videoGrid}>
-                    {/* Local */}
-                    <div className={styles.videoWrapper}>
-                        <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoElement} />
-                        <div className={styles.nameTag}>You {isHost ? '(Host)' : ''}</div>
-                    </div>
-                    {/* Remote */}
-                    {Array.from(participants.values()).map(p => (
-                        <div key={p.userId} className={styles.videoWrapper}>
-                            <RemoteVideo participant={p} />
-                            {isHost && (
-                                <button className={styles.kickBtn} onClick={() => kickUser(p.userId)} title="Kick User">
-                                    🚫
-                                </button>
-                            )}
+                    {/* Local: Only show if I am the Host */}
+                    {isHost && (
+                        <div className={styles.videoWrapper}>
+                            <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoElement} />
+                            <div className={styles.nameTag}>You (Host)</div>
                         </div>
-                    ))}
+                    )}
+
+                    {/* Remote: Only show if the participant is the Host */}
+                    {Array.from(participants.values())
+                        .filter(p => {
+                            // Check if participant is Host
+                            const hostId = session.hostId._id || session.hostId;
+                            return p.userId === hostId;
+                        })
+                        .map(p => (
+                            <div key={p.userId} className={styles.videoWrapper}>
+                                <RemoteVideo participant={p} />
+                            </div>
+                        ))}
                 </div>
 
                 {/* Bottom Controls */}
                 <div className={styles.controlsBar}>
-                    <button onClick={() => setIsAudioEnabled(webrtcService.toggleAudio())} className={!isAudioEnabled ? styles.controlOff : ''}>
-                        {isAudioEnabled ? '🎤 Mute' : '🎤 Unmute'}
-                    </button>
-                    <button onClick={() => setIsVideoEnabled(webrtcService.toggleVideo())} className={!isVideoEnabled ? styles.controlOff : ''}>
-                        {isVideoEnabled ? '📷 Stop Video' : '📷 Start Video'}
-                    </button>
-                    <button onClick={() => {
-                        webrtcService.startScreenShare().then(() => setIsScreenSharing(true)).catch(() => setIsScreenSharing(false));
-                    }} className={isScreenSharing ? styles.controlActive : ''}>
-                        🖥️ Share
-                    </button>
-                    <div className={styles.divider} />
+                    {isHost && (
+                        <>
+                            <button onClick={() => setIsAudioEnabled(webrtcService.toggleAudio())} className={!isAudioEnabled ? styles.controlOff : ''}>
+                                {isAudioEnabled ? '🎤 Mute' : '🎤 Unmute'}
+                            </button>
+                            <button onClick={() => setIsVideoEnabled(webrtcService.toggleVideo())} className={!isVideoEnabled ? styles.controlOff : ''}>
+                                {isVideoEnabled ? '📷 Stop Video' : '📷 Start Video'}
+                            </button>
+                            <button onClick={() => {
+                                webrtcService.startScreenShare().then(() => setIsScreenSharing(true)).catch(() => setIsScreenSharing(false));
+                            }} className={isScreenSharing ? styles.controlActive : ''}>
+                                🖥️ Share
+                            </button>
+                            <div className={styles.divider} />
+                        </>
+                    )}
                     <button onClick={() => setActiveSidebar(activeSidebar === 'people' ? null : 'people')}>
                         👥 People {joinRequests.length > 0 && <span className={styles.badge}>{joinRequests.length}</span>}
                     </button>
@@ -386,79 +473,93 @@ const VideoRoom = () => {
                         💬 Chat
                     </button>
                 </div>
-            </div>
+            </div >
 
             {/* Sidebar */}
-            {activeSidebar && (
-                <div className={styles.sidebar}>
-                    <div className={styles.sidebarHeader}>
-                        <h4>{activeSidebar === 'people' ? 'Participants' : 'Chat'}</h4>
-                        <button onClick={() => setActiveSidebar(null)}>✕</button>
-                    </div>
+            {
+                activeSidebar && (
+                    <div className={styles.sidebar}>
+                        <div className={styles.sidebarHeader}>
+                            <h4>{activeSidebar === 'people' ? 'Participants' : 'Chat'}</h4>
+                            <button onClick={() => setActiveSidebar(null)}>✕</button>
+                        </div>
 
-                    {activeSidebar === 'people' && (
-                        <div className={styles.peopleList}>
-                            {isHost && joinRequests.length > 0 && (
-                                <div className={styles.requestsSection}>
-                                    <h5>Waiting Room ({joinRequests.length})</h5>
-                                    {joinRequests.map(req => (
-                                        <div key={req.userId} className={styles.requestItem}>
-                                            <div className={styles.reqInfo}>
-                                                <span className={styles.avatar}>👤</span>
-                                                <span>{req.userName}</span>
+                        {activeSidebar === 'people' && (
+                            <div className={styles.peopleList}>
+                                {isHost && joinRequests.length > 0 && (
+                                    <div className={styles.requestsSection}>
+                                        <h5>Waiting Room ({joinRequests.length})</h5>
+                                        {joinRequests.map(req => (
+                                            <div key={req.userId} className={styles.requestItem}>
+                                                <div className={styles.reqInfo}>
+                                                    <span className={styles.avatar}>👤</span>
+                                                    <span>{req.userName}</span>
+                                                </div>
+                                                <div className={styles.reqActions}>
+                                                    <button className={styles.btnApprove} onClick={() => approveUser(req)}>✓</button>
+                                                    <button className={styles.btnDeny} onClick={() => denyUser(req)}>✕</button>
+                                                </div>
                                             </div>
-                                            <div className={styles.reqActions}>
-                                                <button className={styles.btnApprove} onClick={() => approveUser(req)}>✓</button>
-                                                <button className={styles.btnDeny} onClick={() => denyUser(req)}>✕</button>
-                                            </div>
+                                        ))}
+                                        <hr />
+                                    </div>
+                                )}
+
+                                <h5>In Meeting ({participants.size + 1})</h5>
+                                <div className={styles.participantItem}>
+                                    <span>You ({user.fullName})</span>
+                                    <span className={styles.role}>{isHost ? 'Host' : 'Me'}</span>
+                                </div>
+                                {Array.from(participants.values())
+                                    .filter(p => p.userId !== user._id) // Double check to exclude self
+                                    .map(p => (
+                                        <div key={p.userId} className={styles.participantItem}>
+                                            <span>{p.userName}</span>
+                                            {isHost && (
+                                                <button className={styles.kickSmall} onClick={() => kickUser(p.userId)}>Kick</button>
+                                            )}
                                         </div>
                                     ))}
-                                    <hr />
-                                </div>
-                            )}
-
-                            <h5>In Meeting ({participants.size + 1})</h5>
-                            <div className={styles.participantItem}>
-                                <span>You ({user.fullName})</span>
-                                <span className={styles.role}>{isHost ? 'Host' : 'Me'}</span>
                             </div>
-                            {Array.from(participants.values()).map(p => (
-                                <div key={p.userId} className={styles.participantItem}>
-                                    <span>{p.userName}</span>
-                                    {isHost && (
-                                        <button className={styles.kickSmall} onClick={() => kickUser(p.userId)}>Kick</button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                        )}
 
-                    {activeSidebar === 'chat' && (
-                        <div className={styles.chatContainer}>
-                            <div className={styles.messages}>
-                                {chatMessages.map((m, i) => (
-                                    <div key={i} className={styles.message}>
-                                        <strong>{m.userName}</strong>: {m.message}
-                                    </div>
-                                ))}
+                        {activeSidebar === 'chat' && (
+                            <div className={styles.chatContainer}>
+                                <div className={styles.messages}>
+                                    {chatMessages.map((m, i) => (
+                                        <div key={i} className={styles.message}>
+                                            <strong>{m.userName}</strong>: {m.message}
+                                        </div>
+                                    ))}
+                                </div>
+                                <form onSubmit={(e) => {
+                                    e.preventDefault();
+                                    if (!chatInput.trim()) return;
+
+                                    // Send to server (others)
+                                    webrtcService.sendChatMessage(chatInput, user);
+
+                                    // Add to local (self)
+                                    setChatMessages(prev => [...prev, {
+                                        userName: "You", // Or user.fullName
+                                        message: chatInput,
+                                        isMe: true // Optional for styling
+                                    }]);
+
+                                    setChatInput('');
+                                }} className={styles.chatInputArea}>
+                                    <input
+                                        value={chatInput}
+                                        onChange={e => setChatInput(e.target.value)}
+                                        placeholder="Type a message..."
+                                    />
+                                </form>
                             </div>
-                            <form onSubmit={(e) => {
-                                e.preventDefault();
-                                if (!chatInput.trim()) return;
-                                webrtcService.sendChatMessage(chatInput, user);
-                                setChatInput('');
-                            }} className={styles.chatInputArea}>
-                                <input
-                                    value={chatInput}
-                                    onChange={e => setChatInput(e.target.value)}
-                                    placeholder="Type a message..."
-                                />
-                            </form>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+                        )}
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
@@ -469,7 +570,29 @@ const RemoteVideo = ({ participant }) => {
             videoRef.current.srcObject = participant.stream;
         }
     }, [participant.stream]);
-    return <video ref={videoRef} autoPlay playsInline className={styles.videoElement} />;
+
+    // If no video/stream, show placeholder
+    if (!participant.isVideoOn || !participant.stream) {
+        return (
+            <div className={styles.videoPlaceholder}>
+                <div className={styles.avatar}>
+                    {participant.userName ? participant.userName.charAt(0).toUpperCase() : '?'}
+                </div>
+                <span className={styles.placeholderName}>{participant.userName}</span>
+                {/* Removed "Connecting..." text as requested */}
+                <span className={styles.statusText}>
+                    {!participant.isVideoOn ? 'Camera Off' : ''}
+                </span>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.videoContainer}>
+            <video ref={videoRef} autoPlay playsInline className={styles.videoElement} />
+            <div className={styles.nameTag}>{participant.userName}</div>
+        </div>
+    );
 };
 
 export default VideoRoom;

@@ -24,16 +24,34 @@ class WebRTCService {
    * @returns {Promise<MediaStream>}
    */
   async initializeLocalStream(constraints = { video: true, audio: true }) {
-    try {
-      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log("[WebRTC] Local stream initialized:", this.localStream.id);
-      return this.localStream;
-    } catch (error) {
-      console.error("[WebRTC] Error getting local stream:", error);
-      throw new Error(
-        "Unable to access camera/microphone. Please check permissions."
-      );
+    // Check if stream already exists and is active
+    if (this.localStream && this.localStream.active) {
+       console.log("[WebRTC] Reusing existing local stream:", this.localStream.id);
+       return this.localStream;
     }
+
+    // If initialization is already in progress, return the pending promise
+    if (this.initializationPromise) {
+        console.log("[WebRTC] Waiting for pending initialization...");
+        return this.initializationPromise;
+    }
+
+    this.initializationPromise = (async () => {
+        try {
+            this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+            console.log("[WebRTC] Local stream initialized:", this.localStream.id);
+            return this.localStream;
+        } catch (error) {
+            console.error("[WebRTC] Error getting local stream:", error);
+            throw new Error(
+                "Unable to access camera/microphone. Please check permissions."
+            );
+        } finally {
+            this.initializationPromise = null;
+        }
+    })();
+
+    return this.initializationPromise;
   }
 
   /**
@@ -43,11 +61,10 @@ class WebRTCService {
    * @param {string} token - Auth token
    */
   async joinSession(sessionId, userName, token) {
-    if (!this.localStream) {
-      throw new Error(
-        "Local stream not initialized. Call initializeLocalStream first."
-      );
-    }
+    // ALLOW joining without local stream (for students/view-only)
+    // if (!this.localStream) {
+    //   throw new Error("Local stream not initialized...");
+    // }
 
     this.sessionId = sessionId;
     this.isInitialized = true;
@@ -324,22 +341,21 @@ class WebRTCService {
 
     const peer = new Peer({
       initiator,
-      stream: this.localStream,
+      stream: this.localStream || undefined, // undefined tells simple-peer "no stream yet"
       trickle: true,
       config: {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
           { urls: "stun:stun1.l.google.com:19302" },
           { urls: "stun:stun2.l.google.com:19302" },
-          // TURN server - Uncomment and configure when available
-          // {
-          //   urls: "turn:your-turn-server.com:3478",
-          //   username: "turnuser",
-          //   credential: "turnpass"
-          // }
         ],
         sdpSemantics: "unified-plan",
       },
+      // If we have no stream but are initiating (e.g. student joining), we want to receive
+      offerOptions: {
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      }
     });
 
     // Handle peer signals
@@ -543,6 +559,8 @@ class WebRTCService {
         sessionId: this.sessionId,
       });
     }
+
+    window.dispatchEvent(new CustomEvent("webrtc:screen-share-stopped"));
   }
 
   /**

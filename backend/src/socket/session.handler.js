@@ -71,8 +71,8 @@ export const initializeSessionNamespace = (io) => {
           (p) => p.userId.toString() === socket.user.id && !p.leftAt
         );
 
-        // Waiting Room Logic
-        if (!isHost && !isParticipant && session.settings?.waitingRoomEnabled) {
+        // Waiting Room Logic - Enforced for all non-host users
+        if (!isHost && !isParticipant) {
           await session.addToWaitingRoom(
             socket.user.id,
             socket.id,
@@ -84,8 +84,10 @@ export const initializeSessionNamespace = (io) => {
             message: "Waiting for host to accept...",
           });
 
-          // Notify Host
-          socket.to(`session:${sessionId}`).emit("session:join-request", {
+          // Notify Host (broadcast to all in session room to be safe, or check if Host is there)
+          // Ideally host is in `session:${sessionId}`.
+          // Using sessionNamespace.to ensures everyone in the room gets it (including host if they are there).
+          sessionNamespace.to(`session:${sessionId}`).emit("session:join-request", {
             userId: socket.user.id,
             userName: userName || socket.user.email,
             socketId: socket.id,
@@ -190,8 +192,11 @@ export const initializeSessionNamespace = (io) => {
           message: "Successfully left session",
         });
 
-        // Notify other participants
-        socket.to(`session:${sessionId}`).emit("session:participant-left", {
+        // Notify other participants (AND self if needed, but self is leaving)
+        // Actually, we want to notify everyone remaining in the room. 
+        // socket.to excludes sender, which is fine for 'left' because sender is leaving.
+        // BUT, if we want to be consistent: 
+        sessionNamespace.to(`session:${sessionId}`).emit("session:participant-left", {
           userId: socket.user.id,
           userName: socket.userName,
         });
@@ -264,12 +269,14 @@ export const initializeSessionNamespace = (io) => {
            }
         }
         
-        // Broadcast to others
-        socket.to(`session:${sessionId}`).emit("session:participant-joined", {
+        // Broadcast to ALL (including Host)
+        sessionNamespace.to(`session:${sessionId}`).emit("session:participant-joined", {
             userId: entry.userId,
             userName: entry.userName,
             socketId: entry.socketId,
-            avatar: entry.avatar
+            avatar: entry.avatar,
+            isMuted: true,
+            isVideoOff: true 
         });
         
         console.log(`✅ User ${userId} approved by host`);
@@ -654,12 +661,14 @@ export const initializeSessionNamespace = (io) => {
           console.error("Error saving chat message:", dbError.message);
         }
 
-        // Broadcast chat message to all participants including sender
-        sessionNamespace
+        // Broadcast chat message to others ONLY
+        socket
           .to(`session:${sessionId}`)
           .emit("session:chat-message", messageData);
-        // Also emit to sender
-        socket.emit("session:chat-message", messageData);
+
+        console.log(
+          `💬 Chat message from ${socket.user.id} in session ${sessionId}`
+        );
 
         console.log(
           `💬 Chat message from ${socket.user.id} in session ${sessionId}`
