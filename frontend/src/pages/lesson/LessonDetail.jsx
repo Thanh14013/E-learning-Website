@@ -779,16 +779,17 @@ const LessonDetail = () => {
 
                     {/* Discussion Section */}
                     <div className={styles.discussionSection} style={{ marginTop: '40px', borderTop: '2px solid #e0e0e0', paddingTop: '30px' }}>
-                        <div className={styles.discussionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <div className={styles.discussionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px',  marginLeft: '20px' }}>
                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>💬 Lesson Discussion</h3>
                             {user && (
                                 <button
                                     className="btn btn-primary"
                                     onClick={() => setShowCreateDiscussion(true)}
-                                    style={{ padding: '8px 16px' }}
+                                    style={{ padding: '8px 16px', marginRight: '20px' }}
                                 >
                                     + New Discussion
                                 </button>
+
                             )}
                         </div>
 
