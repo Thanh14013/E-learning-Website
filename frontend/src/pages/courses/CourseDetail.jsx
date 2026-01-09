@@ -552,7 +552,7 @@ const CourseDetailPage = () => {
             {course.bestseller && <span className="badge badge-warning">Bestseller</span>}
             <div className={styles.ratingInfo}>
               <span className={styles.avg}>{course.rating?.toFixed(1) || '0.0'}</span>
-              <StarIcon />
+              <StarIcon filled={true} />
               <span className={styles.count}>({course.totalReviews || 0} ratings)</span>
             </div>
 
