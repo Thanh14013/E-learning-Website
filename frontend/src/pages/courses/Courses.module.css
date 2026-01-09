@@ -409,9 +409,13 @@
   gap: 8px;
 }
 
-.pageNumber {
+
+.pageNumber{
   width: 40px;
   height: 40px;
+  display: inline-flex;        
+  align-items: center;
+  justify-content: center;
   border: 2px solid #e5e7eb;
   background: white;
   border-radius: 8px;
@@ -419,7 +423,10 @@
   transition: all 0.3s ease;
   font-weight: 600;
   color: #374151;
+  padding: 0;                  
+  line-height: 1;             
 }
+
 
 .pageNumber:hover {
   background: #f3f4f6;
