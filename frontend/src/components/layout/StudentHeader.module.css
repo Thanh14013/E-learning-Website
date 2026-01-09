@@ -158,7 +158,7 @@
   align-items: flex-start;
   gap: 10px;
   flex: 1;
-  cursor: pointer;
+  /* cursor: pointer; removed */
 }
 
 .notifIcon {

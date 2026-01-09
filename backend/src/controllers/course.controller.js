@@ -325,6 +325,14 @@ export const getTeacherCourseById = async (req, res) => {
       .sort({ order: 1 })
       .lean();
 
+    // Fetch quizzes for this course
+    const Quiz = (await import("../models/quiz.model.js")).default;
+    const Question = (await import("../models/question.model.js")).default;
+
+    const quizzes = await Quiz.find({ courseId: id }).lean();
+    const quizIds = quizzes.map(q => q._id);
+    const questions = await Question.find({ quizId: { $in: quizIds } }).lean();
+
     // Map lessons into chapters
     const structuredChapters = chapters.map((chapter) => ({
       ...chapter,
@@ -333,14 +341,27 @@ export const getTeacherCourseById = async (req, res) => {
           (lesson) => lesson.chapterId.toString() === chapter._id.toString()
         )
         // Return FULL lesson object including videoUrl, resources, etc.
-        .map(l => ({
-            ...l,
-            // Ensure resources are explicitly included (though spread should handle it)
-            resources: l.resources || [] 
-        })),
+        .map(l => {
+            // Find quiz for this lesson
+            const lessonQuiz = quizzes.find(q => q.lessonId && q.lessonId.toString() === l._id.toString());
+            let fullQuiz = null;
+            
+            if (lessonQuiz) {
+                fullQuiz = {
+                    ...lessonQuiz,
+                    questions: questions.filter(q => q.quizId.toString() === lessonQuiz._id.toString())
+                };
+            }
+
+            return {
+                ...l,
+                // Ensure resources are explicitly included (though spread should handle it)
+                resources: l.resources || [],
+                quiz: fullQuiz
+            };
+        }),
     }));
 
-    // Fetch discussons (optional)
     // Fetch discussions for this course
     const Discussion = (await import("../models/discussion.model.js")).default;
     const discussions = await Discussion.find({ courseId: id, lessonId: null })

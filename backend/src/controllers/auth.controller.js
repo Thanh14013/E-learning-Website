@@ -39,6 +39,12 @@ export const register = async (req, res, next) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
+      if (existingUser.isDeleted) {
+         return res.status(400).json({ message: "This account has been deleted permanently." });
+      }
+       if (existingUser.isBanned) {
+         return res.status(403).json({ message: "This email belongs to a banned account." });
+      }
       return res.status(400).json({ message: "Email already exists." });
     }
 
@@ -208,6 +214,14 @@ export const login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
+    
+    if (user.isDeleted) {
+        return res.status(403).json({ message: "Account has been deleted." });
+    }
+
+    if (user.isBanned) {
+      return res.status(403).json({ message: "Your account has been banned. Contact support for help." });
+    }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
@@ -350,6 +364,12 @@ export const loginWithGoogle = async (req, res) => {
         message: "Your account has been banned. Contact support for help.",
       });
     }
+
+    if (user && user.isDeleted) {
+        return res.status(403).json({
+          message: "Account has been deleted.",
+        });
+      }
 
     // Create user if not exists (default role: student)
     if (!user) {

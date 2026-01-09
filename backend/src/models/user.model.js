@@ -61,6 +61,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     profileApprovalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],

@@ -5,6 +5,7 @@ import toastService from '../../services/toastService';
 import { debounce } from '../../utils/performance';
 import { useConfirm } from '../../contexts/ConfirmDialogContext';
 import styles from './UserManagement.module.css';
+import { FaBan, FaTrash, FaUnlock, FaSpinner } from 'react-icons/fa';
 
 export default function UserManagement() {
     const { confirm } = useConfirm();
@@ -82,42 +83,27 @@ export default function UserManagement() {
         debouncedSearch(value);
     };
 
-    // Change user role
-    const handleRoleChange = async (userId, newRole) => {
-        const isConfirmed = await confirm(`Are you sure you want to change this user's role to ${newRole}?`, { type: 'warning', title: 'Change Role' });
-        if (!isConfirmed) {
-            return;
-        }
 
-        try {
-            setActionLoading({ ...actionLoading, [userId]: 'role' });
-            await api.put(`/admin/users/${userId}/role`, { role: newRole });
-            toastService.success(`User role updated to ${newRole}`);
-            await fetchUsers(pagination.page);
-        } catch (error) {
-            console.error('[UserManagement] Error changing role:', error);
-            toastService.error(error.response?.data?.message || 'Failed to update role');
-        } finally {
-            setActionLoading({ ...actionLoading, [userId]: null });
-        }
-    };
 
     // Ban/Unban user
     const handleBanToggle = async (userId, currentStatus) => {
         const action = currentStatus ? 'unban' : 'ban';
-        const isConfirmed = await confirm(`Are you sure you want to ${action} this user?`, { type: action === 'ban' ? 'danger' : 'info', title: `${action === 'ban' ? 'Ban' : 'Unban'} User` });
-        if (!isConfirmed) {
-            return;
-        }
+        const isConfirmed = await confirm(`Are you sure you want to ${action} this user?`, { type: 'warning', title: `${action.charAt(0).toUpperCase() + action.slice(1)} User` });
+        if (!isConfirmed) return;
 
         try {
             setActionLoading({ ...actionLoading, [userId]: 'ban' });
             await api.put(`/admin/users/${userId}/ban`, { isBanned: !currentStatus });
+
+            // Immediate UI update
+            setUsers(prevUsers => prevUsers.map(user =>
+                user._id === userId ? { ...user, isBanned: !currentStatus } : user
+            ));
+
             toastService.success(`User ${action}ned successfully`);
-            await fetchUsers(pagination.page);
         } catch (error) {
-            console.error('[UserManagement] Error toggling ban:', error);
-            toastService.error(error.response?.data?.message || `Failed to ${action} user`);
+            console.error('[UserManagement] Error banning user:', error);
+            toastService.error(error.response?.data?.message || 'Failed to update user status');
         } finally {
             setActionLoading({ ...actionLoading, [userId]: null });
         }
@@ -135,10 +121,15 @@ export default function UserManagement() {
         try {
             setActionLoading({ ...actionLoading, [userToDelete._id]: 'delete' });
             await api.delete(`/admin/users/${userToDelete._id}`);
+
+            // Immediate UI update: Mark as deleted instead of removing
+            setUsers(prevUsers => prevUsers.map(user =>
+                user._id === userToDelete._id ? { ...user, isDeleted: true } : user
+            ));
+
             toastService.success('User deleted successfully');
             setShowDeleteModal(false);
             setUserToDelete(null);
-            await fetchUsers(pagination.page);
         } catch (error) {
             console.error('[UserManagement] Error deleting user:', error);
             toastService.error(error.response?.data?.message || 'Failed to delete user');
@@ -155,9 +146,16 @@ export default function UserManagement() {
     };
 
     const getStatusBadge = (user) => {
-        if (user.isBanned) return <span className={styles.statusBanned}>Banned</span>;
-        if (user.isVerified) return <span className={styles.statusActive}>Active</span>;
-        return <span className={styles.statusPending}>Pending</span>;
+        if (user.isDeleted) {
+            return <span className={`${styles.statusBadge} ${styles.statusDeleted}`}>Deleted</span>;
+        }
+        if (user.isBanned) {
+            return <span className={`${styles.statusBadge} ${styles.statusBanned}`}>Banned</span>;
+        }
+        if (user.isVerified) {
+            return <span className={`${styles.statusBadge} ${styles.statusActive}`}>Active</span>;
+        }
+        return <span className={`${styles.statusBadge} ${styles.statusPending}`}>Pending</span>;
     };
 
     const getTeacherApprovalBadge = (user) => {
@@ -201,12 +199,6 @@ export default function UserManagement() {
         <div className={styles.userManagement}>
             <div className={styles.header}>
                 <h1>👥 User Management</h1>
-                <button
-                    className={styles.backButton}
-                    onClick={() => navigate('/dashboard')}
-                >
-                    ← Back to Dashboard
-                </button>
             </div>
 
             {/* Filters */}
@@ -231,7 +223,6 @@ export default function UserManagement() {
                         <option value="all">All Roles</option>
                         <option value="student">Student</option>
                         <option value="teacher">Teacher</option>
-                        <option value="admin">Admin</option>
                     </select>
                 </div>
 
@@ -291,16 +282,9 @@ export default function UserManagement() {
                                     </td>
                                     <td>{user.email}</td>
                                     <td>
-                                        <select
-                                            value={user.role || 'student'}
-                                            onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                                            className={styles.roleSelect}
-                                            disabled={actionLoading[user._id] === 'role'}
-                                        >
-                                            <option value="student">Student</option>
-                                            <option value="teacher">Teacher</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
+                                        <span className={styles.roleBadge}>
+                                            {user.role}
+                                        </span>
                                     </td>
                                     <td>{getStatusBadge(user)}</td>
                                     <td>
@@ -326,23 +310,35 @@ export default function UserManagement() {
                                             )}
                                         </div>
                                     </td>
-                                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                                    <td>{new Date(user.createdAt).toLocaleDateString('en-GB')}</td>
                                     <td>
                                         <div className={styles.actions}>
-                                            <button
-                                                className={user.isBanned ? styles.btnUnban : styles.btnBan}
-                                                onClick={() => handleBanToggle(user._id, user.isBanned)}
-                                                disabled={actionLoading[user._id] === 'ban'}
-                                            >
-                                                {user.isBanned ? '✓ Unban' : '🚫 Ban'}
-                                            </button>
-                                            <button
-                                                className={styles.btnDelete}
-                                                onClick={() => handleDeleteClick(user)}
-                                                disabled={actionLoading[user._id] === 'delete'}
-                                            >
-                                                🗑️ Delete
-                                            </button>
+                                            {!user.isDeleted && (
+                                                <>
+                                                    <button
+                                                        className={user.isBanned ? styles.btnUnban : styles.btnBan}
+                                                        onClick={() => handleBanToggle(user._id, user.isBanned)}
+                                                        disabled={!!actionLoading[user._id]}
+                                                        title={user.isBanned ? 'Unban User' : 'Ban User'}
+                                                    >
+                                                        {actionLoading[user._id] === 'ban' ? (
+                                                            <FaSpinner className="spin" />
+                                                        ) : user.isBanned ? (
+                                                            <><FaUnlock /> Unban</>
+                                                        ) : (
+                                                            <><FaBan /> Ban</>
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        className={styles.btnDelete}
+                                                        onClick={() => handleDeleteClick(user)}
+                                                        disabled={!!actionLoading[user._id]}
+                                                        title="Delete User"
+                                                    >
+                                                        {actionLoading[user._id] === 'delete' ? <FaSpinner className="spin" /> : <><FaTrash /> Delete</>}
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

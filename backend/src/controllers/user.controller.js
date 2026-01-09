@@ -230,8 +230,8 @@ export const getUserList = async (req, res) => {
       sort = "createdAt",
     } = req.query;
 
-    const query = {};
-    if (role) query.role = role;
+    const query = { role: { $ne: 'admin' } };
+    if (role && role !== 'admin') query.role = role;
     if (isVerified !== undefined) query.isVerified = isVerified === "true";
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -370,25 +370,13 @@ export const deleteUser = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Delete user profile if exists
-    await UserProfile.findOneAndDelete({ userId });
-
-    // Delete courses if user is a teacher
-    if (user.role === "teacher") {
-      await Course.deleteMany({ teacher: userId });
-    }
-
-    // Delete progress if user is a student
-    if (user.role === "student") {
-      await Progress.deleteMany({ user: userId });
-    }
-
-    // Delete user itself
-    await user.deleteOne();
+    // Soft delete user
+    user.isDeleted = true;
+    await user.save({ validateBeforeSave: false });
 
     return res
       .status(200)
-      .json({ message: "User and related data deleted successfully." });
+      .json({ message: "User account marked as deleted.", userId: user._id });
   } catch (error) {
     console.error("Delete user error:", error);
     res.status(500).json({ message: "Server error while deleting user." });

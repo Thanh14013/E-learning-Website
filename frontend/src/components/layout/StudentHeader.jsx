@@ -123,12 +123,6 @@ export default function StudentHeader() {
                           >
                             <div
                               className={styles.notifMain}
-                              onClick={() => {
-                                if (n.link) {
-                                  navigate(n.link);
-                                  setNotifOpen(false);
-                                }
-                              }}
                             >
                               <span className={styles.notifIcon}>{typeIcon(n.type)}</span>
                               <div className={styles.notifContent}>

@@ -159,12 +159,6 @@ const ContentModeration = () => {
         <div className={styles.contentModeration}>
             <div className={styles.header}>
                 <h1>🛡️ Content Moderation</h1>
-                <button
-                    className={styles.backButton}
-                    onClick={() => navigate('/dashboard')}
-                >
-                    ← Back to Dashboard
-                </button>
             </div>
 
             {/* Info Banner */}
@@ -223,7 +217,7 @@ const ContentModeration = () => {
                                     {getStatusBadge(report.status)}
                                 </div>
                                 <span className={styles.reportDate}>
-                                    {new Date(report.createdAt).toLocaleDateString()}
+                                    {new Date(report.createdAt).toLocaleDateString('en-GB')}
                                 </span>
                             </div>
 
@@ -329,7 +323,7 @@ const ContentModeration = () => {
                             </div>
                             <div className={styles.detailRow}>
                                 <strong>Date:</strong>
-                                <span>{new Date(selectedReport.createdAt).toLocaleString()}</span>
+                                <span>{new Date(selectedReport.createdAt).toLocaleString('en-GB')}</span>
                             </div>
                             <div className={styles.detailRow}>
                                 <strong>Status:</strong>

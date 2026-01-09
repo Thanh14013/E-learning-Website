@@ -30,6 +30,7 @@ import UserManagement from "../pages/admin/UserManagement.jsx";
 import ContentModeration from "../pages/admin/ContentModeration.jsx";
 import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
 import SystemSettings from "../pages/admin/SystemSettings.jsx";
+import AdminCourseDetail from "../pages/admin/AdminCourseDetail.jsx";
 import CourseApproval from "../pages/admin/CourseApproval.jsx";
 import AdminLayout from "../components/layout/AdminLayout.jsx";
 import AdminRoute from "../components/AdminRoute.jsx";
@@ -127,7 +128,8 @@ const router = createBrowserRouter([
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <UserManagement /> },
       { path: "moderation", element: <ContentModeration /> },
-      { path: "courses/approval", element: <CourseApproval /> },
+      { path: "courses", element: <CourseApproval /> },
+      { path: "courses/:id", element: <AdminCourseDetail /> },
       { path: "settings", element: <SystemSettings /> },
     ],
   },

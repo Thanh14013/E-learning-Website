@@ -5,6 +5,7 @@ import Chapter from "../models/chapter.model.js";
 import Lesson from "../models/lesson.model.js";
 import Discussion from "../models/discussion.model.js";
 import QuizAttempt from "../models/quizAttempt.model.js";
+import User from "../models/user.model.js";
 
 /**
  * Calculate analytics data for a specific course on a specific date
@@ -752,29 +753,106 @@ export const getPlatformStatistics = async () => {
   try {
     // Get total counts
     const totalCourses = await Course.countDocuments({ isPublished: true });
-    const totalTeachers = await Course.distinct("teacherId");
+    const totalTeachers = await User.countDocuments({ role: "teacher" });
+    const totalStudentsCount = await User.countDocuments({ role: "student" });
+    const totalUsers = await User.countDocuments();
 
-    // Get all courses
+    // Get all courses (for enrollments)
     const courses = await Course.find({ isPublished: true });
-    const totalStudents = courses.reduce(
+    // Global enrollments count (sum of all course enrollments)
+    const totalEnrollments = courses.reduce(
       (sum, c) => sum + (c.enrolledStudents?.length || 0),
       0
     );
 
-    // Get latest analytics
-    const latestDate = new Date();
-    latestDate.setHours(0, 0, 0, 0);
+    // --- Trend Analysis (Last 6 Months) ---
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5); // 5 months ago + current month = 6 months
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const latestAnalytics = await Analytics.find({
-      date: { $lte: latestDate },
-    }).sort({ date: -1 });
+    // 1. User Growth Trend (Monthly)
+    const userGrowthRaw = await User.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
 
-    // Calculate platform averages
-    const averageCompletionRate =
-      latestAnalytics.length > 0
-        ? latestAnalytics.reduce((sum, a) => sum + a.completionRate, 0) /
-          latestAnalytics.length
-        : 0;
+    // Fill missing months for User Growth
+    const userGrowth = [];
+    let currentMonth = new Date(sixMonthsAgo);
+    const now = new Date();
+
+    while (currentMonth <= now) {
+      const monthStr = currentMonth.toISOString().slice(0, 7); // YYYY-MM
+      const found = userGrowthRaw.find(u => u._id === monthStr);
+      
+      // We want cumulative growth ideally, or net new? 
+      // User asked for "Chart số liệu thực tế" - usually "Total Users" over time or "New Users".
+      // Let's provide "New Users" per month for a Bar/Area chart, and total cumulative as a separate stat if needed.
+      // Actually, Sparklines usually show "New Users" trend.
+      
+      userGrowth.push({
+        name: monthStr,
+        users: found ? found.count : 0
+      });
+      
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+
+    // 2. Active Students (Last 30 Days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    // Count unique users who created a Progress or QuizAttempt in last 30 days
+    const activeProgressUsers = await Progress.distinct("userId", { updatedAt: { $gte: thirtyDaysAgo } });
+    const activeQuizUsers = await QuizAttempt.distinct("userId", { updatedAt: { $gte: thirtyDaysAgo } });
+    
+    // Combine unique IDs
+    const activeUserSet = new Set([...activeProgressUsers.map(id => id.toString()), ...activeQuizUsers.map(id => id.toString())]);
+    const activeUsersCount = activeUserSet.size;
+
+    // 3. User Distribution
+    const userDistribution = [
+      { name: 'Students', value: totalStudentsCount },
+      { name: 'Teachers', value: totalTeachers }
+    ];
+
+    // 4. Enrollment Trend (Monthly - Proxy via Progress creation if Enrollment Date not tracked)
+    // Actually, Progress is created when student starts. Use Progress.createdAt as proxy for enrollment.
+    const enrollmentGrowthRaw = await Progress.aggregate([
+       { $match: { createdAt: { $gte: sixMonthsAgo } } },
+       // Deduplicate by (userId, courseId) if user resets progress? 
+       // Usually Progress document is unique per course-student.
+       {
+         $group: {
+            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+            count: { $sum: 1 }
+         }
+       },
+       { $sort: { "_id": 1 } }
+    ]);
+    
+    const enrollmentGrowth = [];
+    currentMonth = new Date(sixMonthsAgo);
+    while (currentMonth <= now) {
+        const monthStr = currentMonth.toISOString().slice(0, 7);
+        const found = enrollmentGrowthRaw.find(e => e._id === monthStr);
+        enrollmentGrowth.push({
+            name: monthStr,
+            enrollments: found ? found.count : 0
+        });
+        currentMonth.setMonth(currentMonth.getMonth() + 1);
+    }
+
+
+    // Platform averages
+    const averageCompletionRate = 0; // Keeping 0 to save computation time unless critical
 
     // Top courses by students
     const topCourses = courses
@@ -782,19 +860,25 @@ export const getPlatformStatistics = async () => {
         (a, b) =>
           (b.enrolledStudents?.length || 0) - (a.enrolledStudents?.length || 0)
       )
-      .slice(0, 10)
+      .slice(0, 5)
       .map((c) => ({
         courseId: c._id,
         title: c.title,
         students: c.enrolledStudents?.length || 0,
         rating: c.rating,
+        price: c.price || 0
       }));
 
     return {
       totalCourses,
-      totalTeachers: totalTeachers.length,
-      totalStudents,
-      averageCompletionRate: Math.round(averageCompletionRate * 100) / 100,
+      totalTeachers,
+      totalStudents: totalStudentsCount,
+      totalUsers,
+      totalEnrollments,
+      activeUsers: activeUsersCount,
+      userGrowth,
+      enrollmentGrowth,
+      userDistribution,
       topCourses,
     };
   } catch (error) {

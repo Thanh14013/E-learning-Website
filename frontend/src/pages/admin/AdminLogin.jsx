@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import styles from "../auth/auth.module.css";
+import styles from "./AdminLogin.module.css";
 
 const AdminLogin = () => {
     const navigate = useNavigate();
@@ -36,8 +36,10 @@ const AdminLogin = () => {
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.container}>
-                <h1 className={styles.title}>Admin Login</h1>
-                <p className={styles.subtitle}>Sign in with your admin credentials</p>
+                <div className={styles.header}>
+                    <h1 className={styles.title}>Admin Portal</h1>
+                    <p className={styles.subtitle}>Secure access for administrators</p>
+                </div>
 
                 {error && <div className={styles.error}>{error}</div>}
 
@@ -50,6 +52,7 @@ const AdminLogin = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
+                            placeholder="name@company.com"
                         />
                     </div>
 
@@ -61,20 +64,21 @@ const AdminLogin = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
+                            placeholder="••••••••"
                         />
                     </div>
 
                     <button type="submit" className={styles.loginBtn} disabled={loading}>
-                        {loading ? "Logging in..." : "Login"}
+                        {loading ? "Authenticating..." : "Sign In"}
                     </button>
                 </form>
 
-                <p className={styles.registerText}>
-                    Need the student/teacher login?
-                    <Link to="/login" className={styles.registerLink}>
-                        Go back
+                <div className={styles.footer}>
+                    <span>Not an admin?</span>
+                    <Link to="/login" className={styles.link}>
+                        Student Login
                     </Link>
-                </p>
+                </div>
             </div>
         </div>
     );

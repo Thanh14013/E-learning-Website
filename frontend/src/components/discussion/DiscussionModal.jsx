@@ -43,7 +43,7 @@ const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeac
     const isDiscussionOwner = user?._id === discussion?.userId?._id;
     const isCourseTeacher = user?._id === courseTeacherId;
     const isActiveAdmin = user?.role === 'admin';
-    const canDeleteDiscussion = isDiscussionOwner || isActiveAdmin || canDelete;
+    const canDeleteDiscussion = isDiscussionOwner || isActiveAdmin || canDelete || isCourseTeacher;
 
     const handleDeleteDiscussion = async () => {
         const isConfirmed = await confirm('Are you sure you want to delete this discussion?', { type: 'danger', confirmText: 'Delete' });

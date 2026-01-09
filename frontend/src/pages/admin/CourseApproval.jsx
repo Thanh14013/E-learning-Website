@@ -3,20 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toastService from '../../services/toastService';
 import api from '../../services/api';
+import { useConfirm } from '../../contexts/ConfirmDialogContext';
 import styles from './CourseApproval.module.css';
 
 /**
- * Course Approval Page
- * Admin interface for reviewing and approving courses
+ * Admin Courses Page
+ * View and manage all courses with filters
  */
 const CourseApproval = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { confirm } = useConfirm();
 
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState('pending'); // pending, approved, rejected, all
+    const [filter, setFilter] = useState('all'); // Default to all
     const [courses, setCourses] = useState([]);
     const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const limit = 5;
 
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [showReviewModal, setShowReviewModal] = useState(false);
@@ -30,18 +35,21 @@ const CourseApproval = () => {
         }
 
         loadCourses();
-    }, [user, navigate, filter]);
+    }, [user, navigate, filter, page]);
 
     const loadCourses = async () => {
         try {
             setLoading(true);
             const response = await api.get('/admin/courses', {
-                params: { status: filter === 'all' ? undefined : filter, limit: 50 },
+                params: { status: filter, page, limit },
             });
             if (response.data.success) {
                 setCourses(response.data.data || []);
                 if (response.data.stats) {
                     setStats(response.data.stats);
+                }
+                if (response.data.pagination) {
+                    setTotalPages(response.data.pagination.totalPages);
                 }
             } else {
                 setCourses([]);
@@ -55,10 +63,7 @@ const CourseApproval = () => {
         }
     };
 
-    const filteredCourses = courses.filter(course => {
-        if (filter === 'all') return true;
-        return (course.approvalStatus || course.status || 'pending') === filter;
-    });
+    // Removed redundant filteredCourses logic. We trust the API to return filtered data.
 
     const handleReview = (course) => {
         setSelectedCourse(course);
@@ -71,7 +76,7 @@ const CourseApproval = () => {
             const response = await api.put(`/admin/courses/${selectedCourse._id}/approve`, { notes: reviewNotes });
             if (response.data.success) {
                 toastService.success(`Course "${selectedCourse.title}" has been approved`);
-                loadCourses(); // Refresh list to ensure data consistency
+                loadCourses(); // Refresh list
             }
             setShowReviewModal(false);
             setSelectedCourse(null);
@@ -91,7 +96,7 @@ const CourseApproval = () => {
             const response = await api.put(`/admin/courses/${selectedCourse._id}/reject`, { notes: reviewNotes });
             if (response.data.success) {
                 toastService.success(`Course "${selectedCourse.title}" has been rejected`);
-                loadCourses(); // Refresh list to ensure data consistency
+                loadCourses(); // Refresh list
             }
             setShowReviewModal(false);
             setSelectedCourse(null);
@@ -101,16 +106,55 @@ const CourseApproval = () => {
         }
     };
 
+    const handleDeleteCourse = async (courseId, courseTitle) => {
+        const isConfirmed = await confirm(
+            `Are you sure you want to delete the course "${courseTitle}"? This action cannot be undone.`,
+            {
+                type: 'danger',
+                title: 'Delete Course',
+                confirmText: 'Delete',
+            }
+        );
+
+        if (!isConfirmed) return;
+
+        try {
+            await api.delete(`/courses/${courseId}`);
+            toastService.success('Course deleted successfully');
+            loadCourses();
+        } catch (error) {
+            console.error('[CourseApproval] Delete error:', error);
+            toastService.error(error.response?.data?.message || 'Failed to delete course');
+        }
+    };
+
     const handleViewCourse = (courseId) => {
-        navigate(`/courses/${courseId}`);
+        navigate(`/admin/courses/${courseId}`);
+    };
+
+    const handleFilterClick = (newFilter) => {
+        // Toggle filter: if clicking the current valid filter, revert to 'all'
+        if (filter === newFilter) {
+            setFilter('all');
+        } else {
+            setFilter(newFilter);
+        }
+        setPage(1); // Reset to first page on filter change
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setPage(newPage);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const formatDate = (date) => {
         if (!date) return 'N/A';
-        return new Date(date).toLocaleDateString('en-US', {
+        return new Date(date).toLocaleDateString('en-GB', {
             year: 'numeric',
-            month: 'short',
-            day: 'numeric'
+            month: '2-digit',
+            day: '2-digit'
         });
     };
 
@@ -123,14 +167,11 @@ const CourseApproval = () => {
         return badges[status] || badges.pending;
     };
 
-    // Removed local stats calculation to prevent inconsistency when filtering
-    // const stats = { ... }
-
     if (loading) {
         return (
             <div className={styles.loading}>
                 <div className={styles.spinner}></div>
-                <p>Loading courses...</p>
+                <p>Loading filter...</p>
             </div>
         );
     }
@@ -139,24 +180,24 @@ const CourseApproval = () => {
         <div className={styles.container}>
             <div className={styles.header}>
                 <div>
-                    <h1 className={styles.title}>Course Approval</h1>
+                    <h1 className={styles.title}>All Courses</h1>
                     <p className={styles.subtitle}>
-                        Review and approve courses submitted by teachers
+                        Manage and review all courses
                     </p>
                 </div>
             </div>
 
             {/* Stats */}
             <div className={styles.stats}>
-                <div className={styles.statCard}>
+                <div className={styles.statCard} onClick={() => handleFilterClick('pending')} style={{ cursor: 'pointer' }}>
                     <div className={styles.statValue}>{stats.pending}</div>
                     <div className={styles.statLabel}>Pending Review</div>
                 </div>
-                <div className={styles.statCard}>
+                <div className={styles.statCard} onClick={() => handleFilterClick('approved')} style={{ cursor: 'pointer' }}>
                     <div className={styles.statValue}>{stats.approved}</div>
                     <div className={styles.statLabel}>Approved</div>
                 </div>
-                <div className={styles.statCard}>
+                <div className={styles.statCard} onClick={() => handleFilterClick('rejected')} style={{ cursor: 'pointer' }}>
                     <div className={styles.statValue}>{stats.rejected}</div>
                     <div className={styles.statLabel}>Rejected</div>
                 </div>
@@ -172,19 +213,19 @@ const CourseApproval = () => {
                 </button>
                 <button
                     className={`${styles.filterBtn} ${filter === 'pending' ? styles.filterActive : ''}`}
-                    onClick={() => setFilter('pending')}
+                    onClick={() => handleFilterClick('pending')}
                 >
                     Pending ({stats.pending})
                 </button>
                 <button
                     className={`${styles.filterBtn} ${filter === 'approved' ? styles.filterActive : ''}`}
-                    onClick={() => setFilter('approved')}
+                    onClick={() => handleFilterClick('approved')}
                 >
                     Approved ({stats.approved})
                 </button>
                 <button
                     className={`${styles.filterBtn} ${filter === 'rejected' ? styles.filterActive : ''}`}
-                    onClick={() => setFilter('rejected')}
+                    onClick={() => handleFilterClick('rejected')}
                 >
                     Rejected ({stats.rejected})
                 </button>
@@ -192,12 +233,17 @@ const CourseApproval = () => {
 
             {/* Courses List */}
             <div className={styles.coursesList}>
-                {filteredCourses.length === 0 ? (
+                {courses.length === 0 ? (
                     <div className={styles.empty}>
-                        <p>No courses found</p>
+                        <p>No courses found for this filter.</p>
+                        {filter !== 'all' && (
+                            <button className={styles.viewBtn} onClick={() => setFilter('all')}>
+                                Show All Courses
+                            </button>
+                        )}
                     </div>
                 ) : (
-                    filteredCourses.map(course => {
+                    courses.map(course => {
                         const status = course.approvalStatus || course.status || 'pending';
                         const statusBadge = getStatusBadge(status);
                         const teacher = course.teacher || course.teacherId || {};
@@ -255,6 +301,13 @@ const CourseApproval = () => {
                                                 Review
                                             </button>
                                         )}
+                                        <button
+                                            className={styles.rejectBtn}
+                                            style={{ marginLeft: '8px', padding: '8px 16px', fontSize: '0.9rem' }}
+                                            onClick={() => handleDeleteCourse(course._id || course.id, course.title)}
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -262,6 +315,29 @@ const CourseApproval = () => {
                     })
                 )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className={styles.pagination}>
+                    <button
+                        className={styles.pageBtn}
+                        disabled={page === 1}
+                        onClick={() => handlePageChange(page - 1)}
+                    >
+                        Previous
+                    </button>
+                    <span className={styles.pageInfo}>
+                        Page {page} of {totalPages}
+                    </span>
+                    <button
+                        className={styles.pageBtn}
+                        disabled={page === totalPages}
+                        onClick={() => handlePageChange(page + 1)}
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
 
             {/* Review Modal */}
             {showReviewModal && selectedCourse && (

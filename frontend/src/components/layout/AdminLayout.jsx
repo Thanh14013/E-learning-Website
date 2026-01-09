@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import toastService from '../../services/toastService';
 import styles from './AdminLayout.module.css';
 
@@ -11,6 +11,7 @@ import styles from './AdminLayout.module.css';
 const AdminLayout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     useEffect(() => {
         if (user?.role !== 'admin') {
@@ -21,33 +22,12 @@ const AdminLayout = () => {
 
     const adminNavigation = [
         {
-            section: 'Overview',
+            section: '', // No section title for unified view
             items: [
                 { icon: '📊', label: 'Dashboard', path: '/admin/dashboard' },
-                { icon: '📈', label: 'Analytics', path: '/admin/analytics' }
-            ]
-        },
-        {
-            section: 'User Management',
-            items: [
+                { icon: '📈', label: 'Analytics', path: '/admin/analytics' },
                 { icon: '👥', label: 'All Users', path: '/admin/users' },
-                { icon: '🔑', label: 'Roles & Permissions', path: '/admin/roles' }
-            ]
-        },
-        {
-            section: 'Content Management',
-            items: [
-                { icon: '📚', label: 'All Courses', path: '/courses' },
-                { icon: '✅', label: 'Course Approval', path: '/admin/courses/approval' },
-                { icon: '🚨', label: 'Content Moderation', path: '/admin/moderation' }
-            ]
-        },
-        {
-            section: 'System',
-            items: [
-                { icon: '⚙️', label: 'System Settings', path: '/admin/settings' },
-                { icon: '🔒', label: 'Security', path: '/admin/security' },
-                { icon: '📋', label: 'Audit Logs', path: '/admin/logs' }
+                { icon: '📚', label: 'All Courses', path: '/admin/courses' }
             ]
         }
     ];
@@ -62,20 +42,20 @@ const AdminLayout = () => {
             <header className={styles.header}>
                 <div className={styles.headerContent}>
                     <div className={styles.logo}>
+                        <button
+                            className={styles.toggleBtn}
+                            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                            aria-label="Toggle Sidebar"
+                        >
+                            ☰
+                        </button>
                         <span className={styles.logoIcon}>🎓</span>
                         <span className={styles.logoText}>MasterDev Admin</span>
                     </div>
 
                     <div className={styles.headerRight}>
-                        <button
-                            className={styles.backBtn}
-                            onClick={() => navigate('/dashboard')}
-                        >
-                            ← Back to Dashboard
-                        </button>
                         <div className={styles.userInfo}>
-                            <span className={styles.userName}>{user?.fullName || user?.name}</span>
-                            <span className={styles.userRole}>Administrator</span>
+                            <span className={styles.userName}>Admin</span>
                         </div>
                         <button
                             className={styles.logoutBtn}
@@ -90,13 +70,13 @@ const AdminLayout = () => {
                 </div>
             </header>
 
-            <div className={styles.container}>
+            <div className={`${styles.container} ${!isSidebarOpen ? styles.containerCollapsed : ''}`}>
                 {/* Admin Sidebar */}
-                <aside className={styles.sidebar}>
+                <aside className={`${styles.sidebar} ${!isSidebarOpen ? styles.sidebarCollapsed : ''}`}>
                     <nav className={styles.nav}>
                         {adminNavigation.map((section, idx) => (
                             <div key={idx} className={styles.navSection}>
-                                <div className={styles.sectionTitle}>{section.section}</div>
+                                {section.section && <div className={styles.sectionTitle}>{section.section}</div>}
                                 <div className={styles.navItems}>
                                     {section.items.map((item, itemIdx) => (
                                         <NavLink
