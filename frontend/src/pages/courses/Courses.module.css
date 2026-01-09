@@ -14,13 +14,13 @@
 
 /* Search Bar */
 .searchBar {
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto var(--spacing-4) auto;
   display: flex;
   gap: 12px;
   background: white;
   padding: 8px;
-  border-radius: 50px;
+  border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
@@ -38,7 +38,7 @@
   color: white;
   border: none;
   padding: 12px 28px;
-  border-radius: 50px;
+  border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -409,9 +409,13 @@
   gap: 8px;
 }
 
-.pageNumber {
+
+.pageNumber{
   width: 40px;
   height: 40px;
+  display: inline-flex;        
+  align-items: center;
+  justify-content: center;
   border: 2px solid #e5e7eb;
   background: white;
   border-radius: 8px;
@@ -419,7 +423,10 @@
   transition: all 0.3s ease;
   font-weight: 600;
   color: #374151;
+  padding: 0;                  
+  line-height: 1;             
 }
+
 
 .pageNumber:hover {
   background: #f3f4f6;

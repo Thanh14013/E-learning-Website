@@ -148,6 +148,7 @@
 .accordionContent {
   border: 1px solid var(--color-gray-200);
   border-top: none;
+  margin-left: 20px;
   background-color: var(--bg-card);
 }
 
