@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCourses } from '../../contexts/CoursesContext';
 import { useDiscussions } from '../../contexts/DiscussionContext';
@@ -12,6 +12,7 @@ import styles from './LessonDetail.module.css';
 
 const LessonDetail = () => {
     const { courseId, lessonId } = useParams();
+    const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
     const { myCourses } = useCourses();
@@ -51,6 +52,13 @@ const LessonDetail = () => {
                 const lessonData = lessonRes.data.data;
                 setLesson(lessonData);
 
+                // Guests can only view preview lessons; redirect others to login
+                if (!user && !lessonData?.isPreview) {
+                    toast.error('Please log in to view this lesson');
+                    navigate('/login', { replace: true, state: { from: location } });
+                    return;
+                }
+
                 // Fetch course detail to get all chapters and lessons
                 const courseRes = await api.get(`/courses/${courseId}`);
                 const courseData = courseRes.data.data;
@@ -71,65 +79,68 @@ const LessonDetail = () => {
                 });
                 setAllLessons(allLessonsArray);
 
-                // Fetch quizzes for this lesson
-                try {
-                    const quizRes = await api.get(`/quizzes/lesson/${lessonId}`);
-                    if (quizRes.data.data) {
-                        const quizzesData = quizRes.data.data;
-                        setQuizzes(quizzesData);
+                // Fetch quizzes for this lesson (only if logged in; skip for guests to avoid 401s)
+                if (user) {
+                    try {
+                        const quizRes = await api.get(`/quizzes/lesson/${lessonId}`);
+                        if (quizRes.data.data) {
+                            const quizzesData = quizRes.data.data;
+                            setQuizzes(quizzesData);
 
-                        // Check which quizzes are already completed
-                        const completedSet = new Set();
-                        const attemptsMap = {};
+                            // Check which quizzes are already completed
+                            const completedSet = new Set();
+                            const attemptsMap = {};
 
-                        for (const quiz of quizzesData) {
-                            try {
-                                const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts?limit=1`);
-                                if (attemptsRes.data.attempts && attemptsRes.data.attempts.length > 0) {
-                                    const lastAttempt = attemptsRes.data.attempts[0];
-                                    attemptsMap[quiz._id] = lastAttempt;
-                                    if (lastAttempt.isPassed) {
-                                        completedSet.add(quiz._id);
-                                        setQuizScores(prev => ({
-                                            ...prev,
-                                            [quiz._id]: {
-                                                correct: lastAttempt.score,
-                                                total: lastAttempt.score + (lastAttempt.percentage > 0 ? Math.round(lastAttempt.score * (100 / lastAttempt.percentage) - lastAttempt.score) : 0),
-                                                answered: lastAttempt.score,
-                                                percentage: lastAttempt.percentage,
-                                                isPassed: lastAttempt.isPassed
-                                            }
-                                        }));
+                            for (const quiz of quizzesData) {
+                                try {
+                                    const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts?limit=1`);
+                                    if (attemptsRes.data.attempts && attemptsRes.data.attempts.length > 0) {
+                                        const lastAttempt = attemptsRes.data.attempts[0];
+                                        attemptsMap[quiz._id] = lastAttempt;
+                                        if (lastAttempt.isPassed) {
+                                            completedSet.add(quiz._id);
+                                            setQuizScores(prev => ({
+                                                ...prev,
+                                                [quiz._id]: {
+                                                    correct: lastAttempt.score,
+                                                    total: lastAttempt.score + (lastAttempt.percentage > 0 ? Math.round(lastAttempt.score * (100 / lastAttempt.percentage) - lastAttempt.score) : 0),
+                                                    answered: lastAttempt.score,
+                                                    percentage: lastAttempt.percentage,
+                                                    isPassed: lastAttempt.isPassed
+                                                }
+                                            }));
+                                        }
                                     }
+                                } catch (err) {
+                                    console.log(`No attempts found for quiz ${quiz._id}`);
                                 }
-                            } catch (err) {
-                                console.log(`No attempts found for quiz ${quiz._id}`);
                             }
-                        }
 
-                        setCompletedQuizzes(completedSet);
-                        setQuizAttempts(attemptsMap);
+                            setCompletedQuizzes(completedSet);
+                            setQuizAttempts(attemptsMap);
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch quizzes:', error);
                     }
-                } catch (error) {
-                    console.error('Failed to fetch quizzes:', error);
                 }
 
-                // Check if lesson is completed and get course progress
-                try {
-                    const progressRes = await api.get(`/progress/lesson/${lessonId}`);
-                    setIsCompleted(progressRes.data?.progress?.isCompleted || false);
+                // Check progress only if logged in
+                if (user) {
+                    try {
+                        const progressRes = await api.get(`/progress/lesson/${lessonId}`);
+                        setIsCompleted(progressRes.data?.progress?.isCompleted || false);
 
-                    // Fetch course progress to get completed count
-                    const courseProgressRes = await api.get(`/progress/course/${courseId}`);
-                    console.log('📊 Course Progress Response:', courseProgressRes.data);
-                    if (courseProgressRes.data) {
-                        setCourseProgress({
-                            completedCount: courseProgressRes.data.completedLessons || 0,
-                            totalLessons: courseProgressRes.data.totalLessons || 0
-                        });
+                        const courseProgressRes = await api.get(`/progress/course/${courseId}`);
+                        console.log('📊 Course Progress Response:', courseProgressRes.data);
+                        if (courseProgressRes.data) {
+                            setCourseProgress({
+                                completedCount: courseProgressRes.data.completedLessons || 0,
+                                totalLessons: courseProgressRes.data.totalLessons || 0
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch progress:', error);
                     }
-                } catch (error) {
-                    console.error('Failed to fetch progress:', error);
                 }
 
             } catch (error) {
@@ -146,7 +157,7 @@ const LessonDetail = () => {
         if (courseId && lessonId) {
             fetchLessonData();
         }
-    }, [courseId, lessonId, navigate]);
+    }, [courseId, lessonId, navigate, location, user]);
 
     // Fetch discussions for this lesson
     const fetchLessonDiscussions = async () => {
@@ -779,7 +790,7 @@ const LessonDetail = () => {
 
                     {/* Discussion Section */}
                     <div className={styles.discussionSection} style={{ marginTop: '40px', borderTop: '2px solid #e0e0e0', paddingTop: '30px' }}>
-                        <div className={styles.discussionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px',  marginLeft: '20px' }}>
+                        <div className={styles.discussionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', marginLeft: '20px' }}>
                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>💬 Lesson Discussion</h3>
                             {user && (
                                 <button

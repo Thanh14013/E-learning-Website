@@ -36,26 +36,29 @@ export const DiscussionProvider = ({ children }) => {
   // ============================================================================
 
   const joinCourseRoom = useCallback((courseId) => {
+    // Only join rooms when authenticated and socket is connected
+    if (!isAuthenticated || !socketService.isConnected) return;
+
     if (courseId && courseId !== currentCourseId) {
-      // Leave previous room if any
       if (currentCourseId) {
         socketService.leaveRoom('discussion', currentCourseId);
       }
 
-      // Join new room
       socketService.joinRoom('discussion', courseId);
       setCurrentCourseId(courseId);
       console.log('[DiscussionContext] Joined room for course', courseId);
     }
-  }, [currentCourseId]);
+  }, [currentCourseId, isAuthenticated]);
 
   const leaveCourseRoom = useCallback(() => {
+    if (!isAuthenticated || !socketService.isConnected) return;
+
     if (currentCourseId) {
       socketService.leaveRoom('discussion', currentCourseId);
       setCurrentCourseId(null);
       console.log('[DiscussionContext] Left room');
     }
-  }, [currentCourseId]);
+  }, [currentCourseId, isAuthenticated]);
 
   // ============================================================================
   // API METHODS

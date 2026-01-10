@@ -5,6 +5,7 @@ import toastService from '../../services/toastService';
 import api from '../../services/api';
 import { useConfirm } from '../../contexts/ConfirmDialogContext';
 import DiscussionModal from '../../components/discussion/DiscussionModal';
+import SessionHistoryModal from '../../components/session/SessionHistoryModal';
 import styles from './AdminCourseDetail.module.css';
 
 const AdminCourseDetail = () => {
@@ -18,6 +19,8 @@ const AdminCourseDetail = () => {
     const [activeTab, setActiveTab] = useState('content');
     const [expandedLessons, setExpandedLessons] = useState({});
     const [selectedDiscussionId, setSelectedDiscussionId] = useState(null);
+    const [viewingHistoryId, setViewingHistoryId] = useState(null);
+    const [sessions, setSessions] = useState([]);
 
     // For Review/Reject logic
     const [showRejectModal, setShowRejectModal] = useState(false);
@@ -48,6 +51,24 @@ const AdminCourseDetail = () => {
             setLoading(false);
         }
     };
+
+    const fetchSessions = async () => {
+        try {
+            const response = await api.get(`/sessions/course/${id}`);
+            if (response.data.success) {
+                setSessions(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error fetching sessions:', error);
+            // toastService.error('Unable to load sessions'); // Suppress toast on initial load if empty
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'sessions') {
+            fetchSessions();
+        }
+    }, [activeTab, id]);
 
     const toggleLesson = (chapterId, lessonId) => {
         setExpandedLessons(prev => ({
@@ -206,6 +227,12 @@ const AdminCourseDetail = () => {
                 >
                     Discussions ({course.discussions?.length || 0})
                 </button>
+                <button
+                    className={`${styles.tab} ${activeTab === 'sessions' ? styles.activeTab : ''}`}
+                    onClick={() => setActiveTab('sessions')}
+                >
+                    Sessions
+                </button>
             </div>
 
             {/* Content Tab */}
@@ -343,7 +370,7 @@ const AdminCourseDetail = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
                                         <strong style={{ color: '#111827' }}>{d.userId?.fullName || 'Anonymous'}</strong>
-                                        <span style={{ color: '#9ca3af' }}>{new Date(d.createdAt).toLocaleDateString()}</span>
+                                        <span style={{ color: '#9ca3af' }}>{new Date(d.createdAt).toLocaleDateString('en-GB')}</span>
                                     </div>
                                     <button
                                         onClick={(e) => handleDeleteDiscussion(d._id, e)}
@@ -370,6 +397,83 @@ const AdminCourseDetail = () => {
                 </div>
             )}
 
+            {/* Sessions Tab */}
+            {activeTab === 'sessions' && (
+                <div className={styles.section} style={{ padding: '24px' }}>
+                    {sessions.length === 0 ? (
+                        <p style={{ color: '#6b7280', textAlign: 'center' }}>No sessions found.</p>
+                    ) : (
+                        sessions.map(session => (
+                            <div
+                                key={session._id}
+                                className={styles.discussionItem}
+                                style={{
+                                    borderBottom: '1px solid #e5e7eb',
+                                    paddingBottom: '16px',
+                                    marginBottom: '16px',
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
+                                        <div style={{
+                                            padding: '4px 8px',
+                                            borderRadius: '4px',
+                                            fontSize: '12px',
+                                            fontWeight: 'bold',
+                                            backgroundColor: session.status === 'live' ? '#ef4444' :
+                                                session.status === 'scheduled' ? '#3b82f6' : '#9ca3af',
+                                            color: 'white',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {session.status}
+                                        </div>
+                                        <span style={{ color: '#6b7280', fontSize: '14px' }}>
+                                            {new Date(session.scheduledAt).toLocaleString('en-GB')}
+                                        </span>
+                                    </div>
+                                </div>
+                                <h4 style={{ margin: '0 0 8px', color: '#111827', fontSize: '16px' }}>{session.title}</h4>
+                                {session.description && <p style={{ margin: '0 0 12px', color: '#4b5563', fontSize: '14px' }}>{session.description}</p>}
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    {session.hostId?.avatar ? (
+                                        <img
+                                            src={session.hostId.avatar}
+                                            alt={session.hostId.fullName}
+                                            style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+                                        />
+                                    ) : (
+                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#ccc' }}></div>
+                                    )}
+                                    <span style={{ fontSize: '14px', color: '#374151' }}>
+                                        Host: <strong>{session.hostId?.fullName || 'Unknown'}</strong>
+                                    </span>
+                                </div>
+
+                                {session.status === 'ended' && (
+                                    <div style={{ marginTop: '12px' }}>
+                                        <button
+                                            onClick={() => setViewingHistoryId(session._id)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                borderRadius: '4px',
+                                                border: '1px solid #d1d5db',
+                                                background: 'white',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                color: '#374151'
+                                            }}
+                                        >
+                                            View Chat History
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
+
             {/* Discussion Modal */}
             {selectedDiscussionId && (
                 <DiscussionModal
@@ -382,6 +486,14 @@ const AdminCourseDetail = () => {
                     isEnrolled={true} // Admin can view everything
                     isReadOnly={true} // Admin views as read-only in modal
                     courseTeacherId={course.teacherId?._id}
+                />
+            )}
+
+            {/* Session History Modal */}
+            {viewingHistoryId && (
+                <SessionHistoryModal
+                    sessionId={viewingHistoryId}
+                    onClose={() => setViewingHistoryId(null)}
                 />
             )}
 

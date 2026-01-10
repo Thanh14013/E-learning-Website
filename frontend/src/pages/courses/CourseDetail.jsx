@@ -450,11 +450,11 @@ const CourseDetailPage = () => {
 
   // Join socket room for real-time updates
   useEffect(() => {
-    if (courseId) {
+    if (user && courseId) {
       joinCourseRoom(courseId);
       return () => leaveCourseRoom();
     }
-  }, [courseId, joinCourseRoom, leaveCourseRoom]);
+  }, [user, courseId, joinCourseRoom, leaveCourseRoom]);
 
   // Sync context discussions with local state - MERGE instead of overwrite
   useEffect(() => {

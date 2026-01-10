@@ -41,6 +41,7 @@ const Modal = ({
         small: 'modal-content--small',
         medium: 'modal-content--medium',
         large: 'modal-content--large',
+        xl: 'modal-content--xl',
     };
 
     return (

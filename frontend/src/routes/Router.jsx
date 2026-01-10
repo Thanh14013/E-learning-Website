@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, useLocation } from "react-router-dom";
 import Layout from "../components/layout/Layout.jsx";
 import RoleBlocker from "../components/RoleBlocker.jsx";
 import HomePage from "../pages/homepage/Home.jsx";
@@ -41,14 +41,21 @@ import ApiDocs from "../pages/ApiDocs.jsx";
 import Profile from "../pages/profile/Profile.jsx";
 import StudentRoute from "../components/StudentRoute.jsx";
 
+// Wrap Layout so it remounts on location changes (fixes back/forward not re-rendering)
+const PublicLayout = () => {
+  const location = useLocation();
+  // Use location.key so back/forward triggers remount and fresh fetch
+  return (
+    <RoleBlocker key={location.key}>
+      <Layout key={location.key} />
+    </RoleBlocker>
+  );
+};
+
 const router = createBrowserRouter([
   {
     path: "/",
-    element: (
-      <RoleBlocker>
-        <Layout />
-      </RoleBlocker>
-    ),
+    element: <PublicLayout />,
     children: [
       { index: true, element: <HomePage /> },
       { path: "login", element: <Login /> },
@@ -60,8 +67,9 @@ const router = createBrowserRouter([
       { path: "api-docs", element: <ApiDocs /> },
 
       { path: "courses", element: <Courses /> },
-      { path: "courses/:courseId", element: <CourseDetailPage /> },
+      // Put lesson route before course detail to avoid any matching edge cases
       { path: "courses/:courseId/lessons/:lessonId", element: <LessonDetail /> },
+      { path: "courses/:courseId", element: <CourseDetailPage /> },
 
       // Discussions
       { path: "discussions/:discussionId", element: <DiscussionDetailPage /> },

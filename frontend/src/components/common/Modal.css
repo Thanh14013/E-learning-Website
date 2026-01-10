@@ -56,6 +56,14 @@
   max-width: 900px;
 }
 
+.modal-content--xl {
+  width: 95%;
+  max-width: 1400px;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .modal-header {
   display: flex;
   align-items: center;

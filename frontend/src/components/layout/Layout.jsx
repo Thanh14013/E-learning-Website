@@ -9,8 +9,8 @@ export function Layout() {
 
   if (hideHeaderFooter) {
     return (
-      <main>
-        <Outlet />
+      <main key={location.key}>
+        <Outlet key={location.key} />
       </main>
     );
   }
@@ -18,8 +18,8 @@ export function Layout() {
   return (
     <>
       <StudentHeader />
-      <main style={{ minHeight: "80vh", padding: "20px" }}>
-        <Outlet />
+      <main style={{ minHeight: "80vh", padding: "20px" }} key={location.key}>
+        <Outlet key={location.key} />
       </main>
       <ChatManager />
       <Footer />

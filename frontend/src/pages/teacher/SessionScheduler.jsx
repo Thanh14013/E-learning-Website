@@ -6,6 +6,7 @@ import toastService from '../../services/toastService';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
+import SessionHistoryModal from '../../components/session/SessionHistoryModal';
 import styles from './SessionScheduler.module.css';
 
 /**
@@ -21,6 +22,7 @@ export default function SessionScheduler() {
     const [loading, setLoading] = useState(true);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [editingSession, setEditingSession] = useState(null);
+    const [viewingHistoryId, setViewingHistoryId] = useState(null);
 
     useEffect(() => {
         if (user?.role !== 'teacher' && user?.role !== 'admin') {
@@ -174,6 +176,7 @@ export default function SessionScheduler() {
                 onDelete={handleDeleteSession}
                 onStart={handleStartSession}
                 onEnd={handleEndSession}
+                onViewDetail={(sessionId) => setViewingHistoryId(sessionId)}
             />
 
             {/* Create/Edit Modal */}
@@ -186,6 +189,14 @@ export default function SessionScheduler() {
                         fetchData();
                     }}
                     onClose={() => setShowCreateModal(false)}
+                />
+            )}
+
+            {/* History Modal */}
+            {viewingHistoryId && (
+                <SessionHistoryModal
+                    sessionId={viewingHistoryId}
+                    onClose={() => setViewingHistoryId(null)}
                 />
             )}
         </div>
@@ -204,7 +215,7 @@ function Tab({ label, count, isActive, onClick, variant = 'primary' }) {
     );
 }
 
-function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd }) {
+function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd, onViewDetail }) {
     const now = new Date();
 
     if (sessions.length === 0) {
@@ -278,9 +289,14 @@ function SessionsView({ sessions, onEdit, onDelete, onStart, onEnd }) {
                             )}
 
                             {isPast && (
-                                <Button size="small" variant="secondary" disabled>
-                                    Ended
-                                </Button>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <Button size="small" variant="secondary" disabled>
+                                        Ended
+                                    </Button>
+                                    <Button size="small" onClick={() => onViewDetail(session._id)}>
+                                        View Detail
+                                    </Button>
+                                </div>
                             )}
                         </div>
                     </div>
