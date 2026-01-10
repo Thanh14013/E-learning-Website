@@ -1,6 +1,9 @@
 .dashboardLayout {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr) 420px;
+    grid-template-columns:
+    minmax(280px, 320px)
+    minmax(0, 1fr)
+    minmax(300px, 360px);
   grid-template-areas: "nav main calendar";
   gap: 32px;
   padding: 32px;
@@ -569,7 +572,7 @@
 }
 /* Tablet & Mobile */
 /* --- Tablet --- */
-@media (max-width: 1024px) {
+@media (max-width: 1210px) {
   .dashboardLayout {
     grid-template-columns: 1fr;
     grid-template-areas:
@@ -584,18 +587,31 @@
   .calendarSidebar, 
   .mainContent {
     width: 100%;
+    min-width: 0;
   }
 
-  .navList {
+.navList {
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
+    align-items: flex-start; 
   }
-  
-  .navLink {
-    width: auto;
-    flex-grow: 1;
+  .navList > li {
+    flex: 1 1 0px;
+    min-width: 0;
+    width: 0;
+  }
+
+.navLink {
+    width: 100%;
     justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .courseSublist {
+    padding-left: 0;
+    text-align: center;
   }
 }
 
@@ -636,7 +652,9 @@
   .calendarGrid {
     gap: 2px;
   }
-
+    .navLinkActive{
+    background-color: var(--bg-card);
+  }
   .day, 
   .dayHeader {
     width: 32px;
