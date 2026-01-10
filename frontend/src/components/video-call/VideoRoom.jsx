@@ -182,22 +182,22 @@ const VideoRoom = () => {
             });
         };
 
-        const handleWaiting = (e) => {
+        const handleWaiting = () => {
             setViewMode('waiting');
         };
 
-        const handleApproved = (e) => {
+        const handleApproved = () => {
             toastService.success("Host approved your request!");
             setViewMode('room');
             // WebrtcService socket logic should handle list fetching or we just wait for events
         };
 
-        const handleDenied = (e) => {
+        const handleDenied = () => {
             toastService.error("Host denied your request.");
             navigate('/dashboard'); // Or back to course
         };
 
-        const handleKicked = (e) => {
+        const handleKicked = () => {
             toastService.error("You have been kicked from the session.");
             webrtcService.leaveSession();
             navigate('/dashboard');
@@ -364,7 +364,7 @@ const VideoRoom = () => {
                                         }}
                                         className={`${styles.lobbyBtn} ${!isAudioEnabled ? styles.off : ''}`}
                                     >
-                                        {isAudioEnabled ? '🎤 On' : '🎤 Off'}
+                                        {isAudioEnabled ? 'Mic on' : 'Mic off'}
                                     </button>
                                     <button
                                         onClick={() => {
@@ -373,7 +373,7 @@ const VideoRoom = () => {
                                         }}
                                         className={`${styles.lobbyBtn} ${!isVideoEnabled ? styles.off : ''}`}
                                     >
-                                        {isVideoEnabled ? '📷 On' : '📷 Off'}
+                                        {isVideoEnabled ? 'Camera on' : 'Camera off'}
                                     </button>
                                 </div>
                             </>
@@ -525,12 +525,14 @@ const VideoRoom = () => {
 
                         {activeSidebar === 'chat' && (
                             <div className={styles.chatContainer}>
-                                <div className={styles.messages}>
-                                    {chatMessages.map((m, i) => (
-                                        <div key={i} className={styles.message}>
-                                            <strong>{m.userName}</strong>: {m.message}
-                                        </div>
-                                    ))}
+                                <div className={styles.messageList}>
+                                    <div className={styles.chatMessage}>
+                                        {chatMessages.map((m, i) => (
+                                            <div key={i} className={styles.chatMessage}>
+                                                <strong>{m.userName}</strong>: {m.message}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                                 <form onSubmit={(e) => {
                                     e.preventDefault();
@@ -547,12 +549,19 @@ const VideoRoom = () => {
                                     }]);
 
                                     setChatInput('');
-                                }} className={styles.chatInputArea}>
+                                }} className={styles.chatForm}>
                                     <input
                                         value={chatInput}
                                         onChange={e => setChatInput(e.target.value)}
                                         placeholder="Type a message..."
                                     />
+                                    <button
+                                        type="submit"
+                                        className={styles.sendButton}
+                                        disabled={!chatInput.trim()}
+                                    >
+                                        Send
+                                    </button>
                                 </form>
                             </div>
                         )}
