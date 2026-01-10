@@ -101,48 +101,69 @@ const CoursesPage = () => {
 
     return (
         <div className={styles.pageContainer}>
-            <h1 className={styles.pageTitle}>Explore Courses</h1>
+            <div className={styles.heroSimple}>
+                <h1 className={styles.pageTitle}>Explore Courses</h1>
+                <p className={styles.heroSubtitle}>
+                Build practical skills and advance your career, one course at a time.
+                </p>
+                <span className={styles.heroDivider}></span>
+            </div>
 
+            {/* Search + Filter Container */}
+            <div className={styles.searchFilterBox}>
             {/* Search Bar */}
             <form onSubmit={handleSearch} className={styles.searchBar}>
                 <input
-                    type="text"
-                    placeholder="🔍 Search courses..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={styles.searchInput}
+                type="text"
+                placeholder="🔍 Search courses..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
                 />
                 <button type="submit" className={styles.searchButton}>
-                    Search
+                Search
                 </button>
             </form>
 
-            <div className={styles.filterBar}>
-                <div className="form-group">
-                    <label className="form-label">Category</label>
-                    <select name="category" value={filters.category} onChange={handleFilterChange} className="form-select">
-                        <option value="">All Categories</option>
-                        <option value="Programming">Programming</option>
-                        <option value="Frontend">Frontend</option>
-                        <option value="Backend">Backend</option>
-                        <option value="Full Stack">Full Stack</option>
-                        <option value="DevOps">DevOps</option>
-                        <option value="Cloud Computing">Cloud Computing</option>
-                        <option value="Data Science">Data Science</option>
-                        <option value="Machine Learning">Machine Learning</option>
-                        <option value="Mobile Development">Mobile Development</option>
-                        <option value="Cybersecurity">Cybersecurity</option>
-                        <option value="Nodejs">Node.js</option>
-                        <option value="Reactjs">React.js</option>
-                        <option value="Java">Java</option>
-                        <option value="Python">Python</option>
-                        <option value="C++">C++</option>
-                        <option value="Other">Other</option>
+            {/* Filters */}
+            <div className={styles.filterRow}>
+                {/* Category */}
+                <div className={styles.filterGroup}>
+                    <label className={styles.filterLabel}>Category</label>
+                    <select
+                        name="category"
+                        value={filters.category}
+                        onChange={handleFilterChange}
+                        className={styles.filterSelect}
+                    >
+                    <option value="">All Categories</option>
+                    <option value="Programming">Programming</option>
+                    <option value="Frontend">Frontend</option>
+                    <option value="Backend">Backend</option>
+                    <option value="Full Stack">Full Stack</option>
+                    <option value="DevOps">DevOps</option>
+                    <option value="Cloud Computing">Cloud Computing</option>
+                    <option value="Data Science">Data Science</option>
+                    <option value="Machine Learning">Machine Learning</option>
+                    <option value="Mobile Development">Mobile Development</option>
+                    <option value="Cybersecurity">Cybersecurity</option>
+                    <option value="Nodejs">Node.js</option>
+                    <option value="Reactjs">React.js</option>
+                    <option value="Java">Java</option>
+                    <option value="Python">Python</option>
+                    <option value="C++">C++</option>
+                    <option value="Other">Other</option>
                     </select>
                 </div>
-                <div className="form-group">
-                    <label className="form-label">Level</label>
-                    <select name="level" value={filters.level} onChange={handleFilterChange} className="form-select">
+                {/* Level */}
+                <div className={styles.filterGroup}>
+                    <label className={styles.filterLabel}>Level</label>
+                    <select
+                        name="level"
+                        value={filters.level}
+                        onChange={handleFilterChange}
+                        className={styles.filterSelect}
+                    >
                         <option value="">All Levels</option>
                         <option value="beginner">Beginner</option>
                         <option value="intermediate">Intermediate</option>
@@ -150,6 +171,7 @@ const CoursesPage = () => {
                     </select>
                 </div>
             </div>
+                        </div>
 
             {loading ? (
                 <p className={styles.loadingText}>Loading...</p>
