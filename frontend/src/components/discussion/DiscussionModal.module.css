@@ -422,31 +422,53 @@
 
 @media (prefers-color-scheme: dark) {
   .modalContent {
-    background: var(--color-gray-800);
+    background: #0f172a; /* Slate 900 - Darker, richer background */
+    border: 1px solid #334155;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   }
 
   .modalHeader {
-    border-bottom-color: var(--color-gray-700);
+    background: #1e293b; /* Slate 800 - distinct header */
+    border-bottom: 1px solid #334155;
   }
 
   .discussionContent {
-    background: var(--color-gray-700);
+    background: #1e293b; /* Slate 800 */
+    border: 1px solid #334155;
   }
 
   .commentItem {
-    background: var(--color-gray-700);
-    border-color: var(--color-gray-600);
+    background: #1e293b;
+    border-color: #334155;
   }
 
   .commentForm textarea {
-    background: var(--color-gray-700);
-    color: var(--text-primary);
-    border-color: var(--color-gray-600);
+    background: #1e293b;
+    color: #f1f5f9;
+    border-color: #475569;
+  }
+  
+  .commentForm textarea:focus {
+    border-color: #6366f1; /* Indigo 500 */
+    background: #0f172a;
   }
 
   .enrollPrompt,
   .loginPrompt {
-    background: var(--color-gray-700);
+    background: #1e293b;
+    border: 1px solid #334155;
+  }
+  
+  .authorName, .modalHeader h2 {
+      color: #f1f5f9; /* Slate 100 */
+  }
+  
+  .timestamp, .commentTimestamp {
+      color: #94a3b8; /* Slate 400 */
+  }
+  
+  .commentContent, .discussionContent p {
+      color: #e2e8f0; /* Slate 200 */
   }
 }
 

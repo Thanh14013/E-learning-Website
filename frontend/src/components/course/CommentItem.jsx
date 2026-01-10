@@ -29,8 +29,9 @@ const CommentItem = ({ comment, discussionId, depth = 0 }) => {
 
   const isOwner = user?._id === comment.userId._id;
   const isTeacher = user?.role === 'teacher';
+  const isAdmin = user?.role === 'admin';
   const canEdit = isOwner;
-  const canDelete = isOwner || isTeacher;
+  const canDelete = isOwner || isTeacher || isAdmin;
   const maxDepth = 3; // Maximum nesting level
   const canReply = depth < maxDepth;
 

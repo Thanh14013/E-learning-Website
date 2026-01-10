@@ -108,7 +108,9 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
   const { discussion, comments, totalComments } = currentDiscussion;
   const isOwner = user?.id === discussion.userId._id;
   const isTeacher = user?.role === 'teacher';
+  const isAdmin = user?.role === 'admin';
   const canEdit = isOwner || isTeacher;
+  const canDelete = isOwner || isTeacher || isAdmin;
 
   return (
     <div className={styles.discussionDetailPage}>
@@ -152,8 +154,8 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
                 </div>
               </div>
 
-              {canEdit && (
-                <div className={styles.actions}>
+              <div className={styles.actions}>
+                {canEdit && (
                   <button className="btn btn-ghost" title="Edit" onClick={() => setShowEditForm(!showEditForm)}>
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -161,6 +163,19 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
                     </svg>
                     Edit
                   </button>
+                )}
+                {canDelete && (
+                  <button className="btn btn-ghost text-error" title="Delete" onClick={() => setShowDeleteConfirm(true)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                    Delete
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {!showEditForm ? (
             <div className={styles.discussionBody}>
               <div className="prose-content">
@@ -198,18 +213,7 @@ const DiscussionDetailPage = ({ discussionId: propId }) => {
                 }}>Cancel</button>
               </div>
             </div>
-          )}</div>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.discussionBody}>
-            <div className="prose-content">
-              {discussion.content.split('\n').map((paragraph, idx) => (
-                <p key={idx}>{paragraph}</p>
-              ))}
-            </div>
-          </div>
+          )}
 
           <div className={styles.discussionFooter}>
             <div className={styles.stats}>

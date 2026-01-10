@@ -174,7 +174,7 @@ const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeac
                                 {comments.map((comment) => {
                                     const isOwner = user?._id === comment.userId?._id;
                                     const canEdit = isOwner;
-                                    const canDelete = isOwner;
+                                    const canDelete = isOwner || isActiveAdmin || (user?._id === courseTeacherId);
                                     const isEditing = editingCommentId === comment._id;
 
                                     return (
