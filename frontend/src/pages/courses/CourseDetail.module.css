@@ -251,7 +251,13 @@
   padding: var(--spacing-2);
   border: 1px dashed var(--color-gray-300);
   border-radius: var(--border-radius-md);
-  background: var(--color-gray-50);
+  background-color: var(--bg-card);
+}
+@media (prefers-color-scheme: dark) {
+  .liveSchedule {
+    border-color: var(--color-gray-700);
+    background-color: var(--color-gray-800);
+  }
 }
 
 .liveScheduleHeader {
@@ -282,22 +288,45 @@
 
 .liveScheduleItem {
   display: grid;
-  grid-template-columns: 70px 1fr;
+  grid-template-columns: 72px 1fr;
   gap: var(--spacing-2);
   align-items: center;
   padding: var(--spacing-2);
-  background: white;
+  background-color: var(--bg-body);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--border-radius-sm);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+@media (prefers-color-scheme: dark) {
+  .liveScheduleItem {
+    background-color: var(--color-gray-900);
+    border-color: var(--color-gray-700);
+  }
+}
+.liveItem {
+  border-color: var(--color-danger);
+  background-color: rgba(239, 68, 68, 0.08);
 }
 
+@media (prefers-color-scheme: dark) {
+  .liveItem {
+    background-color: rgba(239, 68, 68, 0.15);
+  }
+}
+.liveScheduleItem:hover {
+  background-color: var(--color-gray-100);
+}
+@media (prefers-color-scheme: dark) {
+  .liveScheduleItem:hover {
+    background-color: var(--color-gray-800);
+  }
+}
 .liveScheduleDate {
-  font-weight: 800;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: center;
   color: var(--color-student-primary);
-  text-transform: uppercase;
-  font-size: 0.95rem;
 }
-
 .liveScheduleInfo {
   display: flex;
   flex-direction: column;
@@ -310,8 +339,8 @@
 }
 
 .liveScheduleMeta {
+  font-size: 0.8rem;
   color: var(--text-secondary);
-  font-size: 0.9rem;
 }
 
 /* Stats Container */
