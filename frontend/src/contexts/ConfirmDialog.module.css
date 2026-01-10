@@ -76,30 +76,30 @@
 }
 
 /* Variants */
-.warning .confirmBtn {
+.confirmBtn.warning {
     background: #f59e0b;
 }
-.warning .confirmBtn:hover {
+.confirmBtn.warning:hover {
     background: #d97706;
 }
 .header.warning h3 {
     color: #fbbf24;
 }
-
-.danger .confirmBtn {
-    background: #ef4444;
+.confirmBtn.danger {
+    background: var(--color-error, #ef4444);
+    color: white;
 }
-.danger .confirmBtn:hover {
-    background: #dc2626;
+.confirmBtn.danger:hover {
+    background: var(--color-error-hover, #ec5b5b);
 }
 .header.danger h3 {
     color: #f87171;
 }
 
-.info .confirmBtn {
+.confirmBtn.info {
     background: #3b82f6;
 }
-.info .confirmBtn:hover {
+.confirmBtn.info:hover {
     background: #2563eb;
 }
 .header.info h3 {

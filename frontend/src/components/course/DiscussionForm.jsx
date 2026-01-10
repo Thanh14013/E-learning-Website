@@ -166,7 +166,7 @@ const DiscussionForm = ({
         <button
           type="submit"
           className="btn btn-primary-student"
-          disabled={isSubmitting || Object.keys(errors).length > 0}
+          disabled={isSubmitting} 
         >
           {isSubmitting
             ? (isEditMode ? 'Updating...' : 'Creating...')
