@@ -20,7 +20,7 @@ const NavigationSidebar = ({ enrolledCourses = [] }) => {
       <h3>Navigation</h3>
       <nav>
         <ul className={styles.navList}>
-          <li><a href="/dashboard" className={styles.navLinkActive}>Dashboard</a></li>
+          <li><a href="/dashboard" className={`${styles.navLink} ${styles.navLinkActive}`}> <span>Dashboard</span></a></li>
           <li><a href="/" className={styles.navLink}>Site home</a></li>
           <li>
             <div className={styles.navLink} onClick={toggleCourses} style={{ cursor: 'pointer' }}>
@@ -301,8 +301,12 @@ export default function Dashboard() {
       <aside className={styles.navSidebar}><NavigationSidebar enrolledCourses={myCourses} /></aside>
 
       <main className={styles.mainContent}>
+      <div className={styles.pageHero}>
         <h1 className={styles.mainTitle}>Dashboard</h1>
-        <p className={styles.mainSubtitle}>Welcome back, {user.fullName}!</p>
+        <p className={styles.mainSubtitle}>
+          Welcome back, {user.fullName}!
+        </p>
+      </div>
         <RoleView user={user} />
       </main>
 

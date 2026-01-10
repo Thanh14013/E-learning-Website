@@ -183,10 +183,9 @@ p {
 
 a {
   color: var(--color-student-primary);
-  text-decoration: none;
+  text-decoration: none !important;
   transition: var(--transition-base);
 }
-a:hover { text-decoration: underline; }
 
 code {
   font-family: var(--font-code);
