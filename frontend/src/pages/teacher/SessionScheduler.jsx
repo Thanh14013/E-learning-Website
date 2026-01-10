@@ -360,7 +360,7 @@ function SessionModal({ session, courses, onSave, onClose }) {
             <div className={styles.sessionModal}>
 
                 <div className={styles.formGroup}>
-                    <label>Course *</label>
+                    <label>Course<span className={styles.required}>*</span></label>
                     <select
                         value={formData.courseId}
                         onChange={(e) => handleChange('courseId', e.target.value)}
@@ -376,7 +376,7 @@ function SessionModal({ session, courses, onSave, onClose }) {
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label>Title *</label>
+                    <label>Title<span className={styles.required}>*</span></label>
                     <Input
                         value={formData.title}
                         onChange={(e) => handleChange('title', e.target.value)}
@@ -396,7 +396,7 @@ function SessionModal({ session, courses, onSave, onClose }) {
                 </div>
 
                 <div className={styles.formGroup}>
-                    <label>Time *</label>
+                    <label>Time<span className={styles.required}>*</span></label>
                     <Input
                         type="datetime-local"
                         value={formData.scheduledAt}

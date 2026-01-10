@@ -263,6 +263,11 @@
   display: none; /* Hidden since we moved title to Modal prop */
 }
 
+.required {
+    color: #e53e3e;
+    margin-left: 4px;
+}
+
 .formGroup {
   margin-bottom: 12px;
 }
@@ -287,6 +292,7 @@ input[type="text"] {
   color: #f3f4f6;
   font-size: 0.95rem;
   transition: border-color 0.2s;
+  resize: vertical;
 }
 
 .select:focus,
