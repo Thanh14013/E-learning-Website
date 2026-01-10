@@ -263,6 +263,11 @@
   display: none; /* Hidden since we moved title to Modal prop */
 }
 
+.required {
+    color: #e53e3e;
+    margin-left: 4px;
+}
+
 .formGroup {
   margin-bottom: 12px;
 }
