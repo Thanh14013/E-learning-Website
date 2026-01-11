@@ -447,6 +447,12 @@ const CourseDetailPage = () => {
   const [discussionPage, setDiscussionPage] = useState(1);
   const discussionsPerPage = 5;
 
+  // Handle discussion deleted from modal
+  const handleDiscussionDeleted = (deletedDiscussionId) => {
+    setDiscussions(prev => prev.filter(d => d._id !== deletedDiscussionId));
+    setSelectedDiscussionId(null);
+  };
+
   // Join socket room for real-time updates
   useEffect(() => {
     if (user && courseId) {
@@ -773,6 +779,7 @@ const CourseDetailPage = () => {
           discussionId={selectedDiscussionId}
           isEnrolled={isEnrolled}
           onClose={() => setSelectedDiscussionId(null)}
+          onDiscussionDeleted={handleDiscussionDeleted}
           onEnroll={handleEnroll}
           courseTeacherId={course?.teacherId?._id || course?.teacherId}
         />

@@ -17,7 +17,7 @@ const formatTimeAgo = (dateString) => {
     return date.toLocaleDateString();
 };
 
-const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeacherId, canDelete = false, isReadOnly = false }) => {
+const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeacherId, canDelete = false, isReadOnly = false, onDiscussionDeleted }) => {
     const { confirm } = useConfirm();
     const { user } = useAuth();
     const {
@@ -50,6 +50,10 @@ const DiscussionModal = ({ discussionId, isOpen, onClose, isEnrolled, courseTeac
         if (isConfirmed) {
             try {
                 await deleteDiscussion(discussionId);
+                // Notify parent component to update UI
+                if (onDiscussionDeleted) {
+                    onDiscussionDeleted(discussionId);
+                }
                 onClose();
             } catch (error) {
                 console.error('Failed to delete discussion:', error);
