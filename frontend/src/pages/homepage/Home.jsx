@@ -4,6 +4,8 @@ import api from "../../services/api";
 import toast from "../../services/toastService";
 import Testimonials from "../../components/homepage/Testimonials";
 import styles from "./home.module.css";
+import imgHome from "../../assets/img-home.jpeg";
+
 
 export function Home() {
   const navigate = useNavigate();
@@ -77,11 +79,15 @@ export function Home() {
             </button>
           </form>
         </div>
+
         <img
-          src="/assets/hero-image.svg"
+          src={imgHome}
           alt="Learning"
           className={styles.heroImage}
         />
+
+
+
       </section>
 
       {/* COURSES PREVIEW - Right after search */}
