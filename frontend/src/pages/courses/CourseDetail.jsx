@@ -238,8 +238,7 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
               {upcomingSessions.map((session) => (
                 <div
                   key={session._id}
-                  className={`${styles.liveScheduleItem} ${session.status === 'live' ? styles.liveItem : ''}`}
-                  style={session.status === 'live' ? { borderColor: '#e53e3e', backgroundColor: '#fff5f5' } : {}}
+                  className={`${styles.liveScheduleItem} ${ session.status === 'live' ? styles.liveItem : ''}`}
                   onClick={() => {
                     if (session.status === 'live') navigate(`/session/${session._id}`);
                   }}
