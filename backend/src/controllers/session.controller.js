@@ -11,6 +11,7 @@ import {
   notifySessionScheduled,
   notifySessionStarted,
   notifySessionCanceled,
+  notifySessionUpdated,
 } from "../services/notification.service.js";
 import { seedLiveSessions } from "../utils/seedSessions.js";
 
@@ -242,6 +243,17 @@ export const updateSession = async (req, res) => {
 
     await session.save();
 
+    // Notify enrolled students about updates to the session
+    const course = await Course.findById(session.courseId).select(
+      "title enrolledStudents"
+    );
+    if (course) {
+      const enrolledStudents = (course.enrolledStudents || []).map((sid) => ({
+        _id: sid,
+      }));
+      await notifySessionUpdated(enrolledStudents, session, course);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Session updated successfully",
@@ -311,7 +323,7 @@ export const startSession = async (req, res) => {
         type: "session_live",
         title: "Live Session Started",
         content: `The session "${session.title}" is now live! Join now.`,
-        link: `/sessions/${session._id}`,
+        link: `/courses/${session.courseId._id}/sessions/${session._id}/join`,
         sessionId: session._id,
       });
 

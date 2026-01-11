@@ -1,105 +1,66 @@
-import { getSocketIOInstance } from "../config/socket.config.js";
-import {
-  sendNotificationToUser,
-  sendNotificationToCourse,
-} from "../socket/index.js";
 import Notification from "../models/notification.model.js";
-// Email service import removed - notifications are in-app only
+import Course from "../models/course.model.js";
+import { getSocketIOInstance } from "../config/socket.config.js";
+import { sendNotificationToUser } from "../socket/index.js";
 
-/**
- * Notification Service
- * Handles creation and delivery of notifications via Socket.IO and database
- * Supports real-time notifications and email notifications
- */
+const toId = (value) => {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (value._id) return value._id.toString();
+  if (value.id) return value.id.toString();
+  return value.toString();
+};
 
-/**
- * Helper function to create and send notification
- * @param {string} userId - Target user ID
- * @param {Object} notificationData - Notification data
- * @param {boolean} sendEmailNotification - Whether to send email
- * @param {string} userEmail - User email (optional)
- * @param {string} userName - User name (optional)
- */
-const createAndSendNotification = async (
-  userId,
-  notificationData,
-  sendEmailNotification = false,
-  userEmail = null,
-  userName = null
-) => {
+const uniqueUserIds = (userIds = []) => {
+  return Array.from(
+    new Set(
+      userIds
+        .map((id) => toId(id))
+        .filter((id) => typeof id === "string" && id.length > 0)
+    )
+  );
+};
+
+const safeGetIO = () => {
   try {
-    // Save notification to database
-    const notification = await Notification.create({
-      userId,
-      ...notificationData,
+    return getSocketIOInstance();
+  } catch (error) {
+    console.error("Socket.IO not initialized:", error.message);
+    return null;
+  }
+};
+
+const buildSessionLink = (courseId, sessionId) =>
+  `/courses/${courseId}/sessions/${sessionId}/join`;
+
+const createNotifications = async (userIds, payload) => {
+  const ids = uniqueUserIds(userIds);
+  if (ids.length === 0) return [];
+
+  const docs = await Notification.insertMany(
+    ids.map((userId) => ({ ...payload, userId }))
+  );
+
+  const io = safeGetIO();
+  if (io) {
+    docs.forEach((doc) => {
+      sendNotificationToUser(io, doc.userId.toString(), {
+        _id: doc._id,
+        userId: doc.userId,
+        type: doc.type,
+        title: doc.title,
+        content: doc.content,
+        link: doc.link,
+        metadata: doc.metadata,
+        isRead: doc.isRead,
+        createdAt: doc.createdAt,
+      });
     });
-
-    // Send real-time notification via Socket.IO
-    const io = getSocketIOInstance();
-    if (io) {
-      sendNotificationToUser(io, userId, {
-        _id: notification._id,
-        ...notificationData,
-      });
-    }
-
-    // Email notifications disabled - use in-app notifications only
-    // if (sendEmailNotification && userEmail && userName) {
-    //   await sendEmail({
-    //     to: userEmail,
-    //     subject: notificationData.title,
-    //     html: `...`,
-    //   });
-    // }
-
-    return notification;
-  } catch (error) {
-    console.error("Error creating and sending notification:", error.message);
-    throw error;
   }
+
+  return docs;
 };
 
-/**
- * Helper function to create and send notification to multiple users
- * @param {Array} userIds - Array of user IDs
- * @param {Object} notificationData - Notification data
- */
-const createAndSendBatchNotifications = async (userIds, notificationData) => {
-  try {
-    // Create notifications for all users
-    const notifications = userIds.map((userId) => ({
-      userId,
-      ...notificationData,
-    }));
-
-    const createdNotifications = await Notification.insertMany(notifications);
-
-    // Send real-time notifications via Socket.IO
-    const io = getSocketIOInstance();
-    if (io) {
-      createdNotifications.forEach((doc) => {
-        sendNotificationToUser(io, doc.userId.toString(), {
-          _id: doc._id,
-          ...notificationData,
-        });
-      });
-    }
-
-    return createdNotifications;
-  } catch (error) {
-    console.error("Error creating batch notifications:", error.message);
-    throw error;
-  }
-};
-
-/**
- * Send notification when a user enrolls in a course
- * @param {string} studentId - Student user ID
- * @param {Object} student - Student user object
- * @param {string} teacherId - Teacher user ID
- * @param {Object} teacher - Teacher user object
- * @param {Object} course - Course object
- */
 export const notifyEnrollment = async (
   studentId,
   student,
@@ -107,682 +68,302 @@ export const notifyEnrollment = async (
   teacher,
   course
 ) => {
-  try {
-    // Notify teacher about new enrollment
-    await createAndSendNotification(
-      teacherId,
-      {
-        type: "course",
-        title: "New Student Enrolled",
-        content: `${student.fullName} has enrolled in your course "${course.title}"`,
-        link: `/teacher/courses/${course._id}/analytics`,
-        metadata: {
-          courseId: course._id,
-          studentId,
-          action: "enrollment",
-        },
-      },
-      false
-    );
+  const courseId = toId(course?._id ?? course?.id ?? course);
+  const studentName = student?.fullName || "Học viên";
+  const teacherName = teacher?.fullName || "Giảng viên";
 
-    // Notify student about successful enrollment
-    await createAndSendNotification(
-      studentId,
-      {
-        type: "course",
-        title: "Course Enrollment Successful",
-        content: `You have successfully enrolled in "${course.title}"`,
-        link: `/courses/${course._id}`,
-        metadata: {
-          courseId: course._id,
-          teacherId,
-          action: "enrollment_confirmation",
-        },
-      },
-      false
-    );
+  await createNotifications([studentId], {
+    type: "course",
+    title: `Đăng ký khóa học thành công`,
+    content: `Bạn đã đăng ký khóa học "${
+      course?.title ?? "Khóa học"
+    }" với ${teacherName}.`,
+    link: courseId ? `/courses/${courseId}` : undefined,
+    metadata: {
+      courseId,
+      teacherId: toId(teacherId),
+      studentId: toId(studentId),
+    },
+  });
 
-    console.log(`📚 Enrollment notification sent for course ${course._id}`);
-  } catch (error) {
-    console.error("Error sending enrollment notification:", error.message);
-  }
+  await createNotifications([teacherId], {
+    type: "course",
+    title: "Học viên mới đăng ký",
+    content: `${studentName} vừa đăng ký khóa học "${
+      course?.title ?? "của bạn"
+    }".`,
+    link: courseId ? `/courses/${courseId}/students` : undefined,
+    metadata: {
+      courseId,
+      teacherId: toId(teacherId),
+      studentId: toId(studentId),
+    },
+  });
 };
 
-/**
- * Send notification when a quiz is assigned/published
- * @param {Array} enrolledStudents - Array of enrolled student objects
- * @param {Object} quiz - Quiz object
- * @param {Object} course - Course object
- */
-export const notifyQuizAssigned = async (enrolledStudents, quiz, course) => {
-  try {
-    const notificationData = {
-      type: "quiz_assigned",
-      title: "New Quiz Available",
-      content: `A new quiz "${quiz.title}" has been published in "${course.title}"`,
-      link: `/courses/${course._id}/quizzes/${quiz._id}`,
-      metadata: {
-        courseId: course._id,
-        quizId: quiz._id,
-        dueDate: quiz.dueDate || null,
-      },
-    };
-
-    // Get student user IDs
-    const studentIds = enrolledStudents.map((student) =>
-      student._id.toString()
-    );
-
-    // Send batch notifications
-    await createAndSendBatchNotifications(studentIds, notificationData);
-
-    // Email notifications disabled - use in-app notifications only
-
-    console.log(
-      `📝 Quiz assignment notification sent to ${studentIds.length} students`
-    );
-  } catch (error) {
-    console.error("Error sending quiz assignment notification:", error.message);
-  }
-};
-
-/**
- * Send notification when a discussion receives a reply
- * @param {string} discussionOwnerId - User ID of discussion owner
- * @param {Object} discussionOwner - Discussion owner user object
- * @param {Object} comment - Comment object
- * @param {Object} commenter - User who created the comment
- * @param {Object} discussion - Discussion object
- * @param {string} courseId - Course ID
- */
-export const notifyDiscussionReply = async (
-  discussionOwnerId,
-  discussionOwner,
-  comment,
-  commenter,
-  discussion,
-  courseId
-) => {
-  try {
-    // Don't notify if replying to own discussion
-    if (discussionOwnerId.toString() === commenter._id.toString()) {
-      return;
-    }
-
-    await createAndSendNotification(
-      discussionOwnerId,
-      {
-        type: "discussion",
-        title: "New Reply to Your Discussion",
-        content: `${commenter.fullName} replied to your discussion "${discussion.title}"`,
-        link: `/courses/${courseId}/discussions/${discussion._id}`,
-        metadata: {
-          courseId,
-          discussionId: discussion._id,
-          commentId: comment._id,
-          commenterId: commenter._id,
-        },
-      },
-      false
-    );
-    discussionOwner.email, discussionOwner.fullName;
-
-    console.log(
-      `💬 Discussion reply notification sent to ${discussionOwnerId}`
-    );
-  } catch (error) {
-    console.error(
-      "Error sending discussion reply notification:",
-      error.message
-    );
-  }
-};
-
-/**
- * Send notification when a quiz is graded
- * @param {string} studentId - Student user ID
- * @param {Object} student - Student user object
- * @param {Object} quiz - Quiz object
- * @param {Object} quizAttempt - Quiz attempt object with score
- * @param {Object} course - Course object
- */
-export const notifyGrade = async (
-  studentId,
-  student,
-  quiz,
-  quizAttempt,
-  course
-) => {
-  try {
-    const passed = quizAttempt.isPassed ? "passed" : "failed";
-    const emoji = quizAttempt.isPassed ? "🎉" : "📚";
-
-    await createAndSendNotification(
-      studentId,
-      {
-        type: "quiz_graded",
-        title: `Quiz ${passed.charAt(0).toUpperCase() + passed.slice(1)}`,
-        content: `${emoji} You ${passed} the quiz "${quiz.title}" with a score of ${quizAttempt.score}/${quiz.totalPoints}`,
-        link: `/courses/${course._id}/quizzes/${quiz._id}/results/${quizAttempt._id}`,
-        metadata: {
-          courseId: course._id,
-          quizId: quiz._id,
-          attemptId: quizAttempt._id,
-          score: quizAttempt.score,
-          passed: quizAttempt.isPassed,
-        },
-      },
-      true,
-      student.email,
-      student.fullName
-    );
-
-    console.log(`📊 Grade notification sent to student ${studentId}`);
-  } catch (error) {
-    console.error("Error sending grade notification:", error.message);
-  }
-};
-
-/**
- * Send notification when a live session is scheduled
- * @param {Array} enrolledStudents - Array of enrolled student objects
- * @param {Object} session - Live session object
- * @param {Object} course - Course object
- */
 export const notifySessionScheduled = async (
   enrolledStudents,
   session,
   course
 ) => {
-  try {
-    const scheduledDate = new Date(session.scheduledAt).toLocaleString();
+  const courseId = toId(course?._id ?? session?.courseId);
+  const sessionId = toId(session?._id ?? session?.id);
+  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
 
-    const notificationData = {
-      type: "session",
-      title: "Live Session Scheduled",
-      content: `A live session "${session.title}" is scheduled for ${scheduledDate} in "${course.title}"`,
-      // Redirect students to the course page (not directly into the live session)
-      link: `/courses/${course._id}`,
-      metadata: {
-        courseId: course._id,
-        sessionId: session._id,
-        scheduledAt: session.scheduledAt,
-      },
-    };
-
-    // Get student user IDs
-    const studentIds = enrolledStudents.map((student) =>
-      student._id.toString()
-    );
-
-    // Send batch notifications
-    await createAndSendBatchNotifications(studentIds, notificationData);
-
-    console.log(
-      `🎥 Session scheduled notification sent to ${studentIds.length} students`
-    );
-  } catch (error) {
-    console.error(
-      "Error sending session scheduled notification:",
-      error.message
-    );
-  }
+  await createNotifications(recipients, {
+    type: "session",
+    title: "Buổi học trực tuyến mới",
+    content: `Buổi học "${session?.title ?? "trực tuyến"}" đã được lên lịch.
+Thời gian: ${
+      session?.scheduledAt
+        ? new Date(session.scheduledAt).toLocaleString()
+        : "Đang cập nhật"
+    }.`,
+    link:
+      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    metadata: {
+      courseId,
+      sessionId,
+      status: session?.status ?? "scheduled",
+      scheduledAt: session?.scheduledAt ?? null,
+    },
+  });
 };
 
-/**
- * Send notification when a live session starts
- * @param {Array} enrolledStudents - Array of enrolled student objects
- * @param {Object} session - Live session object
- * @param {Object} course - Course object
- */
+export const notifySessionUpdated = async (
+  enrolledStudents,
+  session,
+  course
+) => {
+  const courseId = toId(course?._id ?? session?.courseId);
+  const sessionId = toId(session?._id ?? session?.id);
+  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
+
+  await createNotifications(recipients, {
+    type: "session",
+    title: "Cập nhật lịch buổi học",
+    content: `Buổi học "${session?.title ?? "trực tuyến"}" đã được cập nhật.
+Thời gian mới: ${
+      session?.scheduledAt
+        ? new Date(session.scheduledAt).toLocaleString()
+        : "Đang cập nhật"
+    }.`,
+    link:
+      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    metadata: {
+      courseId,
+      sessionId,
+      status: session?.status ?? "scheduled",
+      scheduledAt: session?.scheduledAt ?? null,
+    },
+  });
+};
+
 export const notifySessionStarted = async (
   enrolledStudents,
   session,
   course
 ) => {
-  try {
-    const notificationData = {
-      type: "session",
-      title: "Live Session Started",
-      content: `The live session "${session.title}" has started in "${course.title}". Join now!`,
-      // Redirect to course page
-      link: `/courses/${course._id}`,
-      metadata: {
-        courseId: course._id,
-        sessionId: session._id,
-        startedAt: new Date(),
-      },
-    };
+  const courseId = toId(course?._id ?? session?.courseId);
+  const sessionId = toId(session?._id ?? session?.id);
+  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
 
-    // Get student user IDs
-    const studentIds = enrolledStudents.map((student) =>
-      student._id.toString()
-    );
-
-    // Send batch notifications
-    await createAndSendBatchNotifications(studentIds, notificationData);
-
-    // Send real-time notification to course room
-    const io = getSocketIOInstance();
-    if (io) {
-      sendNotificationToCourse(io, course._id.toString(), {
-        ...notificationData,
-        urgent: true,
-      });
-    }
-
-    console.log(
-      `🔴 Session started notification sent to ${studentIds.length} students`
-    );
-  } catch (error) {
-    console.error("Error sending session started notification:", error.message);
-  }
+  await createNotifications(recipients, {
+    type: "session",
+    title: "Buổi học đang diễn ra",
+    content: `Buổi học "${
+      session?.title ?? "trực tuyến"
+    }" đã bắt đầu. Tham gia ngay!`,
+    link:
+      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    metadata: {
+      courseId,
+      sessionId,
+      status: "live",
+      startedAt: session?.startedAt ?? new Date(),
+    },
+  });
 };
 
-/**
- * Send notification when a live session is canceled/deleted
- */
 export const notifySessionCanceled = async (
   enrolledStudents,
   session,
   course
 ) => {
-  try {
-    const notificationData = {
-      type: "session",
-      title: "Live Session Canceled",
-      content: `The live session "${session.title}" in "${course.title}" has been canceled.",`,
-      link: `/courses/${course._id}`,
-      metadata: {
-        courseId: course._id,
-        sessionId: session._id,
-        canceledAt: new Date(),
-      },
-    };
+  const courseId = toId(course?._id ?? session?.courseId);
+  const sessionId = toId(session?._id ?? session?.id);
+  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
 
-    const studentIds = enrolledStudents.map((student) =>
-      student._id.toString()
-    );
-
-    await createAndSendBatchNotifications(studentIds, notificationData);
-    console.log(
-      `🛑 Session canceled notification sent to ${studentIds.length} students`
-    );
-  } catch (error) {
-    console.error(
-      "Error sending session canceled notification:",
-      error.message
-    );
-  }
+  await createNotifications(recipients, {
+    type: "session",
+    title: "Buổi học đã bị hủy",
+    content: `Buổi học "${
+      session?.title ?? "trực tuyến"
+    }" đã bị hủy. Vui lòng chờ lịch cập nhật.
+${
+  session?.cancellationReason ? `Lý do: ${session.cancellationReason}` : ""
+}`.trim(),
+    link:
+      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    metadata: {
+      courseId,
+      sessionId,
+      status: "cancelled",
+      scheduledAt: session?.scheduledAt ?? null,
+      cancellationReason: session?.cancellationReason ?? null,
+    },
+  });
 };
 
-/**
- * Send reminder notification before live session starts
- * @param {Array} enrolledStudents - Array of enrolled student objects
- * @param {Object} session - Live session object
- * @param {Object} course - Course object
- * @param {number} minutesBefore - Minutes before session starts
- */
-export const notifySessionReminder = async (
-  enrolledStudents,
-  session,
-  course,
-  minutesBefore = 5
-) => {
-  try {
-    const notificationData = {
-      type: "session",
-      title: `Session Starting in ${minutesBefore} Minutes`,
-      content: `Reminder: The live session "${session.title}" in "${course.title}" starts in ${minutesBefore} minutes`,
-      link: `/courses/${course._id}/sessions/${session._id}/join`,
-      metadata: {
-        courseId: course._id,
-        sessionId: session._id,
-        scheduledAt: session.scheduledAt,
-        reminderMinutes: minutesBefore,
-      },
-    };
-
-    // Get student user IDs
-    const studentIds = enrolledStudents.map((student) =>
-      student._id.toString()
-    );
-
-    // Send batch notifications
-    await createAndSendBatchNotifications(studentIds, notificationData);
-
-    console.log(`⏰ Session reminder sent to ${studentIds.length} students`);
-  } catch (error) {
-    console.error(
-      "Error sending session reminder notification:",
-      error.message
-    );
-  }
-};
-
-/**
- * Send notification when a user is mentioned in a comment
- * @param {string} mentionedUserId - User ID of mentioned user
- * @param {Object} mentionedUser - Mentioned user object
- * @param {Object} comment - Comment object
- * @param {Object} commenter - User who mentioned
- * @param {Object} discussion - Discussion object
- * @param {string} courseId - Course ID
- */
-export const notifyMention = async (
-  mentionedUserId,
-  mentionedUser,
-  comment,
-  commenter,
-  discussion,
-  courseId
-) => {
-  try {
-    // Don't notify if mentioning self
-    if (mentionedUserId.toString() === commenter._id.toString()) {
-      return;
-    }
-
-    await createAndSendNotification(
-      mentionedUserId,
-      {
-        type: "discussion",
-        title: "You Were Mentioned",
-        content: `${commenter.fullName} mentioned you in "${discussion.title}"`,
-        link: `/courses/${courseId}/discussions/${discussion._id}`,
-        metadata: {
-          courseId,
-          discussionId: discussion._id,
-          commentId: comment._id,
-          mentionedBy: commenter._id,
-        },
-      },
-      true,
-      mentionedUser.email,
-      mentionedUser.fullName
-    );
-
-    console.log(`@️ Mention notification sent to ${mentionedUserId}`);
-  } catch (error) {
-    console.error("Error sending mention notification:", error.message);
-  }
-};
-
-/**
- * Send notification when a course is updated
- * @param {Array} enrolledStudents - Array of enrolled student objects
- * @param {Object} course - Course object
- * @param {string} updateType - Type of update (e.g., 'new_chapter', 'new_lesson')
- * @param {string} updateDetails - Details of the update
- */
-export const notifyCourseUpdate = async (
-  enrolledStudents,
-  course,
-  updateType,
-  updateDetails
-) => {
-  try {
-    const notificationData = {
-      type: "course",
-      title: "Course Updated",
-      content: `"${course.title}" has been updated: ${updateDetails}`,
-      link: `/courses/${course._id}`,
-      metadata: {
-        courseId: course._id,
-        updateType,
-      },
-    };
-
-    // Get student user IDs
-    const studentIds = enrolledStudents.map((student) =>
-      student._id.toString()
-    );
-
-    // Send batch notifications
-    await createAndSendBatchNotifications(studentIds, notificationData);
-
-    console.log(
-      `🔄 Course update notification sent to ${studentIds.length} students`
-    );
-  } catch (error) {
-    console.error("Error sending course update notification:", error.message);
-  }
-};
-
-/**
- * Send notification when a new discussion is created
- * @param {string} courseId - Course ID
- * @param {Object} discussion - Discussion object
- * @param {Object} creator - User who created the discussion
- */
 export const notifyDiscussionCreated = async (
   courseId,
   discussion,
   creator
 ) => {
-  try {
-    const io = getSocketIOInstance();
-    const Course = (await import("../models/course.model.js")).default;
-    const course = await Course.findById(courseId).select("teacherId title");
+  const course = await Course.findById(courseId).select(
+    "teacherId enrolledStudents"
+  );
+  if (!course) return;
 
-    // Notification data
-    const notification = {
-      type: "discussion",
-      title: "New Discussion Created",
-      content: `${creator.fullName} started a new discussion: "${discussion.title}"`,
-      link: `/discussions/${discussion._id}`,
-      metadata: {
-        courseId,
-        discussionId: discussion._id,
-        createdBy: creator._id || creator.id,
-      },
-    };
+  const recipients = uniqueUserIds([
+    course.teacherId,
+    ...(course.enrolledStudents || []),
+  ]).filter((id) => id !== toId(creator?.id));
 
-    // Send real-time notification to all users in the course
-    sendNotificationToCourse(io, courseId, notification);
-
-    // Notify Teacher specifically (if not the creator)
-    if (
-      course &&
-      course.teacherId &&
-      course.teacherId.toString() !== (creator.id || creator._id).toString()
-    ) {
-      await createAndSendNotification(
-        course.teacherId,
-        {
-          type: "discussion",
-          title: "New Discussion in " + course.title,
-          content: `${creator.fullName} started a discussion: "${discussion.title}"`,
-          link: `/teacher/courses/${courseId}/analytics`, // Redirect to teacher analytics page
-          metadata: notification.metadata,
-        },
-        false
-      );
-      console.log(
-        `📢 Discussion notification sent to Teacher ${course.teacherId}`
-      );
-    }
-
-    console.log(
-      `📢 Discussion creation notification sent for course ${courseId}`
-    );
-  } catch (error) {
-    console.error(
-      "Error sending discussion creation notification:",
-      error.message
-    );
-  }
+  await createNotifications(recipients, {
+    type: "discussion",
+    title: "Thảo luận mới",
+    content: `${creator?.fullName ?? "Một người dùng"} đã tạo thảo luận "${
+      discussion?.title ?? "mới"
+    }".
+Tham gia trao đổi ngay!`,
+    link:
+      courseId && discussion?._id
+        ? `/courses/${courseId}/discussions/${discussion._id}`
+        : undefined,
+    metadata: {
+      courseId: toId(courseId),
+      discussionId: toId(discussion?._id ?? discussion?.id),
+      creatorId: toId(creator?.id),
+    },
+  });
 };
 
-/**
- * Send notification when a new comment is posted on a discussion
- * @param {string} courseId - Course ID
- * @param {string} discussionOwnerId - User ID of discussion owner
- * @param {Object} comment - Comment object
- * @param {Object} commenter - User who created the comment
- * @param {string} discussionTitle - Title of the discussion
- */
-export const notifyCommentCreated = async (
-  courseId,
-  discussionOwnerId,
-  comment,
-  commenter,
-  discussionTitle
-) => {
-  try {
-    await createAndSendNotification(
-      discussionOwnerId,
-      {
-        type: "discussion",
-        title: "New Comment on Your Discussion",
-        content: `${commenter.fullName} commented on your discussion: "${discussionTitle}"`,
-        link: `/discussions/${comment.discussionId}`,
-        metadata: {
-          courseId,
-          discussionId: comment.discussionId,
-          commentId: comment._id,
-          createdBy: commenter._id,
-        },
-      },
-      false
-    );
-
-    console.log(`📢 Comment creation notification sent to discussion owner`);
-  } catch (error) {
-    console.error(
-      "Error sending comment creation notification:",
-      error.message
-    );
-  }
-};
-
-/**
- * Send notification when a user replies to a comment
- * @param {string} courseId - Course ID
- * @param {string} parentCommentOwnerId - User ID of parent comment owner
- * @param {Object} reply - Reply comment object
- * @param {Object} replier - User who created the reply
- * @param {string} discussionTitle - Title of the discussion
- */
-export const notifyCommentReply = async (
-  courseId,
-  parentCommentOwnerId,
-  reply,
-  replier,
-  discussionTitle
-) => {
-  try {
-    await createAndSendNotification(
-      parentCommentOwnerId,
-      {
-        type: "discussion",
-        title: "New Reply to Your Comment",
-        content: `${replier.fullName} replied to your comment on "${discussionTitle}"`,
-        link: `/discussions/${reply.discussionId}`,
-        metadata: {
-          courseId,
-          discussionId: reply.discussionId,
-          commentId: reply._id,
-          parentCommentId: reply.parentId,
-          createdBy: replier._id,
-        },
-      },
-      false
-    );
-
-    console.log(`📢 Comment reply notification sent to parent comment owner`);
-  } catch (error) {
-    console.error("Error sending comment reply notification:", error.message);
-  }
-};
-
-/**
- * Send notification when a discussion is liked
- * @param {string} discussionOwnerId - User ID of discussion owner
- * @param {string} courseId - Course ID
- * @param {Object} discussion - Discussion object
- * @param {Object} liker - User who liked the discussion
- */
 export const notifyDiscussionLiked = async (
-  discussionOwnerId,
+  targetUserId,
   courseId,
   discussion,
   liker
 ) => {
-  try {
-    await createAndSendNotification(
-      discussionOwnerId,
-      {
-        type: "discussion",
-        title: "Discussion Liked",
-        content: `${liker.fullName} liked your discussion: "${discussion.title}"`,
-        link: `/discussions/${discussion._id}`,
-        metadata: {
-          courseId,
-          discussionId: discussion._id,
-          likedBy: liker._id,
-        },
-      },
-      false
-    );
-
-    console.log(`👍 Discussion liked notification sent to discussion owner`);
-  } catch (error) {
-    console.error(
-      "Error sending discussion liked notification:",
-      error.message
-    );
-  }
+  await createNotifications([targetUserId], {
+    type: "discussion",
+    title: "Thảo luận của bạn được thích",
+    content: `${liker?.fullName ?? "Một người dùng"} đã thích thảo luận "${
+      discussion?.title ?? "của bạn"
+    }".`,
+    link:
+      courseId && discussion?._id
+        ? `/courses/${courseId}/discussions/${discussion._id}`
+        : undefined,
+    metadata: {
+      courseId: toId(courseId),
+      discussionId: toId(discussion?._id ?? discussion?.id),
+      likerId: toId(liker?.id),
+    },
+  });
 };
 
-/**
- * Send notification when a discussion is pinned by teacher
- * @param {string} courseId - Course ID
- * @param {Object} discussion - Discussion object
- * @param {Object} teacher - Teacher who pinned the discussion
- */
 export const notifyDiscussionPinned = async (courseId, discussion, teacher) => {
-  try {
-    const io = getSocketIOInstance();
+  const course = await Course.findById(courseId).select(
+    "teacherId enrolledStudents"
+  );
+  if (!course) return;
 
-    // Notification data
-    const notification = {
-      type: "discussion",
-      title: "Discussion Pinned",
-      content: `A discussion has been pinned: "${discussion.title}"`,
-      link: `/discussions/${discussion._id}`,
-      metadata: {
-        courseId,
-        discussionId: discussion._id,
-        pinnedBy: teacher._id,
-      },
-    };
+  const recipients = uniqueUserIds([
+    course.teacherId,
+    ...(course.enrolledStudents || []),
+  ]).filter((id) => id !== toId(teacher?.id));
 
-    // Send notification to all course members
-    sendNotificationToCourse(io, courseId, notification);
+  await createNotifications(recipients, {
+    type: "discussion",
+    title: "Thảo luận được ghim",
+    content: `${teacher?.fullName ?? "Giảng viên"} đã ghim thảo luận "${
+      discussion?.title ?? "trong khóa học"
+    }".`,
+    link:
+      courseId && discussion?._id
+        ? `/courses/${courseId}/discussions/${discussion._id}`
+        : undefined,
+    metadata: {
+      courseId: toId(courseId),
+      discussionId: toId(discussion?._id ?? discussion?.id),
+      teacherId: toId(teacher?.id),
+    },
+  });
+};
 
-    console.log(`📌 Discussion pinned notification sent to course ${courseId}`);
-  } catch (error) {
-    console.error(
-      "Error sending discussion pinned notification:",
-      error.message
-    );
-  }
+export const notifyCommentCreated = async (
+  courseId,
+  targetUserId,
+  comment,
+  commenter,
+  discussionTitle
+) => {
+  await createNotifications([targetUserId], {
+    type: "discussion",
+    title: "Bình luận mới trên thảo luận của bạn",
+    content: `${
+      commenter?.fullName ?? "Một người dùng"
+    } đã bình luận trên thảo luận "${discussionTitle ?? "của bạn"}".`,
+    link:
+      courseId && comment?.discussionId
+        ? `/courses/${courseId}/discussions/${comment.discussionId}`
+        : undefined,
+    metadata: {
+      courseId: toId(courseId),
+      discussionId: toId(comment?.discussionId),
+      commentId: toId(comment?._id ?? comment?.id),
+      commenterId: toId(commenter?.id ?? commenter?._id),
+    },
+  });
+};
+
+export const notifyCommentReply = async (
+  courseId,
+  targetUserId,
+  comment,
+  commenter,
+  discussionTitle
+) => {
+  await createNotifications([targetUserId], {
+    type: "discussion",
+    title: "Có phản hồi cho bình luận của bạn",
+    content: `${
+      commenter?.fullName ?? "Một người dùng"
+    } đã trả lời bình luận của bạn trong thảo luận "${discussionTitle ?? ""}".`,
+    link:
+      courseId && comment?.discussionId
+        ? `/courses/${courseId}/discussions/${comment.discussionId}`
+        : undefined,
+    metadata: {
+      courseId: toId(courseId),
+      discussionId: toId(comment?.discussionId),
+      commentId: toId(comment?._id ?? comment?.id),
+      parentId: toId(comment?.parentId),
+      commenterId: toId(commenter?.id ?? commenter?._id),
+    },
+  });
 };
 
 export default {
   notifyEnrollment,
-  notifyQuizAssigned,
-  notifyDiscussionReply,
-  notifyGrade,
   notifySessionScheduled,
+  notifySessionUpdated,
   notifySessionStarted,
-  notifySessionReminder,
-  notifyMention,
-  notifyCourseUpdate,
+  notifySessionCanceled,
   notifyDiscussionCreated,
-  notifyCommentCreated,
-  notifyCommentReply,
   notifyDiscussionLiked,
   notifyDiscussionPinned,
+  notifyCommentCreated,
+  notifyCommentReply,
 };
