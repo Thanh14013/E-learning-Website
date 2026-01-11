@@ -25,13 +25,18 @@
 }
 
 .section {
-  background: white;
+  background: var(--bg-card);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid transparent;
 }
-
+@media (prefers-color-scheme: dark) {
+  .section {
+    border-color: var(--color-gray-700);
+  }
+}
 .section h3 {
   margin: 0 0 20px 0;
   font-size: 1.25rem;
@@ -51,9 +56,11 @@
 }
 
 .formGroup label {
-  font-weight: 500;
-  color: var(--color-gray-700);
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+  padding: 8px;
 }
 
 .checkbox {
@@ -80,7 +87,7 @@
   text-align: center;
   padding: 40px;
   color: var(--color-gray-500);
-  background: var(--color-gray-50);
+  background: var(--bg-body);
   border-radius: 8px;
 }
 
@@ -95,10 +102,16 @@
   align-items: center;
   gap: 16px;
   padding: 16px;
-  background: var(--color-gray-50);
+  background: var(--bg-body);
   border-radius: 8px;
   border: 1px solid var(--color-gray-200);
   transition: all 0.2s;
+}
+@media (prefers-color-scheme: dark) {
+  .questionItem {
+    border-color: var(--color-gray-700);
+    background: var(--color-gray-900);
+  }
 }
 
 .questionItem:hover {
@@ -124,18 +137,28 @@
 .questionContent h4 {
   margin: 0;
   font-size: 1rem;
-  color: var(--color-gray-900);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+  letter-spacing: 0.2px;
 }
+
 
 .questionType {
   display: inline-block;
   padding: 4px 10px;
   background: var(--color-info-light);
-  color: var(--color-info);
+  color: var(--color-info-hover);
   border-radius: 4px;
   font-size: 0.8rem;
   font-weight: 500;
   width: fit-content;
+}
+@media (prefers-color-scheme: dark) {
+  .questionType {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--color-info-light);
+  }
 }
 
 .questionPoints {
@@ -156,10 +179,21 @@
   cursor: pointer;
   transition: all 0.2s;
 }
+@media (prefers-color-scheme: dark) {
+  .questionActions button {
+    border-color: var(--color-gray-600);
+    background-color: var(--bg-body);
+  }
+}
 
 .questionActions button:hover:not(:disabled) {
   background: var(--color-gray-100);
   border-color: var(--color-gray-400);
+}
+@media (prefers-color-scheme: dark) {
+  .questionActions button:hover:not(:disabled) {
+    background: var(--color-gray-700);
+  }
 }
 
 .questionActions button:disabled {
@@ -180,9 +214,10 @@
 
 /* Question Modal */
 .questionModal {
-  padding: 24px;
-  max-width: 600px;
+  padding: var(--spacing-2);
+  width: 100%;
 }
+
 
 .questionModal h3 {
   margin: 0 0 24px 0;
@@ -218,35 +253,128 @@
   border-color: var(--color-teacher-primary);
   box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
 }
-
+.optionsList {
+  display: grid;
+  grid-template-columns: 1fr 1fr; 
+  gap: 16px; 
+  margin-top: 8px;
+}
 .optionRow {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  padding: 12px;
+  background: var(--bg-body);
+  border: 1px solid var(--color-gray-300);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+@media (prefers-color-scheme: dark) {
+  .optionRow {
+    background: var(--color-gray-800);
+    border-color: var(--color-gray-600);
+  }
+}
+@media (max-width: 768px) {
+  .questionModal {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .optionsList {
+    grid-template-columns: 1fr;
+  }
+}
+.optionRow.isCorrect {
+  background: var(--color-success-light);
+  border: 1px solid var(--color-success);
+}
+.optionRow.isCorrect::after {
+  content: "✓ Correct";
+  position: absolute;
+  right: 12px;
+  top: -10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-success);
+  background: var(--bg-card);
+  padding: 2px 6px;
+  border-radius: 6px;
 }
 
 .optionRow input[type="radio"] {
   width: 20px;
   height: 20px;
+  accent-color: var(--color-success);
   cursor: pointer;
+  flex-shrink: 0;
+}
+.select,
+.textarea,
+.optionInput {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--input-bg);
+  color: var(--input-text);
+  transition: all 0.2s;
+}
+.select:focus,
+.textarea:focus,
+.optionInput:focus {
+  outline: none;
+  border-color: var(--color-teacher-primary);
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+}
+.optionInput {
+  flex: 1;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 8px;
+}
+.optionInput:focus {
+  background: var(--input-bg);
+  border-color: var(--color-teacher-primary);
 }
 
 .removeBtn {
-  padding: 8px 12px;
-  background: var(--color-error-light);
-  color: var(--color-error);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-gray-400);
   border: none;
-  border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
+  transition: all 0.2s;
 }
 
 .removeBtn:hover {
-  background: var(--color-error);
-  color: white;
+  background: var(--color-error-light);
+  color: var(--color-error);
 }
-
+.addOptionBtn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 12px;
+  border: 2px dashed var(--color-gray-300);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.addOptionBtn:hover {
+  border-color: var(--color-teacher-primary);
+  color: var(--color-teacher-primary);
+  background: var(--color-teacher-primary-light);
+}
 .modalActions {
   display: flex;
   justify-content: flex-end;
@@ -255,7 +383,28 @@
   padding-top: 20px;
   border-top: 1px solid var(--color-gray-200);
 }
-
+@media (prefers-color-scheme: dark) {
+  .modalActions {
+    border-top-color: var(--color-gray-700);
+  }
+  .optionRow {
+    background: var(--color-gray-800);
+  }
+  .optionRow.isCorrect {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: var(--color-success);
+  }
+  .optionRow.isCorrect::after {
+    background: var(--color-gray-900);
+  }
+  .addOptionBtn {
+    border-color: var(--color-gray-600);
+    color: var(--color-gray-400);
+  }
+  .addOptionBtn:hover {
+    background: rgba(124, 58, 237, 0.2);
+  }
+}
 /* Responsive */
 @media (max-width: 768px) {
   .quizBuilder {

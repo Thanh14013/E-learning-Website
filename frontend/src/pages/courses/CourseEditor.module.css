@@ -696,8 +696,9 @@
 .quizItem {
   margin-top: 0.5rem;
   margin-left: 2rem;
+  margin-bottom: 1rem;
   padding: 0.75rem;
-  background: #fffbeb; /* Light yellow background for distinction */
+  background: #fffbeb;
   border: 1px solid #fcd34d;
   border-radius: 6px;
   display: flex;
