@@ -16,6 +16,9 @@ export default function StudentHeader() {
     markAllRead,
     deleteNotification,
     refresh,
+    loadMore,
+    hasMore,
+    loading,
   } = useNotifications() || {};
   const navigate = useNavigate();
 
@@ -24,6 +27,7 @@ export default function StudentHeader() {
 
   const profileRef = useRef(null);
   const notifRef = useRef(null);
+  const notifListRef = useRef(null);
 
   // 🔹 Đóng dropdown khi click ra ngoài
   useEffect(() => {
@@ -38,6 +42,23 @@ export default function StudentHeader() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 🔹 Infinite scroll for notifications
+  useEffect(() => {
+    const listEl = notifListRef.current;
+    if (!listEl) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = listEl;
+      // Load more when scrolled near bottom (100px threshold)
+      if (scrollHeight - scrollTop - clientHeight < 100 && hasMore && !loading) {
+        loadMore && loadMore();
+      }
+    };
+
+    listEl.addEventListener('scroll', handleScroll);
+    return () => listEl.removeEventListener('scroll', handleScroll);
+  }, [hasMore, loading, loadMore]);
 
   const typeIcon = (type) => {
     switch (type) {
@@ -58,6 +79,27 @@ export default function StudentHeader() {
       default:
         return "🔔";
     }
+  };
+
+  const resolveLink = (notif) => {
+    const courseId = notif?.metadata?.courseId || notif?.metadata?.courseID;
+
+    // Enrollment -> teacher analytics
+    if (user?.role === 'teacher' && notif?.type === 'course' && notif?.metadata?.action === 'enrollment' && courseId) {
+      return `/teacher/courses/${courseId}/analytics`;
+    }
+
+    // Discussion -> teacher analytics
+    if (user?.role === 'teacher' && notif?.type === 'discussion' && courseId) {
+      return `/teacher/courses/${courseId}/analytics`;
+    }
+
+    // Student discussion fallback to course learn discussions tab
+    if (user?.role !== 'teacher' && notif?.type === 'discussion' && courseId) {
+      return `/courses/${courseId}/learn?tab=discussions`;
+    }
+
+    return notif?.link;
   };
 
   return (
@@ -103,65 +145,81 @@ export default function StudentHeader() {
                   <div className={styles.notifHeader}>
                     <p className={styles.notifTitle}>Notifications</p>
                   </div>
-                  <div className={styles.notifList}>
+                  <div className={styles.notifList} ref={notifListRef}>
                     {(notifications || []).length === 0 ? (
                       <div className={styles.notifEmpty}>Không có thông báo</div>
                     ) : (
-                      [...(notifications || [])]
-                        .sort((a, b) => {
-                          // Unread notifications first
-                          if (!a.isRead && b.isRead) return -1;
-                          if (a.isRead && !b.isRead) return 1;
-                          // Then by creation date
-                          return new Date(b.createdAt) - new Date(a.createdAt);
-                        })
-                        .slice(0, 8)
-                        .map((n) => (
-                          <div
-                            key={n._id}
-                            className={`${styles.notifItem} ${!n.isRead ? styles.unread : ""}`}
-                          >
+                      <>
+                        {[...(notifications || [])]
+                          .sort((a, b) => {
+                            // Unread notifications first
+                            if (!a.isRead && b.isRead) return -1;
+                            if (a.isRead && !b.isRead) return 1;
+                            // Then by creation date
+                            return new Date(b.createdAt) - new Date(a.createdAt);
+                          })
+                          .map((n) => (
                             <div
-                              className={styles.notifMain}
+                              key={n._id}
+                              className={`${styles.notifItem} ${!n.isRead ? styles.unread : ""}`}
                             >
-                              <span className={styles.notifIcon}>{typeIcon(n.type)}</span>
-                              <div className={styles.notifContent}>
-                                <div className={styles.notifTitleText}>
-                                  {n.title || "Notification"}
-                                </div>
-                                {n.content && (
-                                  <div className={styles.notifDesc}>
-                                    {n.content}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className={styles.notifActions}>
-                              {!n.isRead && (
-                                <button
-                                  className={styles.actionBtn}
-                                  title="Mark as read"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+                              <div
+                                className={styles.notifMain}
+                                onClick={() => {
+                                  // Navigate to link if available
+                                  const target = resolveLink(n);
+                                  if (target) {
+                                    navigate(target);
+                                    setNotifOpen(false);
+                                  }
+                                  // Mark as read if unread
+                                  if (!n.isRead) {
                                     markRead && markRead(n._id);
-                                  }}
-                                >
-                                  ✓
-                                </button>
-                              )}
-                              <button
-                                className={styles.actionBtn}
-                                title="Delete"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteNotification && deleteNotification(n._id);
+                                  }
                                 }}
                               >
-                                🗑
-                              </button>
+                                <span className={styles.notifIcon}>{typeIcon(n.type)}</span>
+                                <div className={styles.notifContent}>
+                                  <div className={styles.notifTitleText}>
+                                    {n.title || "Notification"}
+                                  </div>
+                                  {n.content && (
+                                    <div className={styles.notifDesc}>
+                                      {n.content}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <div className={styles.notifActions}>
+                                {!n.isRead && (
+                                  <button
+                                    className={styles.actionBtn}
+                                    title="Mark as read"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markRead && markRead(n._id);
+                                    }}
+                                  >
+                                    ✓
+                                  </button>
+                                )}
+                                <button
+                                  className={styles.actionBtn}
+                                  title="Delete"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteNotification && deleteNotification(n._id);
+                                  }}
+                                >
+                                  🗑
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))
+                          ))}
+                        {loading && (
+                          <div className={styles.notifEmpty}>Đang tải...</div>
+                        )}
+                      </>
                     )}
                   </div>
                 </motion.div>

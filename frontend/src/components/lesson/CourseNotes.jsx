@@ -24,11 +24,11 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
     const fetchNotes = async () => {
         setLoading(true);
         try {
-                const response = await api.get(`/courses/${courseId}/lessons/${lessonId}/notes`);
-                setNotes(response.data.notes || []);
-            } catch (error) {
-                console.error('Error fetching notes:', error);
-                toastService.error('Unable to load notes');
+            const response = await api.get(`/courses/${courseId}/lessons/${lessonId}/notes`);
+            setNotes(response.data.notes || []);
+        } catch (error) {
+            console.error('Error fetching notes:', error);
+            toastService.error('Unable to load notes');
         } finally {
             setLoading(false);
         }
@@ -176,7 +176,7 @@ const CourseNotes = ({ lessonId, videoTimestamp }) => {
                                                 <span className="note-timestamp">{formatTimestamp(note.timestamp)}</span>
                                             )}
                                             <span className="note-date">
-                                                {new Date(note.createdAt).toLocaleDateString('en-US')}
+                                                {new Date(note.createdAt).toLocaleDateString('en-GB')}
                                             </span>
                                         </div>
                                         <p className="note-content">{note.content}</p>

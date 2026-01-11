@@ -326,7 +326,16 @@ const VideoRoom = () => {
             await api.put(`/sessions/${sessionId}/end`);
             toastService.success('Session ended successfully');
             webrtcService.leaveSession();
-            navigate('/dashboard');
+
+            // Close the tab/window
+            window.close();
+
+            // Fallback if browser blocks window.close()
+            setTimeout(() => {
+                if (!window.closed) {
+                    toastService.info('Please close this tab manually');
+                }
+            }, 100);
         } catch (error) {
             console.error('Failed to end session:', error);
             toastService.error('Failed to end session');
@@ -437,14 +446,18 @@ const VideoRoom = () => {
                         )}
                         <Button variant="secondary" size="small" onClick={() => {
                             webrtcService.leaveSession();
-                            if (isHost) {
-                                window.close();
-                                // Fallback if browser blocks close: show message or stay
-                                const win = window.open("about:blank", "_self");
-                                win.close();
-                            } else {
-                                navigate('/dashboard');
-                            }
+
+                            // Close the tab for everyone
+                            window.close();
+
+                            // Fallback if browser blocks window.close()
+                            setTimeout(() => {
+                                if (!window.closed) {
+                                    toastService.info('Please close this tab manually');
+                                    // If still can't close, navigate away as last resort
+                                    navigate('/dashboard');
+                                }
+                            }, 100);
                         }}>
                             Leave
                         </Button>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useConfirm } from '../../contexts/ConfirmDialogContext.jsx';
 import api from '../../services/api';
 import toastService from '../../services/toastService';
+import socketService from '../../services/socketService';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
@@ -16,6 +18,7 @@ import styles from './SessionScheduler.module.css';
 export default function SessionScheduler() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { confirm } = useConfirm();
 
     const [sessions, setSessions] = useState([]);
     const [courses, setCourses] = useState([]);
@@ -32,6 +35,22 @@ export default function SessionScheduler() {
         }
 
         fetchData();
+    }, []);
+
+    // Listen for session ended events
+    useEffect(() => {
+        const handleSessionEnded = (data) => {
+            console.log('[SessionScheduler] Session ended:', data);
+            // Refresh data to update UI
+            fetchData();
+        };
+
+        // Listen to session ended events
+        window.addEventListener('session:ended', handleSessionEnded);
+
+        return () => {
+            window.removeEventListener('session:ended', handleSessionEnded);
+        };
     }, []);
 
     const fetchData = async () => {
@@ -65,9 +84,12 @@ export default function SessionScheduler() {
     };
 
     const handleDeleteSession = async (sessionId) => {
-        if (!window.confirm('Are you sure you want to delete this session?')) {
-            return;
-        }
+        const isConfirmed = await confirm('Are you sure you want to delete this session?', {
+            type: 'danger',
+            confirmText: 'Delete'
+        });
+
+        if (!isConfirmed) return;
 
         try {
             await api.delete(`/teacher/sessions/${sessionId}`);
@@ -84,8 +106,8 @@ export default function SessionScheduler() {
             await api.put(`/teacher/sessions/${sessionId}/start`);
             toastService.success('Session started');
 
-            // Navigate to video room
-            navigate(`/sessions/${sessionId}`);
+            // Refresh data to update UI (session will move from upcoming to live)
+            fetchData();
         } catch (error) {
             console.error('Error starting session:', error);
             toastService.error('Unable to start session');
@@ -93,9 +115,13 @@ export default function SessionScheduler() {
     };
 
     const handleEndSession = async (sessionId) => {
-        if (!window.confirm('Are you sure you want to end this session?')) {
-            return;
-        }
+        const isConfirmed = await confirm('Are you sure you want to end this session?', {
+            type: 'danger',
+            confirmText: 'End Session',
+            title: 'End Live Session'
+        });
+
+        if (!isConfirmed) return;
 
         try {
             await api.put(`/teacher/sessions/${sessionId}/end`);
@@ -416,7 +442,7 @@ function SessionModal({ session, courses, onSave, onClose }) {
 }
 
 function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-GB', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric'
@@ -424,7 +450,7 @@ function formatDate(dateString) {
 }
 
 function formatTime(dateString) {
-    return new Date(dateString).toLocaleTimeString('en-US', {
+    return new Date(dateString).toLocaleTimeString('en-GB', {
         hour: '2-digit',
         minute: '2-digit'
     });

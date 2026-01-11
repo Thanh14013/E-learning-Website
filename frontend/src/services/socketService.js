@@ -45,7 +45,8 @@ class SocketService {
       options.auth = { token };
     }
 
-    this.socket = io(socketUrl, options);
+    // Use notification namespace to receive notification events
+    this.socket = io(`${socketUrl}/notification`, options);
     this.setupConnectionHandlers();
     this.setupEventHandlers();
 
@@ -183,9 +184,7 @@ class SocketService {
       this.notifyContexts("session:user-joined", data);
 
       if (data?.userName && data?.sessionTitle) {
-        toastService.info(
-          `${data.userName} joined "${data.sessionTitle}"`
-        );
+        toastService.info(`${data.userName} joined "${data.sessionTitle}"`);
       }
     });
 

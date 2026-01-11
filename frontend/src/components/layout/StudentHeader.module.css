@@ -143,7 +143,7 @@
 }
 
 .notifItem.unread .notifTitleText::before {
-  content: '●';
+  content: "●";
   color: var(--color-student-primary);
   font-size: 0.6rem;
   margin-right: 6px;
@@ -151,6 +151,7 @@
 
 .notifItem:hover {
   background: var(--color-gray-100);
+  cursor: pointer;
 }
 
 .notifMain {
@@ -158,7 +159,6 @@
   align-items: flex-start;
   gap: 10px;
   flex: 1;
-  /* cursor: pointer; removed */
 }
 
 .notifIcon {

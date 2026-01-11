@@ -21,20 +21,44 @@
   align-items: center;
 }
 
-.rangeLabel {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 14px;
-  color: #cbd5e1;
-}
-
-.rangeLabel select {
+.rangeSelect {
   background: #0f172a;
   color: #e5e7eb;
-  border: 1px solid #1f2937;
-  border-radius: 8px;
-  padding: 8px 10px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  min-width: 140px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rangeSelect:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+}
+
+.backBtn {
+  border: 1px solid #334155;
+  background: linear-gradient(135deg, #111827, #0b1222);
+  color: #e5e7eb;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s;
+}
+
+.backBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  border-color: #6366f1;
+}
+
+.backBtn:active {
+  transform: translateY(0px);
+  box-shadow: none;
 }
 
 .summaryGrid {
@@ -195,9 +219,9 @@
 }
 
 .progressWrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .progressText {
@@ -224,22 +248,38 @@
 /* Pagination Styles */
 .pagination {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 14px;
   border-top: 1px solid #1f2937;
 }
 
 .pagination button {
-  padding: 6px 14px !important;
+  padding: 8px 14px !important;
   font-size: 13px !important;
-  height: 32px !important;
+  height: 34px !important;
+  border-radius: 10px;
+  border: 1px solid #334155 !important;
+  background: #111827 !important;
+  color: #e5e7eb !important;
+  transition: border-color 0.2s, transform 0.15s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  border-color: #6366f1 !important;
+  transform: translateY(-1px);
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .pageInfo {
   font-size: 13px;
-  color: #9ca3af;
+  color: #cbd5e1;
+  padding: 0 6px;
 }
 
 /* Modal Styles */
@@ -265,7 +305,8 @@
   max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .modalHeader {

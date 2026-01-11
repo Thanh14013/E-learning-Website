@@ -77,8 +77,11 @@ const createAndSendBatchNotifications = async (userIds, notificationData) => {
     // Send real-time notifications via Socket.IO
     const io = getSocketIOInstance();
     if (io) {
-      userIds.forEach((userId) => {
-        sendNotificationToUser(io, userId, notificationData);
+      createdNotifications.forEach((doc) => {
+        sendNotificationToUser(io, doc.userId.toString(), {
+          _id: doc._id,
+          ...notificationData,
+        });
       });
     }
 
@@ -112,7 +115,7 @@ export const notifyEnrollment = async (
         type: "course",
         title: "New Student Enrolled",
         content: `${student.fullName} has enrolled in your course "${course.title}"`,
-        link: `/courses/${course._id}/students`,
+        link: `/teacher/courses/${course._id}/analytics`,
         metadata: {
           courseId: course._id,
           studentId,
@@ -298,7 +301,8 @@ export const notifySessionScheduled = async (
       type: "session",
       title: "Live Session Scheduled",
       content: `A live session "${session.title}" is scheduled for ${scheduledDate} in "${course.title}"`,
-      link: `/courses/${course._id}/sessions/${session._id}`,
+      // Redirect students to the course page (not directly into the live session)
+      link: `/courses/${course._id}`,
       metadata: {
         courseId: course._id,
         sessionId: session._id,
@@ -341,7 +345,8 @@ export const notifySessionStarted = async (
       type: "session",
       title: "Live Session Started",
       content: `The live session "${session.title}" has started in "${course.title}". Join now!`,
-      link: `/courses/${course._id}/sessions/${session._id}/join`,
+      // Redirect to course page
+      link: `/courses/${course._id}`,
       metadata: {
         courseId: course._id,
         sessionId: session._id,
@@ -371,6 +376,43 @@ export const notifySessionStarted = async (
     );
   } catch (error) {
     console.error("Error sending session started notification:", error.message);
+  }
+};
+
+/**
+ * Send notification when a live session is canceled/deleted
+ */
+export const notifySessionCanceled = async (
+  enrolledStudents,
+  session,
+  course
+) => {
+  try {
+    const notificationData = {
+      type: "session",
+      title: "Live Session Canceled",
+      content: `The live session "${session.title}" in "${course.title}" has been canceled.",`,
+      link: `/courses/${course._id}`,
+      metadata: {
+        courseId: course._id,
+        sessionId: session._id,
+        canceledAt: new Date(),
+      },
+    };
+
+    const studentIds = enrolledStudents.map((student) =>
+      student._id.toString()
+    );
+
+    await createAndSendBatchNotifications(studentIds, notificationData);
+    console.log(
+      `🛑 Session canceled notification sent to ${studentIds.length} students`
+    );
+  } catch (error) {
+    console.error(
+      "Error sending session canceled notification:",
+      error.message
+    );
   }
 };
 
@@ -521,7 +563,7 @@ export const notifyDiscussionCreated = async (
   try {
     const io = getSocketIOInstance();
     const Course = (await import("../models/course.model.js")).default;
-    const course = await Course.findById(courseId).select('teacherId title');
+    const course = await Course.findById(courseId).select("teacherId title");
 
     // Notification data
     const notification = {
@@ -540,19 +582,25 @@ export const notifyDiscussionCreated = async (
     sendNotificationToCourse(io, courseId, notification);
 
     // Notify Teacher specifically (if not the creator)
-    if (course && course.teacherId && course.teacherId.toString() !== (creator.id || creator._id).toString()) {
-        await createAndSendNotification(
-            course.teacherId,
-            {
-                type: "discussion",
-                title: "New Discussion in " + course.title,
-                content: `${creator.fullName} started a discussion: "${discussion.title}"`,
-                link: `/courses/${courseId}/learn?tab=discussions`, // Redirect to course discussions tab
-                metadata: notification.metadata
-            },
-            false
-        );
-        console.log(`📢 Discussion notification sent to Teacher ${course.teacherId}`);
+    if (
+      course &&
+      course.teacherId &&
+      course.teacherId.toString() !== (creator.id || creator._id).toString()
+    ) {
+      await createAndSendNotification(
+        course.teacherId,
+        {
+          type: "discussion",
+          title: "New Discussion in " + course.title,
+          content: `${creator.fullName} started a discussion: "${discussion.title}"`,
+          link: `/teacher/courses/${courseId}/analytics`, // Redirect to teacher analytics page
+          metadata: notification.metadata,
+        },
+        false
+      );
+      console.log(
+        `📢 Discussion notification sent to Teacher ${course.teacherId}`
+      );
     }
 
     console.log(

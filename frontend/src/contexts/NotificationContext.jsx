@@ -18,7 +18,7 @@ export const NotificationProvider = ({ children }) => {
 
   // Pagination state (simple infinite scroll ready)
   const pageRef = useRef(1);
-  const limitRef = useRef(20);
+  const limitRef = useRef(10);
   const loadingMoreRef = useRef(false);
 
   /**

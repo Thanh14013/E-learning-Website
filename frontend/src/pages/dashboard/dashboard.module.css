@@ -1,6 +1,6 @@
 .dashboardLayout {
   display: grid;
-    grid-template-columns:
+  grid-template-columns:
     minmax(280px, 320px)
     minmax(0, 1fr)
     minmax(300px, 360px);
@@ -36,17 +36,12 @@
   margin-bottom: 32px;
 }
 .pageHero {
-  background: linear-gradient(
-    135deg,
-    var(--bg-card),
-    var(--color-gray-100)
-  );
+  background: linear-gradient(135deg, var(--bg-card), var(--color-gray-100));
   border: 1px solid var(--color-gray-200);
   padding: 32px;
   border-radius: var(--border-radius-xl);
   margin-bottom: 10px;
 }
-
 
 /*3. SIDEBAR TRÁI*/
 .block {
@@ -85,7 +80,7 @@
   gap: 12px;
   padding: 12px;
   border-radius: var(--border-radius-md);
-    color: var(--text-secondary);
+  color: var(--text-secondary);
   font-weight: 500;
   text-decoration: none;
   cursor: pointer;
@@ -110,12 +105,12 @@
   .block h3 {
     border-bottom-color: var(--color-gray-700);
   }
-.navLink:hover {
+  .navLink:hover {
     background-color: var(--color-gray-700);
     color: var(--color-white);
   }
   .navLinkActive {
-    background-color: rgba(79, 70, 229, 0.2); 
+    background-color: rgba(79, 70, 229, 0.2);
     color: var(--color-student-primary-light);
   }
 }
@@ -277,10 +272,16 @@
   font-weight: 700;
   cursor: pointer;
 }
+
+/* When day is both today and has session, keep text white */
+.day.today.hasSession {
+  color: var(--color-white);
+}
+
 .day.hasSession:hover::before {
   content: "";
   position: absolute;
-  inset: -2px; 
+  inset: -2px;
   border-radius: 50%;
   box-shadow: 0 0 0 2px var(--color-student-primary);
   z-index: -1;
@@ -526,28 +527,28 @@
   .popupHeader {
     border-bottom-color: var(--color-gray-700);
   }
-  
+
   .closeBtn:hover {
     background-color: var(--color-gray-700);
   }
-  
+
   .sessionItem {
     border-color: var(--color-gray-700);
   }
-  
+
   .sessionItem:hover {
     background-color: var(--color-gray-700);
   }
-  
+
   .statItem {
     border-color: var(--color-gray-700);
     background-color: var(--bg-card);
   }
-  
+
   .compactStatItem {
     background-color: var(--color-gray-700);
   }
-  
+
   .compactStatItem:hover {
     background-color: var(--color-gray-600);
   }
@@ -558,15 +559,11 @@
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.6);
   }
   .pageHero {
-    background: linear-gradient(
-      135deg,
-      var(--bg-card),
-      var(--color-gray-800)
-    );
+    background: linear-gradient(135deg, var(--bg-card), var(--color-gray-800));
     border-color: var(--color-gray-700);
   }
   .day.hasSession:hover::after {
-    background-color: rgba(99, 102, 241, 0.2); 
+    background-color: rgba(99, 102, 241, 0.2);
     border-color: var(--color-student-primary);
   }
 }
@@ -583,19 +580,19 @@
     padding: 24px;
   }
 
-  .navSidebar, 
-  .calendarSidebar, 
+  .navSidebar,
+  .calendarSidebar,
   .mainContent {
     width: 100%;
     min-width: 0;
   }
 
-.navList {
+  .navList {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 12px;
-    align-items: flex-start; 
+    align-items: flex-start;
   }
   .navList > li {
     flex: 1 1 0px;
@@ -603,7 +600,7 @@
     width: 0;
   }
 
-.navLink {
+  .navLink {
     width: 100%;
     justify-content: center;
     text-align: center;
@@ -631,7 +628,7 @@
     font-size: 1.5rem;
   }
   .statsGrid {
-    grid-template-columns: 1fr; 
+    grid-template-columns: 1fr;
   }
   .popupContent {
     width: 95%;
@@ -652,10 +649,10 @@
   .calendarGrid {
     gap: 2px;
   }
-    .navLinkActive{
+  .navLinkActive {
     background-color: var(--bg-card);
   }
-  .day, 
+  .day,
   .dayHeader {
     width: 32px;
     height: 32px;
@@ -669,7 +666,7 @@
   .compactStatItem {
     padding: 12px;
   }
-  
+
   .compactStatValue {
     font-size: 1.1rem;
   }

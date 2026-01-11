@@ -580,7 +580,7 @@ const CourseEditor = () => {
             className={styles.backButton}
             onClick={() => navigate('/teacher/courses')}
           >
-            ← Back
+            ←
           </button>
           <h1 className={styles.title}>Edit Course</h1>
         </div>

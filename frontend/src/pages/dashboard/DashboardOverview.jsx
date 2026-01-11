@@ -54,7 +54,7 @@ const CalendarSidebar = ({ user }) => {
   const [sessionsByDate, setSessionsByDate] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
-  
+
   const now = new Date();
   const currentMonth = now.toLocaleString('en-US', { month: 'long' });
   const currentYear = now.getFullYear();
@@ -73,7 +73,7 @@ const CalendarSidebar = ({ user }) => {
         try {
           const startOfMonth = new Date(currentYear, now.getMonth(), 1);
           const endOfMonth = new Date(currentYear, now.getMonth() + 1, 0);
-          
+
           const token = localStorage.getItem('accessToken') || localStorage.getItem('token');
           const response = await fetch('/api/sessions/my-enrolled-sessions?' + new URLSearchParams({
             startDate: startOfMonth.toISOString(),
@@ -83,7 +83,7 @@ const CalendarSidebar = ({ user }) => {
               'Authorization': `Bearer ${token}`
             }
           });
-          
+
           if (response.ok) {
             const contentType = response.headers.get('content-type') || '';
             if (contentType.includes('application/json')) {
@@ -118,7 +118,7 @@ const CalendarSidebar = ({ user }) => {
               'Authorization': `Bearer ${token}`
             }
           });
-          
+
           if (response.ok) {
             const contentType = response.headers.get('content-type') || '';
             if (contentType.includes('application/json')) {
@@ -142,8 +142,12 @@ const CalendarSidebar = ({ user }) => {
   }, [user.role]);
 
   const getDayKey = (day) => {
+    // Use local date to match backend's dateKey format
     const date = new Date(currentYear, now.getMonth(), day);
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dayStr}`; // YYYY-MM-DD in local timezone
   };
 
   const handleDayClick = (day) => {
@@ -172,14 +176,14 @@ const CalendarSidebar = ({ user }) => {
             const day = i + 1;
             const dayKey = getDayKey(day);
             const hasSessions = sessionsByDate[dayKey] && sessionsByDate[dayKey].length > 0;
-            
+
             let className = styles.day;
             if (day === today) className += ` ${styles.today}`;
             if (hasSessions) className += ` ${styles.hasSession}`;
-            
+
             return (
-              <span 
-                key={day} 
+              <span
+                key={day}
                 className={className}
                 onClick={() => hasSessions && handleDayClick(day)}
                 style={{ cursor: hasSessions ? 'pointer' : 'default' }}
@@ -207,9 +211,9 @@ const CalendarSidebar = ({ user }) => {
                   window.location.href = `/courses/${session.courseId._id}`;
                 }}>
                   <div className={styles.sessionTime}>
-                    {new Date(session.scheduledAt).toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
+                    {new Date(session.scheduledAt).toLocaleTimeString('en-GB', {
+                      hour: '2-digit',
+                      minute: '2-digit'
                     })}
                   </div>
                   <div className={styles.sessionDetails}>
@@ -230,25 +234,25 @@ const CalendarSidebar = ({ user }) => {
           <h3>My Progress</h3>
           <div className={styles.statsGrid}>
             <div className={styles.statItem}>
-                <div className={styles.statValue}>{dashboardStats.coursePassed}</div>
-                  <div className={styles.statLabel}>Total courses passed</div>
+              <div className={styles.statValue}>{dashboardStats.coursePassed}</div>
+              <div className={styles.statLabel}>Total courses passed</div>
             </div>
             <div className={styles.statItem}>
               <div className={styles.statValue}>{dashboardStats.courseFailed}</div>
-                  <div className={styles.statLabel}>Total courses incomplete</div>
+              <div className={styles.statLabel}>Total courses incomplete</div>
             </div>
             <div className={styles.statItem}>
               <div className={styles.statValue}>{dashboardStats.totalLessonsCompleted}</div>
-                  <div className={styles.statLabel}>Total lessons completed</div>
+              <div className={styles.statLabel}>Total lessons completed</div>
             </div>
             <div className={styles.statItem}>
-                  <div className={styles.statValue}>{dashboardStats.averageProgress}%</div>
-                  <div className={styles.statLabel}>Average progress</div>
+              <div className={styles.statValue}>{dashboardStats.averageProgress}%</div>
+              <div className={styles.statLabel}>Average progress</div>
             </div>
           </div>
         </div>
       )}
-      
+
       {/* Course Statistics for Students */}
       {user.role === 'student' && dashboardStats && (
         <div className={styles.block}>
@@ -301,12 +305,12 @@ export default function Dashboard() {
       <aside className={styles.navSidebar}><NavigationSidebar enrolledCourses={myCourses} /></aside>
 
       <main className={styles.mainContent}>
-      <div className={styles.pageHero}>
-        <h1 className={styles.mainTitle}>Dashboard</h1>
-        <p className={styles.mainSubtitle}>
-          Welcome back, {user.fullName}!
-        </p>
-      </div>
+        <div className={styles.pageHero}>
+          <h1 className={styles.mainTitle}>Dashboard</h1>
+          <p className={styles.mainSubtitle}>
+            Welcome back, {user.fullName}!
+          </p>
+        </div>
         <RoleView user={user} />
       </main>
 

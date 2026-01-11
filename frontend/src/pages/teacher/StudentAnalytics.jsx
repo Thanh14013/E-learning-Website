@@ -123,7 +123,7 @@ const StudentAnalytics = () => {
             {/* Header / Profile */}
             <div className={styles.header}>
                 <Button variant="secondary" onClick={() => navigate(-1)} className={styles.backBtn}>
-                    ← Back
+                    ←
                 </Button>
                 <div className={styles.profileSection}>
                     <div className={styles.avatar}>

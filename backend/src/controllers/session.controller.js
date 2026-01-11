@@ -1,7 +1,17 @@
 import LiveSession from "../models/liveSession.model.js";
 import Course from "../models/course.model.js";
 import User from "../models/user.model.js";
-import { sendNotificationToCourse } from "../socket/index.js";
+import Notification from "../models/notification.model.js";
+import {
+  sendNotificationToCourse,
+  sendNotificationToUser,
+} from "../socket/index.js";
+import { getSocketIOInstance } from "../config/socket.config.js";
+import {
+  notifySessionScheduled,
+  notifySessionStarted,
+  notifySessionCanceled,
+} from "../services/notification.service.js";
 import { seedLiveSessions } from "../utils/seedSessions.js";
 
 /**
@@ -56,16 +66,15 @@ export const createSession = async (req, res) => {
       { path: "hostId", select: "fullName email" },
     ]);
 
-    // Send notifications to enrolled students
-    if (req.io) {
-      sendNotificationToCourse(req.io, courseId, {
-        type: "session_scheduled",
-        title: "New Live Session Scheduled",
-        content: `A new live session "${title}" has been scheduled for ${scheduledDate.toLocaleString()}`,
-        link: `/sessions/${newSession._id}`,
-        sessionId: newSession._id,
-      });
-    }
+    // Get enrolled students from the course
+    const enrolledStudents = await User.find({
+      _id: { $in: course.enrolledStudents },
+    }).select("_id");
+
+    const studentIds = enrolledStudents.map((student) => student._id);
+
+    // Send notifications to enrolled students (DB + realtime)
+    await notifySessionScheduled(enrolledStudents, newSession, course);
 
     return res.status(201).json({
       success: true,
@@ -290,6 +299,12 @@ export const startSession = async (req, res) => {
     session.startedAt = new Date();
     await session.save();
 
+    // Notify enrolled students session started
+    const enrolledStudents = (session.courseId.enrolledStudents || []).map(
+      (id) => ({ _id: id })
+    );
+    await notifySessionStarted(enrolledStudents, session, session.courseId);
+
     // Broadcast session live notification via Socket.IO
     if (req.io) {
       sendNotificationToCourse(req.io, session.courseId._id, {
@@ -501,6 +516,17 @@ export const deleteSession = async (req, res) => {
 
     await LiveSession.findByIdAndDelete(id);
 
+    // Notify enrolled students session canceled/deleted
+    const course = await Course.findById(session.courseId).select(
+      "title enrolledStudents"
+    );
+    if (course) {
+      const enrolledStudents = (course.enrolledStudents || []).map((sid) => ({
+        _id: sid,
+      }));
+      await notifySessionCanceled(enrolledStudents, session, course);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Session deleted successfully",
@@ -570,12 +596,12 @@ export const getEnrolledCourseSessions = async (req, res) => {
     const { startDate, endDate } = req.query;
 
     // Get user's enrolled courses
-    const user = await User.findById(userId).select('enrolledCourses');
+    const user = await User.findById(userId).select("enrolledCourses");
     if (!user || !user.enrolledCourses || user.enrolledCourses.length === 0) {
       return res.status(200).json({
         success: true,
-        message: 'No enrolled courses found',
-        data: []
+        message: "No enrolled courses found",
+        data: [],
       });
     }
 
@@ -584,7 +610,7 @@ export const getEnrolledCourseSessions = async (req, res) => {
     // Build filter
     const filter = {
       courseId: { $in: enrolledCourseIds },
-      status: { $in: ['scheduled', 'live'] } // Only show upcoming and live sessions
+      status: { $in: ["scheduled", "live"] }, // Only show upcoming and live sessions
     };
 
     // Add date range filter if provided
@@ -600,15 +626,21 @@ export const getEnrolledCourseSessions = async (req, res) => {
 
     // Get sessions
     const sessions = await LiveSession.find(filter)
-      .populate('courseId', 'title thumbnail')
-      .populate('hostId', 'fullName avatar')
+      .populate("courseId", "title thumbnail")
+      .populate("hostId", "fullName avatar")
       .sort({ scheduledAt: 1 })
       .lean();
 
     // Group sessions by date for easier calendar rendering
     const sessionsByDate = {};
-    sessions.forEach(session => {
-      const dateKey = session.scheduledAt.toISOString().split('T')[0]; // YYYY-MM-DD
+    sessions.forEach((session) => {
+      // Use local date instead of UTC to avoid timezone issues
+      const localDate = new Date(session.scheduledAt);
+      const year = localDate.getFullYear();
+      const month = String(localDate.getMonth() + 1).padStart(2, "0");
+      const day = String(localDate.getDate()).padStart(2, "0");
+      const dateKey = `${year}-${month}-${day}`; // YYYY-MM-DD in local timezone
+
       if (!sessionsByDate[dateKey]) {
         sessionsByDate[dateKey] = [];
       }
@@ -617,16 +649,16 @@ export const getEnrolledCourseSessions = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Sessions fetched successfully',
+      message: "Sessions fetched successfully",
       data: sessions,
-      sessionsByDate
+      sessionsByDate,
     });
   } catch (error) {
-    console.error('Get enrolled sessions error:', error);
+    console.error("Get enrolled sessions error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Server error while fetching sessions',
-      error: error.message
+      message: "Server error while fetching sessions",
+      error: error.message,
     });
   }
 };
@@ -641,14 +673,14 @@ export const seedDemoSessions = async (_req, res) => {
     const created = await seedLiveSessions();
     return res.status(201).json({
       success: true,
-      message: 'Demo sessions seeded successfully',
+      message: "Demo sessions seeded successfully",
       createdCount: created?.length || 0,
     });
   } catch (error) {
-    console.error('Seed demo sessions error:', error);
+    console.error("Seed demo sessions error:", error);
     return res.status(500).json({
       success: false,
-      message: 'Failed to seed demo sessions',
+      message: "Failed to seed demo sessions",
     });
   }
 };

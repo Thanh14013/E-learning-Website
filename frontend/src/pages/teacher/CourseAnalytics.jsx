@@ -138,17 +138,22 @@ const CourseAnalytics = () => {
                     <p className={styles.subheading}>Course ID: {courseId}</p>
                 </div>
                 <div className={styles.headerActions}>
-                    <label className={styles.rangeLabel}>
-                        Range
-                        <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
-                            <option value={7}>Last 7 days</option>
-                            <option value={30}>Last 30 days</option>
-                            <option value={60}>Last 60 days</option>
-                        </select>
-                    </label>
-                    <Button variant="secondary" onClick={() => navigate(-1)}>
-                        Back
-                    </Button>
+                    <select
+                        className={styles.rangeSelect}
+                        value={days}
+                        onChange={(e) => setDays(Number(e.target.value))}
+                    >
+                        <option value={7}>Last 7 days</option>
+                        <option value={30}>Last 30 days</option>
+                        <option value={60}>Last 60 days</option>
+                    </select>
+                    <button
+                        type="button"
+                        className={styles.backBtn}
+                        onClick={() => navigate(-1)}
+                    >
+                        ←
+                    </button>
                 </div>
             </div>
 

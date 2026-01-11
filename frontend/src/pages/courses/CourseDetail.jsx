@@ -102,7 +102,7 @@ const CourseRating = ({ courseId, isEnrolled, currentRating, totalReviews, userR
             <div className={styles.existingComment}>
               <p><strong>Your comment:</strong> {userReview.comment}</p>
               <p style={{ fontSize: '0.9em', color: 'var(--color-text-secondary)', marginTop: '0.5rem' }}>
-                Submitted on {new Date(userReview.createdAt).toLocaleDateString()}
+                Submitted on {new Date(userReview.createdAt).toLocaleDateString('en-GB')}
               </p>
             </div>
           )}
@@ -238,7 +238,7 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
               {upcomingSessions.map((session) => (
                 <div
                   key={session._id}
-                  className={`${styles.liveScheduleItem} ${ session.status === 'live' ? styles.liveItem : ''}`}
+                  className={`${styles.liveScheduleItem} ${session.status === 'live' ? styles.liveItem : ''}`}
                   onClick={() => {
                     if (session.status === 'live') navigate(`/session/${session._id}`);
                   }}
@@ -247,13 +247,13 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
                     {session.status === 'live' ? (
                       <span style={{ color: '#e53e3e', fontWeight: 'bold' }}>LIVE</span>
                     ) : (
-                      new Date(session.scheduledAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
+                      new Date(session.scheduledAt).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })
                     )}
                   </div>
                   <div className={styles.liveScheduleInfo}>
                     <div className={styles.liveScheduleTitle} style={session.status === 'live' ? { color: '#e53e3e' } : {}}>{session.title}</div>
                     <div className={styles.liveScheduleMeta}>
-                      ⏰ {new Date(session.scheduledAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                      ⏰ {new Date(session.scheduledAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   {session.status === 'live' && (
@@ -353,13 +353,13 @@ const LiveSessionsSection = ({ courseId, isHost }) => {
               <div className={styles.sessionInfo}>
                 <div className={styles.sessionTitle}>{session.title}</div>
                 <div className={styles.sessionTime}>
-                  📆 {new Date(session.scheduledAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
+                  📆 {new Date(session.scheduledAt).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: '2-digit',
                     year: 'numeric'
                   })}
                   {' '}at{' '}
-                  {new Date(session.scheduledAt).toLocaleTimeString('en-US', {
+                  {new Date(session.scheduledAt).toLocaleTimeString('en-GB', {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}
@@ -714,7 +714,7 @@ const CourseDetailPage = () => {
                             {discussion.userId?.fullName || 'Anonymous'}
                           </span>
                           <span className={styles.timestamp}>
-                            • {new Date(discussion.createdAt).toLocaleDateString()}
+                            • {new Date(discussion.createdAt).toLocaleDateString('en-GB')}
                           </span>
                         </div>
                       </div>

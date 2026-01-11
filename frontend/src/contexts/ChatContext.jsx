@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
-import api from "../services/api";
+import chatService from "../services/chatService";
 
 const ChatContext = createContext(null);
 
@@ -51,6 +51,12 @@ export const ChatProvider = ({ children }) => {
     const [unreadCounts, setUnreadCounts] = useState({});
     const [onlineUsers, setOnlineUsers] = useState([]);
 
+    // Calculate total unread count from conversations
+    const totalUnreadCount = conversations.reduce((total, convo) => {
+        const myUnread = convo.unreadCounts?.[user?._id] || 0;
+        return total + myUnread;
+    }, 0);
+
     // Persist to localStorage
     useEffect(() => {
         localStorage.setItem('activeChats', JSON.stringify(activeChats));
@@ -61,9 +67,49 @@ export const ChatProvider = ({ children }) => {
     }, [minimizedChats]);
 
     const handleReceiveMessage = (message) => {
-        console.log("[ChatContext] Global receive_message:", message);
-        // Logic for global unread counts can go here if needed
+        if (!message) return;
+        setConversations((prev) => {
+            const idx = prev.findIndex((c) => c._id === message.conversationId);
+            if (idx === -1) return prev;
+
+            const updated = [...prev];
+            const convo = { ...updated[idx] };
+            convo.lastMessage = message;
+
+            // Increment unread count when message not from me
+            if (message.sender !== user?._id && message.sender?._id !== user?._id) {
+                const currentUnread = convo.unreadCounts?.[user?._id] || 0;
+                convo.unreadCounts = {
+                    ...convo.unreadCounts,
+                    [user?._id]: currentUnread + 1,
+                };
+            }
+
+            updated[idx] = convo;
+            return updated;
+        });
     };
+
+    // Preload conversations to drive unread badge
+    useEffect(() => {
+        if (!user || !token) {
+            setConversations([]);
+            return;
+        }
+
+        const loadConversations = async () => {
+            try {
+                const res = await chatService.getConversations();
+                if (res.data?.success) {
+                    setConversations(res.data.data || []);
+                }
+            } catch (error) {
+                console.error("[ChatContext] Failed to preload conversations:", error);
+            }
+        };
+
+        loadConversations();
+    }, [user?._id, token]);
 
     useEffect(() => {
         let newSocket = null;
@@ -128,11 +174,22 @@ export const ChatProvider = ({ children }) => {
         };
     }, [token, user]);
 
+    const markConversationRead = (conversationId) => {
+        if (!conversationId || !user?._id) return;
+        setConversations((prev) => prev.map((c) => {
+            if (c._id !== conversationId) return c;
+            const newUnread = { ...(c.unreadCounts || {}) };
+            newUnread[user._id] = 0;
+            return { ...c, unreadCounts: newUnread };
+        }));
+    };
+
     const openChat = (conversation) => {
         if (!activeChats.find(c => c._id === conversation._id)) {
             setActiveChats(prev => [...prev, conversation]);
             setMinimizedChats(prev => prev.filter(c => c._id !== conversation._id));
         }
+        markConversationRead(conversation._id);
     };
 
     const closeChat = (conversationId) => {
@@ -160,7 +217,9 @@ export const ChatProvider = ({ children }) => {
                 conversations,
                 setConversations,
                 unreadCounts,
-                onlineUsers
+                totalUnreadCount,
+                onlineUsers,
+                markConversationRead,
             }}
         >
             {children}

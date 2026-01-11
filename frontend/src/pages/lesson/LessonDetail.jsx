@@ -851,10 +851,10 @@ const LessonDetail = () => {
                                                         <span>👤 {discussion.userId?.fullName || 'Anonymous'}</span>
                                                     </div>
                                                     <div style={{ fontSize: '0.75rem', color: '#999' }}>
-                                                        {new Date(discussion.createdAt).toLocaleDateString('en-US', {
+                                                        {new Date(discussion.createdAt).toLocaleDateString('en-GB', {
+                                                            day: '2-digit',
+                                                            month: '2-digit',
                                                             year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric',
                                                             hour: '2-digit',
                                                             minute: '2-digit'
                                                         })}

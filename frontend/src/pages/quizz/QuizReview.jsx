@@ -22,7 +22,7 @@ const QuizReview = () => {
   const { quizId, attemptId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [quiz, setQuiz] = useState(null);
   const [result, setResult] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -51,7 +51,7 @@ const QuizReview = () => {
       // Get result detail with answers and explanations
       const resultData = await quizService.getQuizResult(quizId, attemptId);
       setResult(resultData);
-      
+
       // Process questions with user answers and correct answers
       const processedQuestions = quizData.questions.map((question, index) => {
         const userAnswer = resultData.answers.find(a => a.questionId === question.id);
@@ -62,7 +62,7 @@ const QuizReview = () => {
           pointsEarned: userAnswer?.pointsEarned || 0
         };
       });
-      
+
       setQuestions(processedQuestions);
       setLoading(false);
     } catch (err) {
@@ -118,7 +118,7 @@ const QuizReview = () => {
       // link.click();
       // document.body.removeChild(link);
       // window.URL.revokeObjectURL(url);
-      
+
       // For now, show a message (in production, this would download PDF)
       alert(`Certificate for "${quiz.title}" is being generated. This feature will be available when the backend is ready.`);
       console.log('Downloading certificate for quiz:', quizId, 'attempt:', attemptId);
@@ -133,10 +133,10 @@ const QuizReview = () => {
    */
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -197,7 +197,7 @@ const QuizReview = () => {
         <div className="review-header-content">
           <div className="breadcrumb">
             <button onClick={() => navigate(`/quiz/${quizId}`)} className="breadcrumb-link">
-              ← Back
+              ←
             </button>
             <span className="breadcrumb-separator">/</span>
             <span className="breadcrumb-current">Quiz Results</span>
@@ -256,7 +256,7 @@ const QuizReview = () => {
           {/* Action Buttons */}
           <div className="result-actions">
             {result.isPassed && (
-                <Button
+              <Button
                 variant="primary"
                 onClick={handleDownloadCertificate}
                 className="certificate-btn"
@@ -265,7 +265,7 @@ const QuizReview = () => {
               </Button>
             )}
             {attempts.length < quiz.attemptsAllowed && (
-                <Button
+              <Button
                 variant="secondary"
                 onClick={handleRetakeQuiz}
                 className="retake-btn"
@@ -322,14 +322,14 @@ const QuizReview = () => {
               ...currentQuestion,
               // Add user answer and correct answer for review
               userAnswer: currentQuestion.userAnswer,
-              correctAnswer: currentQuestion.type === 'multiple_choice' 
+              correctAnswer: currentQuestion.type === 'multiple_choice'
                 ? currentQuestion.options?.find(o => o.isCorrect)?.id
                 : currentQuestion.correctAnswer
             }}
             questionIndex={currentQuestionIndex}
             totalQuestions={questions.length}
             currentAnswer={currentQuestion.userAnswer}
-            onAnswerChange={() => {}} // Disabled in review mode
+            onAnswerChange={() => { }} // Disabled in review mode
             showExplanation={true}
             isReviewMode={true}
           />

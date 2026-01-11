@@ -4,11 +4,10 @@ import { useChat } from '../../contexts/ChatContext';
 import styles from './ChatDropdown.module.css';
 
 const ChatDropdown = ({ onClose }) => {
-    const [conversations, setConversations] = useState([]);
+    const { openChat, socket, onlineUsers, conversations, setConversations, markConversationRead } = useChat();
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
-    const { openChat, socket, onlineUsers } = useChat();
     // Get user safely from localStorage
     let user = null;
     try {
@@ -103,6 +102,7 @@ const ChatDropdown = ({ onClose }) => {
     };
 
     const handleOpenConversation = (convo) => {
+        markConversationRead && markConversationRead(convo._id);
         openChat(convo);
         onClose();
     };
@@ -248,7 +248,6 @@ const ChatDropdown = ({ onClose }) => {
                                                         {lastMsgFromMe && "You: "}
                                                         {convo.lastMessage?.content || "Started a chat"}
                                                     </span>
-                                                    {isUnread && <div className={styles.unreadDot}></div>}
                                                 </div>
                                             </div>
                                         </button>

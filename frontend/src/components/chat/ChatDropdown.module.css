@@ -115,9 +115,9 @@
 }
 
 .relativeWrapper {
-    position: relative;
-    width: 48px;
-    height: 48px;
+  position: relative;
+  width: 48px;
+  height: 48px;
 }
 .onlineIndicator {
   position: absolute;
@@ -125,7 +125,7 @@
   right: 0;
   width: 12px;
   height: 12px;
-  background: #10B981;
+  background: #10b981;
   border-radius: 50%;
   border: 2px solid white;
 }
@@ -138,7 +138,7 @@
   height: 12px;
   background-color: var(--color-success);
   border-radius: 50%;
-  border: 2px solid var(--bg-card); 
+  border: 2px solid var(--bg-card);
 }
 
 .info {
@@ -187,14 +187,6 @@
   color: #000000;
   font-weight: 600;
 }
-.unreadDot {
-  width: 8px;
-  height: 8px;
-  background: var(--color-student-primary);
-  border-radius: 50%;
-  margin-left: 8px;
-  flex-shrink: 0;
-}
 
 .empty {
   text-align: center;
@@ -212,7 +204,7 @@
 .footerBtn {
   background: none;
   border: none;
-  color: var(--color-primary, #4F46E5);
+  color: var(--color-primary, #4f46e5);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
@@ -225,16 +217,16 @@
   .container {
     border-color: var(--color-gray-700);
   }
-  
+
   .header {
     border-bottom-color: var(--color-gray-700);
   }
 
   .searchInput {
-    background-color: var(--color-gray-900); 
+    background-color: var(--color-gray-900);
     color: var(--color-white);
   }
-  
+
   .searchInput:focus {
     background-color: var(--color-gray-800);
     border-color: var(--color-student-primary);
@@ -246,7 +238,8 @@
   .item:not(:last-child)::after {
     background: var(--color-gray-700);
   }
-  .avatar, .fallbackAvatar {
+  .avatar,
+  .fallbackAvatar {
     border-color: var(--color-gray-600);
   }
   .fallbackAvatar {
