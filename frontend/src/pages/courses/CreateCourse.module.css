@@ -47,6 +47,13 @@
 }
 
 .stepContent {
+    background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.02),
+    rgba(255,255,255,0)
+  );
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-lg);
   animation: fadeIn 0.3s ease;
 }
 
@@ -62,12 +69,25 @@
 }
 
 .stepContent h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--color-gray-800);
-  margin-bottom: var(--spacing-3);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--spacing-4);
 }
-
+.stepContent h2::before {
+  content: '';
+  width: 4px;
+  height: 1.2em;
+  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    var(--color-info),
+    var(--color-info-hover)
+  );
+}
 .stepDescription {
   color: var(--color-gray-600);
   margin-bottom: var(--spacing-4);
@@ -126,24 +146,29 @@
 .quillEditor {
   background-color: var(--color-white);
   border-radius: var(--border-radius-md);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+  transition: background-color 0.3s, border-color 0.3s; 
 }
 
 .quillEditor .ql-container {
-  min-height: 200px;
+  min-height: 150px;
   border-bottom-left-radius: var(--border-radius-md);
   border-bottom-right-radius: var(--border-radius-md);
   font-size: 1rem;
-  color: #000000 !important; /* Force black text */
+  color: var(--color-gray-900) !important; 
 }
 
 /* Ensure the editor content itself is black */
 .quillEditor :global(.ql-editor) {
-  color: #000000 !important;
+  color: var(--color-gray-900) !important;
 }
 
 /* Darken placeholder for better visibility */
 .quillEditor :global(.ql-editor.ql-blank::before) {
-  color: #4b5563 !important; /* Darker grey for placeholder */
+  color: var(--color-gray-500) !important;
   font-style: normal;
 }
 
@@ -152,9 +177,14 @@
 }
 
 .quillEditor .ql-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px !important;
   border-top-left-radius: var(--border-radius-md);
   border-top-right-radius: var(--border-radius-md);
   border-bottom: 1px solid var(--color-gray-300);
+  background-color: var(--color-gray-50);
 }
 
 .charCount {
@@ -257,8 +287,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: var(--spacing-6);
-  padding-top: var(--spacing-4);
+  margin-top: var(--spacing-2);
+  padding-top: var(--spacing-2);
   border-top: 1px solid var(--color-gray-200);
 }
 
@@ -414,10 +444,17 @@
     background: var(--color-gray-800);
     border: 1px solid var(--color-gray-700);
   }
-
+  .stepContent {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255,255,255,0)
+    );
+  }
   .stepContent h2 {
     color: var(--color-gray-100);
   }
+  
 
   .stepDescription {
     color: var(--color-gray-400);
@@ -478,5 +515,144 @@
 
   .successBannerMessage {
     color: var(--color-gray-300);
+  }
+.quillEditor {
+    background-color: var(--color-gray-800);
+    border: 1px solid var(--color-gray-700);
+  }
+
+  .quillEditor .ql-toolbar {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-700);
+    border-bottom: 1px solid var(--color-gray-600);
+  }
+
+  .quillEditor .ql-container {
+    color: var(--color-gray-100) !important;
+    border: none;
+  }
+
+  .quillEditor :global(.ql-editor) {
+    color: var(--color-gray-100) !important;
+  }
+
+  .quillEditor :global(.ql-editor.ql-blank::before) {
+    color: var(--color-gray-500) !important;
+  }
+
+  .quillEditor .ql-snow.ql-toolbar button svg .ql-stroke {
+    stroke: var(--color-gray-300);
+  }
+  
+  .quillEditor .ql-snow.ql-toolbar button svg .ql-fill {
+    fill: var(--color-gray-300);
+  }
+
+  .quillEditor .ql-snow.ql-toolbar button:hover svg .ql-stroke,
+  .quillEditor .ql-snow.ql-toolbar button.ql-active svg .ql-stroke {
+    stroke: var(--color-info);
+  }
+
+  .quillEditor .ql-snow.ql-toolbar button:hover svg .ql-fill,
+  .quillEditor .ql-snow.ql-toolbar button.ql-active svg .ql-fill {
+    fill: var(--color-info);
+  }
+
+  .quillEditor .ql-snow .ql-picker {
+    color: var(--color-gray-300);
+  }
+  
+  .quillEditor .ql-snow .ql-picker-label::before {
+    color: var(--color-gray-300);
+  }
+  .quillEditor .ql-snow .ql-picker-label svg .ql-stroke {
+     stroke: var(--color-gray-300);
+  }
+
+  .quillEditor .ql-snow .ql-picker-options {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-gray-600);
+    color: var(--color-gray-100);
+  }
+}
+@media (max-width: 768px) {
+  .container {
+    padding: 10px; 
+    width: 100%;
+  }
+
+  .formContainer {
+    padding: 15px;
+  }
+
+  .stepContent {
+    padding: 15px 10px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  .stepContent h2 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+  }
+  
+  .stepDescription {
+    font-size: 0.9rem;
+  }
+
+  /* 3. TỐI ƯU EDITOR CHO MOBILE */
+  .quillEditor .ql-toolbar {
+    padding: 4px 2px !important;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .quillEditor .ql-formats {
+    margin-right: 4px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .quillEditor .ql-snow.ql-toolbar button {
+    width: 24px;
+    height: 24px;
+    padding: 2px;
+  }
+  
+  .quillEditor .ql-indent {
+    display: none !important;
+  }
+
+  .quillEditor .ql-editor {
+    min-height: 150px; 
+    font-size: 16px;
+  }
+}
+
+/* 4. RESPONSIVE CHO CÁC Button */
+@media (max-width: 576px) {
+  .formActions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .formActions button {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .finalActions {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .dropzoneIcon {
+    font-size: 2rem;
+  }
+  .dropzoneText {
+    font-size: 0.9rem;
   }
 }

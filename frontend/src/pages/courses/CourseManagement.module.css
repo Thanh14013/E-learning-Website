@@ -405,6 +405,18 @@
   background: var(--color-gray-100);
   color: var(--color-gray-700);
   border-radius: var(--border-radius-full);
+  text-transform: capitalize;
+    transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+.courseCard:hover .metaTag {
+  background: var(--color-student-primary);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.35);
 }
 
 /* Card Actions */
@@ -751,5 +763,15 @@
 
   .emptyDescription {
     color: var(--color-gray-400);
+  }
+    .metaTag {
+    background: var(--color-gray-700);
+    color: var(--color-gray-300);
+  }
+
+  .courseCard:hover .metaTag {
+    background: var(--color-student-primary);
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(99, 102, 241, 0.45);
   }
 }
