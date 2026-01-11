@@ -19,43 +19,7 @@ const ChatDropdown = ({ onClose }) => {
 
     useEffect(() => {
         fetchConversations();
-        if (socket) {
-            socket.on('new_conversation', (convo) => {
-                setConversations(prev => [convo, ...prev]);
-            });
-
-            socket.on('receive_message', (msg) => {
-                setConversations(prev => {
-                    const existingIndex = prev.findIndex(c => c._id === msg.conversationId);
-                    if (existingIndex !== -1) {
-                        const updatedConvos = [...prev];
-                        const convo = { ...updatedConvos[existingIndex] };
-
-                        // Update last message
-                        convo.lastMessage = msg;
-
-                        // Update unread count if I am not the sender
-                        if (msg.sender?._id !== user?._id && msg.sender !== user?._id) {
-                            convo.unreadCounts = {
-                                ...convo.unreadCounts,
-                                [user?._id]: (convo.unreadCounts?.[user?._id] || 0) + 1
-                            };
-                        }
-
-                        updatedConvos[existingIndex] = convo;
-                        return updatedConvos;
-                    }
-                    // If conversation doesn't exist in list (edge case), potentially fetch it
-                    // But usually new_conversation handles that.
-                    return prev;
-                });
-            });
-
-            return () => {
-                socket.off('new_conversation');
-                socket.off('receive_message');
-            };
-        }
+        // Socket listeners moved to ChatContext to ensure global updates
     }, [socket, user?._id]);
 
     const fetchConversations = async () => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import { useAuth } from "./AuthContext";
 import chatService from "../services/chatService";
@@ -46,6 +46,11 @@ export const ChatProvider = ({ children }) => {
             return [];
         }
     });
+    const activeChatsRef = useRef(activeChats);
+
+    useEffect(() => {
+        activeChatsRef.current = activeChats;
+    }, [activeChats]);
 
     const [conversations, setConversations] = useState([]);
     const [unreadCounts, setUnreadCounts] = useState({});
@@ -76,8 +81,9 @@ export const ChatProvider = ({ children }) => {
             const convo = { ...updated[idx] };
             convo.lastMessage = message;
 
-            // Increment unread count when message not from me
-            if (message.sender !== user?._id && message.sender?._id !== user?._id) {
+            // Increment unread count when message not from me AND chat is not active
+            const isActive = activeChatsRef.current.some(c => c._id === message.conversationId);
+            if (message.sender !== user?._id && message.sender?._id !== user?._id && !isActive) {
                 const currentUnread = convo.unreadCounts?.[user?._id] || 0;
                 convo.unreadCounts = {
                     ...convo.unreadCounts,
@@ -152,6 +158,14 @@ export const ChatProvider = ({ children }) => {
 
             newSocket.on("receive_message", (message) => {
                 handleReceiveMessage(message);
+            });
+
+            newSocket.on("new_conversation", (conversation) => {
+                setConversations((prev) => {
+                    // Check if already exists to avoid dupes
+                    if (prev.find(c => c._id === conversation._id)) return prev;
+                    return [conversation, ...prev];
+                });
             });
 
             setSocket(newSocket);
