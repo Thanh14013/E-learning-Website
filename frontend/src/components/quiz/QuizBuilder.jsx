@@ -307,16 +307,25 @@ export default function QuizBuilder({ courseId, quizId = null, lessonId = null, 
 
 // Question Modal Component
 function QuestionModal({ question, onSave, onClose }) {
-    const [questionData, setQuestionData] = useState(
-        question || {
+    const [questionData, setQuestionData] = useState(() => {
+        const initialData = question ? { ...question } : {
             type: 'multiple_choice',
             question: '',
             points: 1,
             options: ['', '', '', ''],
             correctAnswer: '',
+            correctAnswerIndex: null,
             explanation: ''
+        };
+
+        if (initialData.type === 'multiple_choice' && 
+            initialData.correctAnswer && 
+            (initialData.correctAnswerIndex === undefined || initialData.correctAnswerIndex === null)) {
+            initialData.correctAnswerIndex = initialData.options.indexOf(initialData.correctAnswer);
         }
-    );
+
+        return initialData;
+    });
 
     const handleChange = (field, value) => {
         setQuestionData(prev => ({ ...prev, [field]: value }));
@@ -335,35 +344,46 @@ function QuestionModal({ question, onSave, onClose }) {
         }));
     };
 
-    const handleRemoveOption = (index) => {
-        setQuestionData(prev => ({
-            ...prev,
-            options: prev.options.filter((_, i) => i !== index)
-        }));
+const handleRemoveOption = (indexToRemove) => {
+        setQuestionData(prev => {
+            const newOptions = prev.options.filter((_, i) => i !== indexToRemove);
+            let newCorrectIndex = prev.correctAnswerIndex;
+            
+            if (prev.correctAnswerIndex === indexToRemove) {
+                newCorrectIndex = null;
+            } else if (prev.correctAnswerIndex > indexToRemove) {
+                newCorrectIndex = prev.correctAnswerIndex - 1;
+            }
+            return {
+                ...prev,
+                options: newOptions,
+                correctAnswerIndex: newCorrectIndex
+            };
+        });
     };
 
-    const handleSubmit = () => {
+const handleSubmit = () => {
         if (!questionData.question.trim()) {
             toastService.error('Please enter a question');
             return;
         }
-
         if (questionData.type === 'multiple_choice') {
             if (questionData.options.some(opt => !opt.trim())) {
                 toastService.error('Please fill in all options');
                 return;
             }
-            if (!questionData.correctAnswer) {
+            // Kiểm tra theo index thay vì text
+            if (questionData.correctAnswerIndex === null || questionData.correctAnswerIndex === undefined || questionData.correctAnswerIndex === -1) {
                 toastService.error('Please select the correct answer');
                 return;
             }
+            questionData.correctAnswer = questionData.options[questionData.correctAnswerIndex];
         }
-
         onSave(questionData);
     };
 
-    return (
-        <Modal isOpen onClose={onClose}>
+return (
+        <Modal isOpen onClose={onClose} >
             <div className={styles.questionModal}>
                 <h3>{question ? 'Edit Question' : 'Add New Question'}</h3>
 
@@ -408,12 +428,18 @@ function QuestionModal({ question, onSave, onClose }) {
                     <div className={styles.formGroup}>
                         <label>Options</label>
                         {questionData.options.map((option, index) => (
-                            <div key={index} className={styles.optionRow}>
+                            <div 
+                                key={index} 
+                                // Sử dụng index để so sánh class
+                                className={`${styles.optionRow} ${questionData.correctAnswerIndex === index ? styles.isCorrect : ''}`}
+                            >
                                 <input
                                     type="radio"
                                     name="correctAnswer"
-                                    checked={questionData.correctAnswer === option}
-                                    onChange={() => handleChange('correctAnswer', option)}
+                                    // Sử dụng index để so sánh checked
+                                    checked={questionData.correctAnswerIndex === index}
+                                    // Lưu index khi change
+                                    onChange={() => handleChange('correctAnswerIndex', index)}
                                 />
                                 <Input
                                     value={option}
@@ -439,6 +465,7 @@ function QuestionModal({ question, onSave, onClose }) {
                         <label>Đáp án đúng</label>
                         <select
                             value={questionData.correctAnswer}
+                            // Logic cũ của True/False vẫn giữ nguyên vì nó đơn giản
                             onChange={(e) => handleChange('correctAnswer', e.target.value)}
                             className={styles.select}
                         >
