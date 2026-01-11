@@ -32,6 +32,8 @@ export default function QuizBuilder({ courseId, quizId = null, lessonId = null, 
     const [editingQuestion, setEditingQuestion] = useState(null);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    // navigation helper from react-router
+    const navigate = useNavigate();
 
     // Load existing quiz if editing
     useEffect(() => {
@@ -44,7 +46,7 @@ export default function QuizBuilder({ courseId, quizId = null, lessonId = null, 
         try {
             setLoading(true);
             const response = await api.get(`/teacher/quizzes/${quizId}`);
-            const quiz = response.data.quiz;
+            const quiz = response.data.data.quiz;
 
             setQuizData({
                 title: quiz.title,
@@ -56,7 +58,7 @@ export default function QuizBuilder({ courseId, quizId = null, lessonId = null, 
                 isPublished: quiz.isPublished
             });
 
-            setQuestions(quiz.questions || []);
+            setQuestions(response.data.data.questions || []);
         } catch (error) {
             console.error('Error loading quiz:', error);
             toastService.error('Unable to load quiz');
