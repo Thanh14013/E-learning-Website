@@ -17,6 +17,7 @@ export function Register() {
     month: "",
     year: "",
     role: "student",
+    cv: null,
   });
 
   const [error, setError] = useState("");
@@ -46,14 +47,20 @@ export function Register() {
       : null;
 
     try {
-      // Call API Register
-      const res = await register({
-        fullName: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        dateOfBirth: dobString,
-      });
+      // Call API Register (using FormData if CV is present or just to be consistent)
+      const registerData = new FormData();
+      registerData.append("fullName", formData.name);
+      registerData.append("email", formData.email);
+      registerData.append("password", formData.password);
+      registerData.append("role", formData.role);
+      if (dobString) registerData.append("dateOfBirth", dobString);
+
+      if (formData.role === "teacher" && formData.cv) {
+        registerData.append("cv", formData.cv);
+      }
+
+      // api.post handles Content-Type automatically when data is FormData
+      const res = await register(registerData);
 
       if (res.success) {
         // Successful registration: redirect to login (no auto-login)
@@ -157,6 +164,24 @@ export function Register() {
               </label>
             </div>
           </div>
+
+          {formData.role === "teacher" && (
+            <div className={styles.formGroup}>
+              <label className={styles.label}>
+                Upload CV (PDF) <span style={{ fontSize: "0.8em", color: "#666" }}>(Recommended)</span>
+              </label>
+              <input
+                type="file"
+                name="cv"
+                accept=".pdf"
+                onChange={(e) => setFormData({ ...formData, cv: e.target.files[0] })}
+                className={styles.input}
+              />
+              <p style={{ fontSize: "0.8rem", color: "#888", marginTop: "4px" }}>
+                Only PDF files are accepted. Max size 5MB.
+              </p>
+            </div>
+          )}
 
           <div className={styles.formGroup}>
             <label className={styles.label}>Date Of Birth</label>

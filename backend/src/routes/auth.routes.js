@@ -7,6 +7,7 @@ import {
   logout,
 } from "../controllers/auth.controller.js";
 import { registerLimiter } from "../middleware/rateLimiter.js";
+import { uploadCV } from "../middleware/upload.js";
 import {
   validateRegister,
   validateRefreshToken,
@@ -17,7 +18,7 @@ import { authenticate } from "../middleware/auth.js";
 const router = express.Router();
 
 // POST /api/auth/register - Register new user with validation and rate limiting
-router.post("/register", registerLimiter, validateRegister, register);
+router.post("/register", registerLimiter, uploadCV.single("cv"), validateRegister, register);
 
 // POST /api/auth/refresh-token - Refresh access token with validation
 router.post("/refresh-token", validateRefreshToken, refreshAccessToken);

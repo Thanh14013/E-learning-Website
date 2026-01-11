@@ -254,6 +254,7 @@ export default function UserManagement() {
                                 <th>Email</th>
                                 <th>Role</th>
                                 <th>Status</th>
+                                <th>CV</th>
                                 <th>Teacher Approval</th>
                                 <th>Joined</th>
                                 <th>Actions</th>
@@ -287,6 +288,25 @@ export default function UserManagement() {
                                         </span>
                                     </td>
                                     <td>{getStatusBadge(user)}</td>
+                                    <td>
+                                        {user.role === 'teacher' ? (
+                                            user.cvUrl ? (
+                                                <a
+                                                    href={user.cvUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className={styles.cvLink}
+                                                    style={{ color: '#3b82f6', textDecoration: 'underline', fontWeight: 500 }}
+                                                >
+                                                    CV
+                                                </a>
+                                            ) : (
+                                                <span className={styles.statusMuted}>N/A</span>
+                                            )
+                                        ) : (
+                                            <span className={styles.statusMuted}>N/A</span>
+                                        )}
+                                    </td>
                                     <td>
                                         <div className={styles.approvalCell}>
                                             {getTeacherApprovalBadge(user)}

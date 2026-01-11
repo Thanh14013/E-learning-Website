@@ -8,6 +8,9 @@ import {
   generateTokenPair,
 } from "../config/jwt.config.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { uploadFile } from "../config/cloudinary.config.js";
+import fs from "fs";
+import path from "path";
 
 // Check if running in production environment
 const isProduction = process.env.NODE_ENV === "production";
@@ -57,8 +60,37 @@ export const register = async (req, res, next) => {
       isVerified: true,
     });
 
-    // Create empty profile linked to user
-    await UserProfile.create({ userId: user._id });
+    let cvUrl = "";
+    let cvPublicId = "";
+
+    // If teacher and has CV file
+    if (role === "teacher" && req.file) {
+      try {
+        const filePath = path.resolve(req.file.path);
+        const uploadResult = await uploadFile(filePath, {
+          folder: "cvs",
+          resource_type: "raw",
+        });
+        
+        cvUrl = uploadResult.secure_url;
+        cvPublicId = uploadResult.public_id;
+
+        // Clean up local file
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (uploadErr) {
+        console.error("CV Upload error during registration:", uploadErr);
+        // Continue registration but log error (or could revert)
+      }
+    }
+
+    // Create profile linked to user with optional CV
+    await UserProfile.create({ 
+        userId: user._id,
+        cvUrl,
+        cvPublicId
+    });
 
     // Generate tokens for auto-login after registration
     const { accessToken, refreshToken } = generateTokenPair({

@@ -243,12 +243,24 @@ export const getUserList = async (req, res) => {
       .limit(parseInt(limit))
       .select("-password -refreshToken");
 
+    // Populate CV URL for admin
+    const userIds = users.map(user => user._id);
+    const profiles = await UserProfile.find({ userId: { $in: userIds } }).select("userId cvUrl");
+    
+    const usersWithCv = users.map(user => {
+        const profile = profiles.find(p => p.userId.toString() === user._id.toString());
+        return {
+            ...user.toObject(),
+            cvUrl: profile ? profile.cvUrl : null
+        };
+    });
+
     return res.status(200).json({
       total: totalUsers,
       page: parseInt(page),
       limit: parseInt(limit),
       totalPages: Math.ceil(totalUsers / limit),
-      users,
+      users: usersWithCv,
     });
   } catch (error) {
     console.error("Get user list error:", error);
