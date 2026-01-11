@@ -640,13 +640,7 @@ const CourseDetailPage = () => {
             </div>
           )}
 
-          {/* Live Sessions - Only for enrolled students OR Host */}
-          {(isEnrolled || (user && course && (user._id === course.teacherId || user._id === course.teacherId?._id))) && (
-            <LiveSessionsSection
-              courseId={courseId}
-              isHost={user && course && (user._id === course.teacherId || user._id === course.teacherId?._id)}
-            />
-          )}
+
 
           {/* Course Content */}
 

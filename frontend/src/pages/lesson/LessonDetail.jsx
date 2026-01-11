@@ -276,6 +276,7 @@ const LessonDetail = () => {
             // Normal Start Mode
             setSelectedQuiz({
                 ...quizData,
+                _id: quiz._id, // Ensure ID is preserved from the list
                 attemptsLeft: left
             });
             setReviewData(null); // Reset review data
