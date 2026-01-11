@@ -24,6 +24,12 @@
   font-weight: 600;
 }
 
+.headerActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .participantsCount {
   font-size: 0.875rem;
   color: #a0a0a0;
@@ -190,6 +196,26 @@
   overflow-y: auto;
   padding: 1rem;
   scrollbar-width: thin;
+  scrollbar-color: #4a4a4a #2a2a2a;
+}
+
+/* Custom scrollbar for Webkit browsers (Chrome, Safari, Edge) */
+.messageList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messageList::-webkit-scrollbar-track {
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+
+.messageList::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 4px;
+}
+
+.messageList::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
 }
 
 .chatMessage {
@@ -360,13 +386,12 @@
 }
 
 .badge {
-    background-color: red;
-    border-radius: 10px;
-    padding: 2px 6px;
-    font-size: 0.7rem;
-    margin-left: 5px;
+  background-color: red;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 0.7rem;
+  margin-left: 5px;
 }
-
 
 /* Sidebar (Teams style) */
 .sidebar {
@@ -380,7 +405,7 @@
   top: 0;
   bottom: 0;
   z-index: 100;
-  box-shadow: -2px 0 10px rgba(0,0,0,0.5);
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.5);
 }
 
 /* If logic changes to push main content, remove absolute and use flex in container */
@@ -406,245 +431,409 @@
   font-size: 1.2rem;
 }
 
-.peopleList, .chatContainer {
+.peopleList,
+.chatContainer {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
   padding: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: #4a4a4a #222;
+}
+
+/* Custom scrollbar for peopleList and chatContainer */
+.peopleList::-webkit-scrollbar,
+.chatContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+.peopleList::-webkit-scrollbar-track,
+.chatContainer::-webkit-scrollbar-track {
+  background: #222;
+  border-radius: 4px;
+}
+
+.peopleList::-webkit-scrollbar-thumb,
+.chatContainer::-webkit-scrollbar-thumb {
+  background: #4a4a4a;
+  border-radius: 4px;
+}
+
+.peopleList::-webkit-scrollbar-thumb:hover,
+.chatContainer::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
 }
 
 .participantItem {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid #2a2a2a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #2a2a2a;
 }
 
 .role {
-    font-size: 0.75rem;
-    color: #aaa;
-    margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: #aaa;
+  margin-left: 0.5rem;
 }
 
 .kickSmall {
-    background: #ef4444;
-    border: none;
-    color: white;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    cursor: pointer;
+  background: #ef4444;
+  border: none;
+  color: white;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .requestsSection {
-    background: #2a2a2a;
-    padding: 0.5rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
+  background: #2a2a2a;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
 }
 
 .requestItem {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .reqInfo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .reqActions {
-    display: flex;
-    gap: 0.25rem;
+  display: flex;
+  gap: 0.25rem;
 }
 
-.btnApprove { color: white; background: #22c55e; border: none; border-radius: 4px; cursor: pointer; padding: 4px 8px; }
-.btnDeny { color: white; background: #ef4444; border: none; border-radius: 4px; cursor: pointer; padding: 4px 8px; }
+.btnApprove {
+  color: white;
+  background: #22c55e;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.btnDeny {
+  color: white;
+  background: #ef4444;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+}
 
 .chatInputArea {
-    border-top: 1px solid #333;
-    padding: 1rem;
+  border-top: 1px solid #333;
+  padding: 1rem;
 }
 .chatInputArea input {
-    width: 100%;
-    padding: 0.5rem;
-    background: #333;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 4px;
+  width: 100%;
+  padding: 0.5rem;
+  background: #333;
+  border: 1px solid #444;
+  color: white;
+  border-radius: 4px;
 }
 
 /* Lobby */
 .lobbyContainer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #111;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #111;
 }
 
 .lobbyCard {
-    background: #222;
-    padding: 2rem;
-    border-radius: 12px;
-    width: 600px;
-    text-align: center;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  background: #222;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 600px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .lobbyVideoPreview {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16/9;
-    background: black;
-    margin: 1.5rem 0;
-    border-radius: 8px;
-    overflow: hidden;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: black;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .videoPreview {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .lobbyControls {
-    position: absolute;
-    bottom: 1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 1rem;
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
 }
 
 .lobbyBtn {
-    background: rgba(0,0,0,0.6);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
 }
-.lobbyBtn:hover { background: rgba(0,0,0,0.8); }
-.lobbyBtn.off { background: #ef4444; border-color: #ef4444; }
+.lobbyBtn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+.lobbyBtn.off {
+  background: #ef4444;
+  border-color: #ef4444;
+}
 
 .studentPreview {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    background-color: #1a1a1a;
-    color: #a0a0a0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background-color: #1a1a1a;
+  color: #a0a0a0;
 }
 
 .avatarLarge {
-    font-size: 4rem;
-    margin-bottom: 1rem;
+  font-size: 4rem;
+  margin-bottom: 1rem;
 }
 
 /* Waiting Room */
 .waitingRoom {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background: #111;
 }
 .waitingContent {
-    text-align: center;
-    color: #ccc;
+  text-align: center;
+  color: #ccc;
 }
-.waitingContent h2 { color: white; margin-bottom: 1rem; }
+.waitingContent h2 {
+  color: white;
+  margin-bottom: 1rem;
+}
 
 /* Video Wrappers */
 .videoWrapper {
-    position: relative;
-    background-color: #000;
-    border-radius: 8px;
-    overflow: hidden;
-    width: 100%;
-    height: 100%;
-    min-height: 200px; 
+  position: relative;
+  background-color: #000;
+  border-radius: 8px;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
 }
 .videoElement {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .kickBtn {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: rgba(0,0,0,0.5);
-    border: none;
-    color: white;
-    cursor: pointer;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0; 
-    transition: opacity 0.2s;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
-.videoWrapper:hover .kickBtn { opacity: 1; }
-.kickBtn:hover { background: #ef4444; }
+.videoWrapper:hover .kickBtn {
+  opacity: 1;
+}
+.kickBtn:hover {
+  background: #ef4444;
+}
 
 .nameTag {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    background: rgba(0,0,0,0.6);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 0.8rem;
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
 }
 
 /* Placeholder for Camera Off / No Stream */
 .videoPlaceholder {
-    width: 100%;
-    height: 100%;
-    background-color: #222;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #ccc;
+  width: 100%;
+  height: 100%;
+  background-color: #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
 }
 
 .avatar {
-    width: 64px;
-    height: 64px;
-    background-color: #3b82f6;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
+  width: 64px;
+  height: 64px;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 .placeholderName {
-    font-size: 1.1rem;
-    color: white;
-    font-weight: 500;
+  font-size: 1.1rem;
+  color: white;
+  font-weight: 500;
 }
 
 .statusText {
-    font-size: 0.8rem;
-    color: #888;
-    margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  background-color: #2a2a2a;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 480px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  color: #a0a0a0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.modalClose:hover {
+  background-color: #3a3a3a;
+  color: #ffffff;
+}
+
+.modalBody {
+  padding: 1.5rem;
+  color: #e0e0e0;
+}
+
+.modalBody p {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.modalWarning {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid #ef4444;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #fca5a5 !important;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid #3a3a3a;
+}
+
+.modalFooter button {
+  min-width: 100px;
 }

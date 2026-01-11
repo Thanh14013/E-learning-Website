@@ -38,6 +38,7 @@ const VideoRoom = () => {
 
     // Host Controls State
     const [joinRequests, setJoinRequests] = useState([]);
+    const [showEndSessionModal, setShowEndSessionModal] = useState(false);
 
     const isHost = session?.hostId === user?._id || session?.hostId?._id === user?._id;
 
@@ -318,6 +319,20 @@ const VideoRoom = () => {
         webrtcService.kickParticipant(uid);
     };
 
+    // End Session (Host only)
+    const handleEndSession = async () => {
+        setShowEndSessionModal(false);
+        try {
+            await api.put(`/sessions/${sessionId}/end`);
+            toastService.success('Session ended successfully');
+            webrtcService.leaveSession();
+            navigate('/dashboard');
+        } catch (error) {
+            console.error('Failed to end session:', error);
+            toastService.error('Failed to end session');
+        }
+    };
+
     // Helper: Name Lookup
     const getParticipantName = (uid) => {
         // Check session.participants (from DB fetch)
@@ -409,19 +424,31 @@ const VideoRoom = () => {
                             {/* Could add duration timer here */}
                         </span>
                     </div>
-                    <Button variant="danger" size="small" onClick={() => {
-                        webrtcService.leaveSession();
-                        if (isHost) {
-                            window.close();
-                            // Fallback if browser blocks close: show message or stay
-                            const win = window.open("about:blank", "_self");
-                            win.close();
-                        } else {
-                            navigate('/dashboard');
-                        }
-                    }}>
-                        Leave
-                    </Button>
+                    <div className={styles.headerActions}>
+                        {isHost && (
+                            <Button
+                                variant="danger"
+                                size="small"
+                                onClick={() => setShowEndSessionModal(true)}
+                                style={{ marginRight: '10px' }}
+                            >
+                                End Session
+                            </Button>
+                        )}
+                        <Button variant="secondary" size="small" onClick={() => {
+                            webrtcService.leaveSession();
+                            if (isHost) {
+                                window.close();
+                                // Fallback if browser blocks close: show message or stay
+                                const win = window.open("about:blank", "_self");
+                                win.close();
+                            } else {
+                                navigate('/dashboard');
+                            }
+                        }}>
+                            Leave
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Video Grid */}
@@ -568,6 +595,30 @@ const VideoRoom = () => {
                     </div>
                 )
             }
+
+            {/* End Session Modal */}
+            {showEndSessionModal && (
+                <div className={styles.modalOverlay} onClick={() => setShowEndSessionModal(false)}>
+                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                        <div className={styles.modalHeader}>
+                            <h3>End Session</h3>
+                            <button className={styles.modalClose} onClick={() => setShowEndSessionModal(false)}>✕</button>
+                        </div>
+                        <div className={styles.modalBody}>
+                            <p>Are you sure you want to end this session for everyone?</p>
+                            <p className={styles.modalWarning}>⚠️ All participants will be disconnected and the session will be marked as completed.</p>
+                        </div>
+                        <div className={styles.modalFooter}>
+                            <Button variant="secondary" onClick={() => setShowEndSessionModal(false)}>
+                                Cancel
+                            </Button>
+                            <Button variant="danger" onClick={handleEndSession}>
+                                End Session
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };
