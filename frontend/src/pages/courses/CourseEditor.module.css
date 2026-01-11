@@ -94,11 +94,6 @@
   gap: 2rem;
 }
 
-@media (max-width: 1024px) {
-  .content {
-    grid-template-columns: 1fr;
-  }
-}
 
 /* Left Panel */
 .leftPanel {
@@ -125,7 +120,7 @@
 .section {
   margin-bottom: 2.5rem;
   padding-bottom: 2rem;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--color-gray-200);
 }
 
 .section:last-child {
@@ -312,7 +307,75 @@
   border-color: #4f46e5;
   box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
 }
+/* Label bao quanh: Căn giữa, con trỏ tay */
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 1rem;
+  color: var(--text-primary);
+  padding: 4px 0;
+}
 
+.checkboxLabel input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-gray-400);
+  border-radius: 6px;
+  background-color: var(--input-bg);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0;
+}
+
+.checkboxLabel:hover input[type="checkbox"] {
+  border-color: var(--color-info);
+  background-color: var(--bg-body);
+}
+
+.checkboxLabel input[type="checkbox"]:checked {
+  background-color: var(--color-info);
+  border-color: var(--color-info);
+}
+
+.checkboxLabel input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  animation: checkAnim 0.2s ease-out forwards;
+}
+
+/* Hiệu ứng nảy nhẹ khi tích */
+@keyframes checkAnim {
+  0% { transform: rotate(45deg) scale(0); opacity: 0; }
+  100% { transform: rotate(45deg) scale(1); opacity: 1; }
+}
+.highlightRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.highlightInputWrapper {
+  flex: 1; 
+}
+
+.highlightInputWrapper input {
+  width: 100% !important;
+}
 /* Quill Editor */
 .quillEditor {
   background: white;
@@ -720,7 +783,245 @@
   color: #92400e;
   font-size: 0.95rem;
 }
+.quillEditor :global(.ql-toolbar) {
+    background-color: var(--bg-card) !important; 
+    border-color: var(--color-gray-600) !important;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+  }
+  .quillEditor :global(.ql-container) {
+    background-color: var(--input-bg) !important; 
+    border-color: var(--color-gray-600) !important;
+    color: var(--color-gray-100) !important;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
+  .quillEditor :global(.ql-editor) {
+    color: var(--color-gray-100) !important;
+  }
+  .quillEditor :global(.ql-editor.ql-blank::before) {
+    color: var(--color-gray-500) !important;
+    font-style: normal;
+  }
+  .quillEditor :global(.ql-snow .ql-stroke) {
+    stroke: var(--color-gray-300) !important;
+  }
+  .quillEditor :global(.ql-snow .ql-fill) {
+    fill: var(--color-gray-300) !important;
+  }
+  .quillEditor :global(.ql-snow .ql-active .ql-stroke) {
+    stroke: var(--color-info) !important;
+  }
+  .quillEditor :global(.ql-snow .ql-active .ql-fill) {
+    fill: var(--color-info) !important;
+  }
+  .quillEditor :global(.ql-snow .ql-picker) {
+    color: var(--color-gray-300) !important;
+  }
+  .quillEditor :global(.ql-snow .ql-picker-label::before) {
+    color: var(--color-gray-300) !important; 
+  }
+  .quillEditor :global(.ql-snow .ql-picker-options) {
+    background-color: var(--bg-card) !important;
+    border-color: var(--color-gray-600) !important;
+    color: var(--color-gray-200) !important;
+  }
+  
+@media (prefers-color-scheme: dark) {
+  .container {
+    background-color: var(--bg-body);
+  }
 
+  .header, 
+  .leftPanel, 
+  .rightPanel {
+    background-color: var(--bg-card);
+    border-color: var(--color-gray-700);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .title, 
+  .sectionTitle,
+  .chapterTitle,
+  .lessonTitle,
+  .modalHeader h3,
+  .dropzoneText {
+    color: var(--text-primary);
+  }
+
+  .label, 
+  .autoSaveStatus,
+  .chapterMeta,
+  .resourceName {
+    color: var(--text-primary);
+  }
+  
+  .dropzoneHint,
+  .resourceLink {
+    color: var(--text-secondary);
+  }
+
+  .select,
+  .formGroup input[type="text"],
+  .formGroup input[type="number"],
+  .formGroup textarea {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--input-text);
+  }
+
+  .select:focus,
+  .formGroup input:focus,
+  .formGroup textarea:focus {
+    border-color: var(--color-info);
+  }
+
+  .chapterItem,
+  .lessonItem {
+    background-color: var(--bg-card);
+    border-color: var(--color-gray-600);
+  }
+  
+  .chapterItem:hover,
+  .lessonItem:hover {
+    border-color: var(--color-gray-500);
+    box-shadow: var(--shadow-md);
+  }
+
+  .chapterHeader {
+    background-color: var(--bg-card);
+    border-bottom-color: var(--color-gray-700);
+  }
+  
+  .lessonsList {
+    background-color: var(--bg-body);
+    border-top: 1px solid var(--color-gray-700);
+  }
+  
+  .emptyState {
+    background-color: var(--bg-body);
+    border-color: var(--color-gray-700);
+    color: var(--text-secondary);
+  }
+
+  .chapterToggle,
+  .actionButton,
+  .modalClose,
+  .removeResourceBtn {
+    background-color: var(--bg-body);
+    border-color: var(--color-gray-600);
+    color: var(--text-primary);
+  }
+
+  .chapterToggle:hover,
+  .actionButton:hover,
+  .modalClose:hover {
+    background-color: var(--color-gray-700);
+    color: var(--color-white);
+  }
+
+  .backButton {
+    color: var(--text-secondary);
+    border-color: var(--color-gray-600);
+  }
+  .backButton:hover {
+    background-color: var(--color-gray-700);
+    color: var(--text-primary);
+  }
+
+  .modal {
+    background-color: var(--bg-card);
+    border: 1px solid var(--color-gray-700);
+  }
+  
+  .modalHeader {
+    background-color: var(--bg-card);
+    border-bottom-color: var(--color-gray-700);
+  }
+  
+  .modalActions {
+    background-color: var(--bg-body);
+    border-top-color: var(--color-gray-700);
+  }
+
+  .thumbnailDropzone {
+    background-color: var(--bg-body);
+    border-color: var(--color-gray-600);
+  }
+  .thumbnailDropzone:hover {
+    background-color: var(--color-gray-800);
+    border-color: var(--color-info);
+  }
+
+  .resourceItem,
+  .resourceActions {
+    background-color: var(--bg-body);
+    border-color: var(--color-gray-700);
+  }
+
+  .quizItem {
+    background: rgba(251, 191, 36, 0.1);
+    border-color: rgba(251, 191, 36, 0.3);
+  }
+  .quizTitle {
+    color: var(--color-warning);
+  }
+
+  .quillEditor .ql-toolbar {
+    background-color: var(--bg-body) !important;
+    border-color: var(--color-gray-600) !important;
+  }
+  .quillEditor .ql-container {
+    border-color: var(--color-gray-600) !important;
+    background-color: var(--input-bg) !important;
+    color: var(--input-text) !important;
+  }
+  .quillEditor :global(.ql-stroke) { stroke: var(--text-secondary) !important; }
+  .quillEditor :global(.ql-fill) { fill: var(--text-secondary) !important; }
+  .checkboxLabel input[type="checkbox"] {
+    background-color: var(--color-gray-700);
+    border-color: var(--color-gray-500);
+  }
+  .checkboxLabel:hover input[type="checkbox"] {
+    border-color: var(--color-info);
+    background-color: var(--color-gray-600);
+  }
+  .checkboxLabel input[type="checkbox"]:checked {
+    background-color: var(--color-info);
+    border-color: var(--color-info);
+  }
+}
+
+@media (max-width: 1200px) {
+  .content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+  }
+
+  .leftPanel {
+    width: 100% !important;
+    position: static !important;
+    height: auto !important;
+    margin-bottom: 0 !important;
+    z-index: 1;
+  }
+
+  .rightPanel {
+    width: 100% !important;
+  }
+  
+  .header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    height: auto !important;
+  }
+  
+  .headerLeft, .headerRight {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
 /* Responsive */
 @media (max-width: 768px) {
   .container {

@@ -709,12 +709,14 @@ const CourseEditor = () => {
             </div>
             <div className={styles.formGroup}>
               {formData.highlights.map((highlight, index) => (
-                <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                  <Input
-                    value={highlight}
-                    onChange={(e) => handleHighlightChange(index, e.target.value)}
-                    placeholder="e.g. Build full-stack apps"
-                  />
+                <div key={index} className={styles.highlightRow}>
+                      <div className={styles.highlightInputWrapper}>
+                        <Input
+                          value={highlight}
+                          onChange={(e) => handleHighlightChange(index, e.target.value)}
+                          placeholder="e.g. Build full-stack apps"
+                        />
+                      </div>
                   <Button
                     variant="secondary"
                     onClick={() => handleRemoveHighlight(index)}
