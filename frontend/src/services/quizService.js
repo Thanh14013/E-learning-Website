@@ -26,8 +26,35 @@ const quizService = {
     return response.data;
   },
 
-  // Note: Backend doesn't support auto-save during quiz
-  // Answers are only saved when quiz is submitted
+  /**
+   * Save quiz answers (Auto-save)
+   * @param {string} quizId - Quiz ID
+   * @param {string} attemptId - Attempt ID
+   * @param {Object} answers - Answers to save
+   * @returns {Promise} Save result
+   */
+  saveAnswers: async (quizId, attemptId, answers) => {
+    // Only save values, not whole object if possible to save bandwidth
+    // But backend expects full object currently
+    const response = await api.post(`/quizzes/${quizId}/save`, {
+      attemptId,
+      answers: Object.values(answers), // Convert to array for backend
+    });
+    return response.data;
+  },
+
+  /**
+   * Get saved answers
+   * @param {string} quizId - Quiz ID
+   * @param {string} attemptId - Attempt ID
+   * @returns {Promise} Saved answers
+   */
+  getSavedAnswers: async (quizId, attemptId) => {
+    const response = await api.get(`/quizzes/${quizId}/progress`, {
+      params: { attemptId }
+    });
+    return response.data;
+  },
 
   /**
    * Submit quiz
@@ -39,7 +66,7 @@ const quizService = {
   submitQuiz: async (quizId, attemptId, answers) => {
     const response = await api.post(`/quizzes/${quizId}/submit`, {
       attemptId,
-      answers,
+      answers: Object.values(answers), // Ensure array format
     });
     return response.data;
   },

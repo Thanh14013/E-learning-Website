@@ -59,7 +59,8 @@ const StudentAnalytics = () => {
         if (!isConfirmed) return;
 
         try {
-            await api.delete(`/analytics/quiz-attempt/${quizId}/student/${studentId}`);
+            // Updated to use the correct quiz reset endpoint
+            await api.delete(`/quizzes/${quizId}/attempts/student/${studentId}`);
             toastService.success("Quiz attempts reset successfully");
             fetchData(); // Refresh data
         } catch (error) {
@@ -276,7 +277,7 @@ const StudentAnalytics = () => {
                                                 {quiz.attemptsUsed > 0 && (
                                                     <button
                                                         className={styles.resetBtn}
-                                                        onClick={() => handleResetReview(quiz.id)}
+                                                        onClick={() => handleResetAttempts(quiz.id)}
                                                         title="Reset Attempts"
                                                     >
                                                         Reset

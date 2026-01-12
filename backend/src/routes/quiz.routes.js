@@ -9,6 +9,9 @@ import {
   startQuiz,
   submitQuiz,
   updateQuiz,
+  saveProgress,
+  getSavedProgress,
+  resetQuizAttempts
 } from "../controllers/quiz.controller.js";
 import { authenticate } from "../middleware/auth.js";
 import { isStudent, isTeacher } from "../middleware/authorize.js";
@@ -55,8 +58,18 @@ router.post(
   validateQuizSubmission,
   submitQuiz
 );
+
+// Auto-save progress
+router.post("/:id/save", authenticate, isStudent, saveProgress);
+
+// Get progress
+router.get("/:id/progress", authenticate, isStudent, getSavedProgress);
+
 router.get("/:id/attempts", authenticate, isStudent, getQuizAttempts);
 
 router.get("/:id/results/:attemptId", authenticate, getQuizResultDetail);
+
+// Reset attempts (Teacher only)
+router.delete("/:id/attempts/student/:studentId", authenticate, isTeacher, resetQuizAttempts);
 
 export default router;

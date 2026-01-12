@@ -442,6 +442,11 @@
   color: #991b1b;
 }
 
+.status-progress {
+  background: #E0F2FE;
+  color: #0369A1;
+}
+
 .status-icon {
   font-size: 1rem;
 }

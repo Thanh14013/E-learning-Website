@@ -78,7 +78,17 @@ const QuizModal = ({ quiz, attemptsLeft, onStart, onSubmit, onClose, isReviewMod
                             Time Left: {formatTime(timeLeft)}
                         </div>
                     )}
-                    <button className={styles.closeBtn} onClick={onClose} disabled={step === 'taking' && timeLeft > 0}>&times;</button>
+                    <button
+                        className={styles.closeBtn}
+                        onClick={() => {
+                            // If taking a quiz, close = submit with current answers
+                            if (step === 'taking' && !isReviewMode) {
+                                handleSubmit();
+                            } else {
+                                onClose();
+                            }
+                        }}
+                    >&times;</button>
                 </div>
 
                 <div className={styles.content}>

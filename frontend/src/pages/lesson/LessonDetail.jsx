@@ -93,23 +93,59 @@ const LessonDetail = () => {
 
                             for (const quiz of quizzesData) {
                                 try {
-                                    const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts?limit=1`);
+                                    // Fetch ALL attempts (limit 50) to correctly calculate best score and usage
+                                    const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts?limit=50`);
+
                                     if (attemptsRes.data.attempts && attemptsRes.data.attempts.length > 0) {
-                                        const lastAttempt = attemptsRes.data.attempts[0];
-                                        attemptsMap[quiz._id] = lastAttempt;
-                                        if (lastAttempt.isPassed) {
-                                            completedSet.add(quiz._id);
+                                        const allAttempts = attemptsRes.data.attempts;
+
+                                        // 1. Calculate Submitted Attempts (exclude ghosts)
+                                        const submittedAttempts = allAttempts.filter(a => a.submittedAt);
+                                        const attemptsUsed = submittedAttempts.length;
+                                        const attemptsAllowed = quiz.attemptsAllowed || 1; // default to 1, NOT 100
+                                        const attemptsLeft = Math.max(0, attemptsAllowed - attemptsUsed);
+
+                                        // 2. Find BEST attempt (highest score)
+                                        // If passed, obviously best. If multiple failed, highest percentage.
+                                        const bestAttempt = submittedAttempts.reduce((best, current) => {
+                                            if (!best) return current;
+                                            return (current.percentage > best.percentage) ? current : best;
+                                        }, null);
+
+                                        if (bestAttempt) {
+                                            attemptsMap[quiz._id] = {
+                                                ...bestAttempt,
+                                                attemptsLeft: attemptsLeft, // Store calculated left attempts
+                                                usedAttempts: attemptsUsed
+                                            };
+
+                                            // Set score based on BEST attempt
                                             setQuizScores(prev => ({
                                                 ...prev,
                                                 [quiz._id]: {
-                                                    correct: lastAttempt.score,
-                                                    total: lastAttempt.score + (lastAttempt.percentage > 0 ? Math.round(lastAttempt.score * (100 / lastAttempt.percentage) - lastAttempt.score) : 0),
-                                                    answered: lastAttempt.score,
-                                                    percentage: lastAttempt.percentage,
-                                                    isPassed: lastAttempt.isPassed
+                                                    correct: bestAttempt.score,
+                                                    total: bestAttempt.score + (bestAttempt.percentage > 0 ? Math.round(bestAttempt.score * (100 / bestAttempt.percentage) - bestAttempt.score) : 0),
+                                                    answered: bestAttempt.answers?.length || 0,
+                                                    percentage: bestAttempt.percentage,
+                                                    isPassed: bestAttempt.isPassed
                                                 }
                                             }));
+
+                                            // Mark completed if ANY attempt passed
+                                            if (submittedAttempts.some(a => a.isPassed)) {
+                                                completedSet.add(quiz._id);
+                                            }
+                                        } else {
+                                            // Has attempts but none submitted? (e.g. only ghosts)
+                                            attemptsMap[quiz._id] = {
+                                                attemptsLeft: attemptsAllowed - allAttempts.filter(a => a.submittedAt).length
+                                            };
                                         }
+                                    } else {
+                                        // No attempts at all
+                                        attemptsMap[quiz._id] = {
+                                            attemptsLeft: quiz.attemptsAllowed || 1
+                                        };
                                     }
                                 } catch (err) {
                                     console.log(`No attempts found for quiz ${quiz._id}`);
@@ -118,6 +154,15 @@ const LessonDetail = () => {
 
                             setCompletedQuizzes(completedSet);
                             setQuizAttempts(attemptsMap);
+
+                            // DEBUG: Log final quiz state
+                            console.log('🎯 Quiz Status Debug:');
+                            console.log('   completedSet:', [...completedSet]);
+                            console.log('   attemptsMap:', attemptsMap);
+                            quizzesData.forEach(q => {
+                                const info = attemptsMap[q._id];
+                                console.log(`   📝 ${q.title}: attemptsLeft=${info?.attemptsLeft}, isPassed=${info?.isPassed}`);
+                            });
                         }
                     } catch (error) {
                         console.error('Failed to fetch quizzes:', error);
@@ -229,8 +274,30 @@ const LessonDetail = () => {
 
         try {
             // Check attempts first
-            const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts?limit=1`);
-            let attemptsLeft = quizAttempts[quiz._id]?.attemptsLeft; // Might not be populated correctly
+            // Use the data we already fetched and calculated in useEffect
+            // This ensures consistency between list view and modal
+            let attemptsInfo = quizAttempts[quiz._id];
+
+            // Re-fetch only if missing (fallback)
+            if (!attemptsInfo) {
+                const attemptsRes = await api.get(`/quizzes/${quiz._id}/attempts?limit=50`);
+                const allAttempts = attemptsRes.data.attempts || [];
+                const submitted = allAttempts.filter(a => a.submittedAt);
+                const allowed = quiz.attemptsAllowed || 1;
+                attemptsInfo = {
+                    attemptsLeft: Math.max(0, allowed - submitted.length),
+                    // If no stored info, define simplest "best" (latest submitted)
+                    ...submitted[0]
+                };
+                // If we have to refetch here, finding "best" again is safer but let's rely on simple fallback
+                // Actually, let's just do the same best-finding logic if we must.
+                if (submitted.length > 0) {
+                    const best = submitted.reduce((b, c) => (c.percentage > b.percentage ? c : b), submitted[0]);
+                    attemptsInfo = { ...best, attemptsLeft: Math.max(0, allowed - submitted.length) };
+                }
+            }
+
+            let attemptsLeft = attemptsInfo?.attemptsLeft ?? (quiz.attemptsAllowed || 1); // Default
 
             // We need to fetch quiz details to know timeLimit and attemptsAllowed if not in list
             // But list usually has summary. 
@@ -241,18 +308,16 @@ const LessonDetail = () => {
             // Update questions
             setQuizQuestions(prev => ({ ...prev, [quiz._id]: quizData.questions }));
 
-            // Calculate attempts left
-            const usedAttempts = attemptsRes.data.attempts?.length || 0;
-            const allowed = quizData.quiz.attemptsAllowed || 1; // Default 1
-            const left = Math.max(0, allowed - usedAttempts);
-
             // If already passed or no attempts left, trigger Review Mode
-            if (completedQuizzes.has(quiz._id) || left === 0) {
-                const attempt = attemptsRes.data.attempts?.[0]; // Get latest
+            // Use the attemptsInfo (best attempt) for review
+            if (completedQuizzes.has(quiz._id) || attemptsLeft === 0) {
+                // Determine which attempt to review. 
+                // attemptsInfo SHOULD contain the best attempt details if populated by useEffect
+                const attemptToReview = attemptsInfo;
 
                 let userAnswersMap = {};
-                if (attempt && attempt.answers) {
-                    attempt.answers.forEach(ans => {
+                if (attemptToReview && attemptToReview.answers) {
+                    attemptToReview.answers.forEach(ans => {
                         if (ans.selectedOption !== undefined) {
                             userAnswersMap[ans.questionId] = ans.selectedOption;
                         } else if (ans.selectedBoolean !== undefined) {
@@ -263,7 +328,7 @@ const LessonDetail = () => {
 
                 setSelectedQuiz({
                     ...quizData,
-                    attemptsLeft: left
+                    attemptsLeft: attemptsLeft
                 });
                 setReviewData({
                     isReviewMode: true,
@@ -277,7 +342,7 @@ const LessonDetail = () => {
             setSelectedQuiz({
                 ...quizData,
                 _id: quiz._id, // Ensure ID is preserved from the list
-                attemptsLeft: left
+                attemptsLeft: attemptsLeft
             });
             setReviewData(null); // Reset review data
             setShowQuizModal(true);
@@ -391,6 +456,25 @@ const LessonDetail = () => {
                 }
             }));
             setSubmittedQuizzes(prev => new Set([...prev, selectedQuiz._id]));
+
+            // Update quizAttempts to reflect decreased attempts AND preserve answers for review
+            setQuizAttempts(prev => {
+                const current = prev[selectedQuiz._id] || { attemptsLeft: selectedQuiz.attemptsLeft };
+                const newAttemptsLeft = Math.max(0, (current.attemptsLeft || 0) - 1);
+                return {
+                    ...prev,
+                    [selectedQuiz._id]: {
+                        ...current,
+                        attemptsLeft: newAttemptsLeft,
+                        isPassed: result.isPassed,
+                        percentage: result.percentage,
+                        score: result.score,
+                        // IMPORTANT: Preserve answers for immediate review
+                        answers: submissionAnswers
+                    }
+                };
+            });
+
             if (result.isPassed) {
                 setCompletedQuizzes(prev => new Set([...prev, selectedQuiz._id]));
                 toast.success(`Passed! ${result.percentage}%`);
@@ -450,12 +534,13 @@ const LessonDetail = () => {
 
         // Check whether all quizzes are completed (based on completedQuizzes)
         const incompletedCount = quizzes.length - completedQuizzes.size;
-        if (incompletedCount > 0) {
-            return {
-                canComplete: false,
-                message: `You need to complete all ${quizzes.length} quizzes (there are ${incompletedCount} quizzes incomplete or not passed)`
-            };
-        }
+        // User requested to remove blocking validation
+        // if (incompletedCount > 0) {
+        //     return {
+        //         canComplete: false,
+        //         message: `You need to complete all ${quizzes.length} quizzes (there are ${incompletedCount} quizzes incomplete or not passed)`
+        //     };
+        // }
 
         return { canComplete: true, message: '' };
     };
@@ -702,7 +787,11 @@ const LessonDetail = () => {
                                                 </h4>
                                             </div>
                                             <button className="btn btn-sm btn-outline-primary">
-                                                {completedQuizzes.has(quiz._id) ? 'Review' : 'Take Quiz'}
+                                                {completedQuizzes.has(quiz._id)
+                                                    ? 'Review'
+                                                    : (quizAttempts[quiz._id] && quizAttempts[quiz._id].attemptsLeft === 0)
+                                                        ? 'Review (Failed)'
+                                                        : 'Take Quiz'}
                                             </button>
                                         </div>
                                         {/* Show Score if available */}

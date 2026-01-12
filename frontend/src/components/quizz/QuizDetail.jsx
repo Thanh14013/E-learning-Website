@@ -131,6 +131,11 @@ const QuizDetail = () => {
   };
 
   const getAttemptStatus = (attempt) => {
+    // Check if attempt is submitted (has submittedAt date)
+    if (!attempt.submittedAt) {
+      return { text: 'In Progress', className: 'status-progress', icon: '⏳' };
+    }
+
     if (attempt.isPassed) {
       return { text: 'Passed', className: 'status-passed', icon: '✅' };
     } else {
@@ -172,7 +177,7 @@ const QuizDetail = () => {
 
   const canTakeQuiz = attempts.length < quiz.attemptsAllowed;
   const bestAttempt = attempts.reduce((best, current) =>
-    current.percentage > (best?.percentage || 0) ? current : best, null
+    current.percentage > (best?.percentage || 0) && current.submittedAt ? current : best, null
   );
 
   return (
@@ -305,12 +310,16 @@ const QuizDetail = () => {
             <div className="attempts-list">
               {attempts.map((attempt) => {
                 const status = getAttemptStatus(attempt);
+                const isSubmitted = !!attempt.submittedAt;
+                
                 return (
                   <div key={attempt.id} className="attempt-card">
                     <div className="attempt-header">
                       <div className="attempt-info">
                         <h3>Attempt #{attempt.attemptNumber}</h3>
-                        <p className="attempt-date">{formatDate(attempt.submittedAt)}</p>
+                        <p className="attempt-date">
+                          {isSubmitted ? formatDate(attempt.submittedAt) : formatDate(attempt.startedAt)}
+                        </p>
                       </div>
                       <div className={`attempt-status ${status.className}`}>
                         <span className="status-icon">{status.icon}</span>
@@ -321,25 +330,31 @@ const QuizDetail = () => {
                     <div className="attempt-metrics">
                       <div className="metric">
                         <span className="metric-label">Score</span>
-                        <span className="metric-value">{attempt.percentage}%</span>
+                        <span className="metric-value">
+                          {isSubmitted ? `${attempt.percentage}%` : '-'}
+                        </span>
                       </div>
                       <div className="metric">
                         <span className="metric-label">Correct</span>
-                        <span className="metric-value">{attempt.correctAnswers}/{attempt.totalQuestions}</span>
+                        <span className="metric-value">
+                          {isSubmitted ? `${attempt.correctAnswers}/${attempt.totalQuestions}` : '-'}
+                        </span>
                       </div>
                       <div className="metric">
                         <span className="metric-label">Time Used</span>
-                        <span className="metric-value">{attempt.timeUsed} min</span>
+                        <span className="metric-value">
+                          {isSubmitted ? `${attempt.timeUsed} min` : 'In Progress'}
+                        </span>
                       </div>
                     </div>
 
                     <div className="attempt-actions">
                       <button
                         className="view-attempt-btn"
-                        onClick={() => handleViewAttempt(attempt.id)}
+                        onClick={() => isSubmitted ? handleViewAttempt(attempt.id) : handleStartQuiz()}
                       >
-                        <span className="btn-icon">👁️</span>
-                        View Details
+                        <span className="btn-icon">{isSubmitted ? '👁️' : '🚀'}</span>
+                        {isSubmitted ? 'View Details' : 'Continue'}
                       </button>
                     </div>
                   </div>

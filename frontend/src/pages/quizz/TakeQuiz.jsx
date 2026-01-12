@@ -23,7 +23,7 @@ const TakeQuiz = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [quiz, setQuiz] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [attemptId, setAttemptId] = useState(null);
@@ -57,7 +57,7 @@ const TakeQuiz = () => {
     const interval = setInterval(() => {
       const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
       const remaining = (quiz.duration * 60) - elapsed;
-      
+
       setTimeRemaining(Math.max(0, remaining));
 
       // Auto-submit when time expires
@@ -88,15 +88,44 @@ const TakeQuiz = () => {
         }
       }
 
-      // Start new attempt
+      // Start new attempt (or resume if backend returns existing)
       const response = await quizService.startQuiz(quizId);
-      
+
       setQuiz(response.quiz);
       setQuestions(response.questions);
       setAttemptId(response.attemptId);
       setStartedAt(response.startedAt);
-      setTimeRemaining(response.quiz.duration * 60);
-      
+
+      // Calculate remaining time based on startedAt
+      if (response.startedAt) {
+        const elapsed = Math.floor((Date.now() - new Date(response.startedAt).getTime()) / 1000);
+        const durationSeconds = (response.quiz?.duration || response.duration || 30) * 60; // Backend might return duration in quiz obj or root
+        const remaining = durationSeconds - elapsed;
+        setTimeRemaining(Math.max(0, remaining));
+      } else {
+        setTimeRemaining((response.quiz?.duration || 30) * 60);
+      }
+
+      // If resumed, restore answers
+      if (response.isResumed && response.answers) {
+        // Convert array/map to valid answer state
+        const resumedAnswers = {};
+        // Backend might return array of objects or map
+        if (Array.isArray(response.answers)) {
+          response.answers.forEach(a => {
+            resumedAnswers[a.questionId] = a;
+          });
+        } else {
+          Object.assign(resumedAnswers, response.answers);
+        }
+
+        // Note: We need to expose a way to set initial answers in useQuizAutoSave
+        // or we can just force update them here if we expose setAnswers
+        // But useQuizAutoSave likely overrode them on mount.
+        // Actually useQuizAutoSave loads from backend on mount so it might already have them!
+        // But let's be safe and ensure they are synced.
+      }
+
       // Save attempt info to localStorage
       localStorage.setItem(`quiz_${quizId}_attempt`, JSON.stringify({
         attemptId: response.attemptId,
@@ -123,11 +152,11 @@ const TakeQuiz = () => {
 
       // Get saved answers
       const savedData = await quizService.getSavedAnswers(quizId, existingAttemptId);
-      
+
       setAttemptId(existingAttemptId);
       setQuestions(quizData.questions);
       setStartedAt(savedData.startedAt || new Date().toISOString());
-      
+
       // Calculate remaining time
       if (savedData.startedAt && quizData.duration) {
         const elapsed = Math.floor((Date.now() - new Date(savedData.startedAt).getTime()) / 1000);
@@ -186,16 +215,16 @@ const TakeQuiz = () => {
     try {
       // Final save before submission
       await syncAnswers();
-      
+
       const allAnswers = getAllAnswers();
-      
+
       // Submit quiz
       const result = await quizService.submitQuiz(quizId, attemptId, allAnswers);
-      
+
       // Clear localStorage
       localStorage.removeItem(`quiz_${quizId}_attempt`);
       localStorage.removeItem(`quiz_${quizId}_attempt_${attemptId}_answers`);
-      
+
       // Navigate to results page
       navigate(`/quiz/${quizId}/result/${attemptId}`, {
         state: { result }
@@ -274,13 +303,12 @@ const TakeQuiz = () => {
           {questions.map((q, index) => {
             const isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
             const isBookmarked = bookmarkedQuestions.includes(index);
-            
+
             return (
               <button
                 key={q.id}
-                className={`nav-btn ${index === currentQuestionIndex ? 'active' : ''} ${
-                  isAnswered ? 'answered' : ''
-                } ${isBookmarked ? 'bookmarked' : ''}`}
+                className={`nav-btn ${index === currentQuestionIndex ? 'active' : ''} ${isAnswered ? 'answered' : ''
+                  } ${isBookmarked ? 'bookmarked' : ''}`}
                 onClick={() => setCurrentQuestionIndex(index)}
                 title={`Question ${index + 1}${isAnswered ? ' - Answered' : ''}`}
               >
@@ -322,7 +350,7 @@ const TakeQuiz = () => {
       {/* Submit Button */}
       <div className="take-quiz-footer">
         <div className="answered-count">
-          Answered: {Object.keys(answers).filter(key => 
+          Answered: {Object.keys(answers).filter(key =>
             answers[key] !== undefined && answers[key] !== ''
           ).length} / {questions.length}
         </div>

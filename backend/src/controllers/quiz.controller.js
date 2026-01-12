@@ -219,10 +219,36 @@ export const startQuiz = async (req, res) => {
         .json({ message: "You are not enrolled in this course" });
     }
 
-    // Count attempts
+    // Check for existing unsubmitted attempt
+    const existingAttempt = await QuizAttempt.findOne({
+      quizId,
+      userId,
+      submittedAt: null,
+    });
+
+    if (existingAttempt) {
+      console.log(`♻️ Resuming existing attempt: ${existingAttempt._id}`);
+
+      const questions = await Question.find({ quizId }).select(
+        "-correctOption -correctBoolean -correctText"
+      );
+
+      return res.json({
+        message: "Resuming quiz attempt",
+        attemptId: existingAttempt._id,
+        attemptNumber: existingAttempt.attemptNumber,
+        questions,
+        startedAt: existingAttempt.startedAt,
+        isResumed: true,
+        answers: existingAttempt.answers
+      });
+    }
+
+    // Checking attempts count
     const previousAttempts = await QuizAttempt.countDocuments({
       quizId,
       userId,
+      submittedAt: { $ne: null } // Only count submitted attempts
     });
 
     console.log(`🎯 Quiz Start Attempt Check:`, {
@@ -235,7 +261,7 @@ export const startQuiz = async (req, res) => {
     });
 
     if (previousAttempts >= quiz.attemptsAllowed) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "No attempts remaining",
         previousAttempts,
         attemptsAllowed: quiz.attemptsAllowed
@@ -263,6 +289,8 @@ export const startQuiz = async (req, res) => {
       attemptId: attempt._id,
       attemptNumber: attempt.attemptNumber,
       questions,
+      startedAt: attempt.startedAt,
+      isResumed: false
     });
   } catch (err) {
     console.error(err);
@@ -412,7 +440,7 @@ export const getQuizAttempts = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
-      .select("score percentage isPassed createdAt attemptNumber");
+      .select("score percentage isPassed createdAt attemptNumber submittedAt answers");
 
     const count = await QuizAttempt.countDocuments({ quizId, userId });
 
@@ -490,10 +518,10 @@ export const getQuizResultDetail = async (req, res) => {
         q.type === "multiple_choice"
           ? q.correctOption
           : q.type === "true_false"
-          ? q.correctBoolean
-          : q.type === "fill_blank"
-          ? q.correctText
-          : null;
+            ? q.correctBoolean
+            : q.type === "fill_blank"
+              ? q.correctText
+              : null;
 
       // Check if answer is correct
       let isCorrect = false;
@@ -643,5 +671,132 @@ export const togglePublishQuiz = async (req, res) => {
     return res
       .status(500)
       .json({ message: "Server error while toggling quiz publish status" });
+  }
+};
+/**
+ * @route   POST /api/quizzes/:id/save
+ * @desc    Save quiz progress (without submitting)
+ * @access  Private (Student)
+ */
+export const saveProgress = async (req, res) => {
+  try {
+    const quizId = req.params.id;
+    const { attemptId, answers } = req.body;
+    const userId = req.user.id;
+
+    const attempt = await QuizAttempt.findById(attemptId);
+    if (!attempt) {
+      return res.status(404).json({ message: "Attempt not found" });
+    }
+
+    if (String(attempt.userId) !== String(userId)) {
+      return res.status(403).json({ message: "Not your attempt" });
+    }
+
+    if (attempt.submittedAt) {
+      return res.status(400).json({ message: "Attempt already submitted" });
+    }
+
+    // Update answers
+    attempt.answers = answers;
+    await attempt.save();
+
+    return res.json({
+      success: true,
+      message: "Progress saved",
+      lastSaved: new Date()
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error while saving progress" });
+  }
+};
+
+/**
+ * @route   GET /api/quizzes/:id/progress
+ * @desc    Get saved progress for current unsubmitted attempt
+ * @access  Private (Student)
+ */
+export const getSavedProgress = async (req, res) => {
+  try {
+    const quizId = req.params.id;
+    const userId = req.user.id;
+    const { attemptId } = req.query;
+
+    let query = { quizId, userId, submittedAt: null };
+    if (attemptId) {
+      query._id = attemptId;
+    }
+
+    const attempt = await QuizAttempt.findOne(query).sort({ createdAt: -1 });
+
+    if (!attempt) {
+      return res.json({
+        success: true,
+        hasProgress: false,
+        answers: {}
+      });
+    }
+
+    // Convert array of answers to object format for frontend
+    const answersMap = {};
+    if (attempt.answers && Array.isArray(attempt.answers)) {
+      attempt.answers.forEach(a => {
+        answersMap[a.questionId] = a;
+      });
+    }
+
+    return res.json({
+      success: true,
+      hasProgress: true,
+      attemptId: attempt._id,
+      startedAt: attempt.startedAt,
+      answers: answersMap, // Frontend expects map/object
+      rawAnswers: attempt.answers // Keep detailed list
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error while fetching progress" });
+  }
+};
+
+/**
+ * @route   DELETE /api/quizzes/:id/attempts/student/:studentId
+ * @desc    Reset all attempts for a specific student (Teacher only)
+ * @access  Private (Teacher)
+ */
+export const resetQuizAttempts = async (req, res) => {
+  try {
+    const quizId = req.params.id;
+    const studentId = req.params.studentId;
+    const teacherId = req.user.id;
+
+    // Check ownership
+    const quiz = await Quiz.findById(quizId).populate("courseId");
+    if (!quiz) {
+      return res.status(404).json({ message: "Quiz not found" });
+    }
+
+    if (String(quiz.courseId.teacherId) !== teacherId) {
+      return res.status(403).json({ message: "Not authorized to reset attempts" });
+    }
+
+    // Delete all attempts for this user and quiz
+    const result = await QuizAttempt.deleteMany({
+      quizId: quizId,
+      userId: studentId,
+    });
+
+    console.log(`[RESET] Deleted ${result.deletedCount} attempts for Quiz ${quizId}, Student ${studentId}`);
+
+    return res.json({
+      message: `Reset successful. Deleted ${result.deletedCount} attempts.`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json({ message: "Server error while resetting attempts" });
   }
 };

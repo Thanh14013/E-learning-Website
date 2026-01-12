@@ -19,22 +19,22 @@ import quizService from '../services/quizService';
 const useQuizAutoSave = (quizId, attemptId, saveInterval = 30000) => {
   // Local answers state
   const [answers, setAnswers] = useState({});
-  
+
   // Save status: 'idle' | 'saving' | 'saved' | 'error' | 'syncing'
   const [saveStatus, setSaveStatus] = useState('idle');
-  
+
   // Connection status
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  
+
   // Pending saves queue (when offline)
   const pendingSavesRef = useRef([]);
-  
+
   // Last save timestamp
   const lastSaveRef = useRef(null);
-  
+
   // Save timer ref
   const saveTimerRef = useRef(null);
-  
+
   // Flag to prevent multiple simultaneous saves
   const isSavingRef = useRef(false);
 
@@ -63,14 +63,25 @@ const useQuizAutoSave = (quizId, attemptId, saveInterval = 30000) => {
       setSaveStatus('error');
     };
 
+    const handleBeforeUnload = (e) => {
+      // Trigger a final sync/save before leaving
+      // Note: We can only do synchronous or beacon calls here reliability
+      // For now we just ensure we try to save if we have pending changes
+      if (Object.keys(answers).length > 0) {
+        saveAnswersToBackend();
+      }
+    };
+
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, []);
+  }, [answers]); // Re-bind when answers change to ensure we have latest closure
 
   /**
    * Auto-save timer
@@ -113,16 +124,16 @@ const useQuizAutoSave = (quizId, attemptId, saveInterval = 30000) => {
   const updateAnswer = useCallback((questionId, answer) => {
     setAnswers(prev => {
       const newAnswers = { ...prev, [questionId]: answer };
-      
+
       // Save to localStorage immediately
       saveToLocalStorage(newAnswers);
-      
+
       // Schedule backend save (debounced)
       scheduleBackendSave(newAnswers);
-      
+
       return newAnswers;
     });
-    
+
     // Show saving indicator briefly
     setSaveStatus('saving');
   }, [quizId, attemptId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -206,16 +217,16 @@ const useQuizAutoSave = (quizId, attemptId, saveInterval = 30000) => {
 
     try {
       await quizService.saveAnswers(quizId, attemptId, answersToSaveFinal);
-      
+
       // Success
       lastSaveRef.current = Date.now();
       setSaveStatus('saved');
-      
+
       // Clear pending saves if any
       if (pendingSavesRef.current.length > 0) {
         pendingSavesRef.current = [];
       }
-      
+
       // Clear after 2 seconds
       setTimeout(() => {
         if (saveStatus === 'saved') {
@@ -224,7 +235,7 @@ const useQuizAutoSave = (quizId, attemptId, saveInterval = 30000) => {
       }, 2000);
     } catch (error) {
       console.error('Failed to save answers:', error);
-      
+
       // Add to pending saves if network error
       if (!error.response || error.response.status >= 500) {
         pendingSavesRef.current.push({
@@ -255,14 +266,14 @@ const useQuizAutoSave = (quizId, attemptId, saveInterval = 30000) => {
     try {
       // Get the most recent pending save (contains all latest answers)
       const latestPending = pendingSavesRef.current[pendingSavesRef.current.length - 1];
-      
+
       await quizService.saveAnswers(quizId, attemptId, latestPending.answers);
-      
+
       // Clear all pending saves
       pendingSavesRef.current = [];
       lastSaveRef.current = Date.now();
       setSaveStatus('saved');
-      
+
       setTimeout(() => {
         setSaveStatus('idle');
       }, 2000);
@@ -300,7 +311,7 @@ const useQuizAutoSave = (quizId, attemptId, saveInterval = 30000) => {
   const clearAnswers = useCallback(() => {
     setAnswers({});
     pendingSavesRef.current = [];
-    
+
     // Clear localStorage
     try {
       const storageKey = `quiz_${quizId}_attempt_${attemptId}_answers`;
