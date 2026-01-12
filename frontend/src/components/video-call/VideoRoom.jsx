@@ -327,6 +327,15 @@ const VideoRoom = () => {
             toastService.success('Session ended successfully');
             webrtcService.leaveSession();
 
+            // Reload the opener (Session Scheduler) if it exists
+            if (window.opener) {
+                try {
+                    window.opener.location.reload();
+                } catch (e) {
+                    console.warn('Could not reload opener', e);
+                }
+            }
+
             // Close the tab/window
             window.close();
 

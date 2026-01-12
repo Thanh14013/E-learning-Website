@@ -126,7 +126,7 @@ export default function SessionScheduler() {
         try {
             await api.put(`/teacher/sessions/${sessionId}/end`);
             toastService.success('Session ended');
-            fetchData();
+            window.location.reload();
         } catch (error) {
             console.error('Error ending session:', error);
             toastService.error('Unable to end session');
