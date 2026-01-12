@@ -243,7 +243,7 @@ const LessonDetail = () => {
 
             // Calculate attempts left
             const usedAttempts = attemptsRes.data.attempts?.length || 0;
-            const allowed = quizData.attemptsAllowed || 1; // Default 1
+            const allowed = quizData.quiz.attemptsAllowed || 1; // Default 1
             const left = Math.max(0, allowed - usedAttempts);
 
             // If already passed or no attempts left, trigger Review Mode
@@ -298,7 +298,7 @@ const LessonDetail = () => {
             }));
             toast.success('Quiz started! Good luck.');
         } catch (error) {
-            const errorMsg = error.response?.data?.message || 'Unable to start quiz';
+            const errorMsg = error.message || 'Unable to start quiz';
             toast.error(errorMsg);
             setShowQuizModal(false); // Close if cannot start
         }
@@ -398,7 +398,7 @@ const LessonDetail = () => {
                 // Trigger completion check
                 setTimeout(() => handleMarkComplete(), 500);
             } else {
-                toast.error(`Failed: ${result.percentage}% (Need ${selectedQuiz.passingScore}%)`);
+                toast.error(`Failed: ${result.percentage}% (Need ${selectedQuiz.quiz.passingScore}%)`);
             }
 
             setShowQuizModal(false);

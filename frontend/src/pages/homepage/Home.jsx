@@ -62,7 +62,7 @@ export function Home() {
         <div className={styles.heroContent}>
           <h1 className={styles.title}>Welcome to <span>MasterDev</span></h1>
           <p className={styles.subtitle}>
-            Practice your coding skills with interactive lessons, real-time feedback, and a supportive community.
+              Build the skills you need to launch your tech career. Dive into interactive lessons with instant feedback, build a professional portfolio, and solve problems alongside a community of passionate developers.
           </p>
 
           {/* Search Bar */}
@@ -79,15 +79,6 @@ export function Home() {
             </button>
           </form>
         </div>
-
-        <img
-          src={imgHome}
-          alt="Learning"
-          className={styles.heroImage}
-        />
-
-
-
       </section>
 
       {/* COURSES PREVIEW - Right after search */}
