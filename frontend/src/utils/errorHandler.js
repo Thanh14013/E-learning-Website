@@ -147,6 +147,11 @@ export const parseApiError = (error) => {
     originalError: error,
   };
 
+  // Check if error is already parsed
+  if (error && error.type && Object.values(ERROR_TYPES).includes(error.type)) {
+    return error;
+  }
+
   // Network errors
   if (isNetworkError(error)) {
     parsedError.type = ERROR_TYPES.NETWORK;

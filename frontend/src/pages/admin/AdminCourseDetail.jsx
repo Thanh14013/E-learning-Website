@@ -24,6 +24,7 @@ const AdminCourseDetail = () => {
 
     // For Review/Reject logic
     const [showRejectModal, setShowRejectModal] = useState(false);
+    const [showApproveModal, setShowApproveModal] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
 
     useEffect(() => {
@@ -77,12 +78,16 @@ const AdminCourseDetail = () => {
         }));
     };
 
-    const handleApprove = async () => {
-        if (!window.confirm('Are you sure you want to approve this course?')) return;
+    const handleApprove = () => {
+        setShowApproveModal(true);
+    };
+
+    const confirmApprove = async () => {
         try {
             const response = await api.put(`/admin/courses/${id}/approve`);
             if (response.data.success) {
                 toastService.success('Course approved successfully');
+                setShowApproveModal(false);
                 fetchCourseDetail();
             }
         } catch (error) {
@@ -274,8 +279,46 @@ const AdminCourseDetail = () => {
                                                         </div>
                                                     )}
 
+
+                                                    {/* ... previous content ... */}
+
                                                     {/* Content Text */}
                                                     <div className={styles.lessonDescription} dangerouslySetInnerHTML={{ __html: lesson.content }} />
+
+                                                    {/* Resources Section */}
+                                                    {lesson.resources && lesson.resources.length > 0 && (
+                                                        <div className={styles.resourcesSection} style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
+                                                            <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '8px', color: '#374151' }}>Resources & Materials</h4>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                {lesson.resources.map((res, idx) => (
+                                                                    <a
+                                                                        key={idx}
+                                                                        href={res.url}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        style={{
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '8px',
+                                                                            textDecoration: 'none',
+                                                                            color: '#2563eb',
+                                                                            fontSize: '14px'
+                                                                        }}
+                                                                    >
+                                                                        <span>
+                                                                            {res.type === 'pdf' ? '📄' :
+                                                                                res.type === 'video' ? '🎥' :
+                                                                                    res.type === 'link' ? '🔗' : 'qw'}
+                                                                        </span>
+                                                                        <span>{res.name}</span>
+                                                                        <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: 'auto' }}>
+                                                                            {res.type.toUpperCase()}
+                                                                        </span>
+                                                                    </a>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
 
                                                     {/* Quiz Content */}
                                                     {lesson.quiz && (
@@ -349,174 +392,210 @@ const AdminCourseDetail = () => {
             )}
 
             {/* Discussions Tab */}
-            {activeTab === 'discussions' && (
-                <div className={styles.section} style={{ padding: '24px' }}>
-                    {course.discussions?.length === 0 ? (
-                        <p style={{ color: '#6b7280', textAlign: 'center' }}>No discussions yet.</p>
-                    ) : (
-                        course.discussions.map(d => (
-                            <div
-                                key={d._id}
-                                style={{
-                                    borderBottom: '1px solid #e5e7eb',
-                                    paddingBottom: '16px',
-                                    marginBottom: '16px',
-                                    cursor: 'pointer',
-                                    position: 'relative'
-                                }}
-                                onClick={() => setSelectedDiscussionId(d._id)}
-                                className={styles.discussionItem}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-                                        <strong style={{ color: '#111827' }}>{d.userId?.fullName || 'Anonymous'}</strong>
-                                        <span style={{ color: '#9ca3af' }}>{new Date(d.createdAt).toLocaleDateString('en-GB')}</span>
-                                    </div>
-                                    <button
-                                        onClick={(e) => handleDeleteDiscussion(d._id, e)}
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            color: '#ef4444',
-                                            cursor: 'pointer',
-                                            padding: '4px',
-                                            borderRadius: '4px'
-                                        }}
-                                        title="Delete Discussion"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                <h4 style={{ margin: '0 0 4px', color: '#374151' }}>{d.title}</h4>
-                                <p style={{ margin: 0, color: '#4b5563' }}>{d.content}</p>
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
-
-            {/* Sessions Tab */}
-            {activeTab === 'sessions' && (
-                <div className={styles.section} style={{ padding: '24px' }}>
-                    {sessions.length === 0 ? (
-                        <p style={{ color: '#6b7280', textAlign: 'center' }}>No sessions found.</p>
-                    ) : (
-                        sessions.map(session => (
-                            <div
-                                key={session._id}
-                                className={styles.discussionItem}
-                                style={{
-                                    borderBottom: '1px solid #e5e7eb',
-                                    paddingBottom: '16px',
-                                    marginBottom: '16px',
-                                }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
-                                        <div style={{
-                                            padding: '4px 8px',
-                                            borderRadius: '4px',
-                                            fontSize: '12px',
-                                            fontWeight: 'bold',
-                                            backgroundColor: session.status === 'live' ? '#ef4444' :
-                                                session.status === 'scheduled' ? '#3b82f6' : '#9ca3af',
-                                            color: 'white',
-                                            textTransform: 'uppercase'
-                                        }}>
-                                            {session.status}
+            {
+                activeTab === 'discussions' && (
+                    <div className={styles.section} style={{ padding: '24px' }}>
+                        {course.discussions?.length === 0 ? (
+                            <p style={{ color: '#6b7280', textAlign: 'center' }}>No discussions yet.</p>
+                        ) : (
+                            course.discussions.map(d => (
+                                <div
+                                    key={d._id}
+                                    style={{
+                                        borderBottom: '1px solid #e5e7eb',
+                                        paddingBottom: '16px',
+                                        marginBottom: '16px',
+                                        cursor: 'pointer',
+                                        position: 'relative'
+                                    }}
+                                    onClick={() => setSelectedDiscussionId(d._id)}
+                                    className={styles.discussionItem}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
+                                            <strong style={{ color: '#111827' }}>{d.userId?.fullName || 'Anonymous'}</strong>
+                                            <span style={{ color: '#9ca3af' }}>{new Date(d.createdAt).toLocaleDateString('en-GB')}</span>
                                         </div>
-                                        <span style={{ color: '#6b7280', fontSize: '14px' }}>
-                                            {new Date(session.scheduledAt).toLocaleString('en-GB')}
-                                        </span>
-                                    </div>
-                                </div>
-                                <h4 style={{ margin: '0 0 8px', color: '#111827', fontSize: '16px' }}>{session.title}</h4>
-                                {session.description && <p style={{ margin: '0 0 12px', color: '#4b5563', fontSize: '14px' }}>{session.description}</p>}
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    {session.hostId?.avatar ? (
-                                        <img
-                                            src={session.hostId.avatar}
-                                            alt={session.hostId.fullName}
-                                            style={{ width: '24px', height: '24px', borderRadius: '50%' }}
-                                        />
-                                    ) : (
-                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#ccc' }}></div>
-                                    )}
-                                    <span style={{ fontSize: '14px', color: '#374151' }}>
-                                        Host: <strong>{session.hostId?.fullName || 'Unknown'}</strong>
-                                    </span>
-                                </div>
-
-                                {session.status === 'ended' && (
-                                    <div style={{ marginTop: '12px' }}>
                                         <button
-                                            onClick={() => setViewingHistoryId(session._id)}
+                                            onClick={(e) => handleDeleteDiscussion(d._id, e)}
                                             style={{
-                                                padding: '6px 12px',
-                                                borderRadius: '4px',
-                                                border: '1px solid #d1d5db',
-                                                background: 'white',
+                                                background: 'none',
+                                                border: 'none',
+                                                color: '#ef4444',
                                                 cursor: 'pointer',
-                                                fontSize: '13px',
-                                                color: '#374151'
+                                                padding: '4px',
+                                                borderRadius: '4px'
                                             }}
+                                            title="Delete Discussion"
                                         >
-                                            View Chat History
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                            </svg>
                                         </button>
                                     </div>
-                                )}
-                            </div>
-                        ))
-                    )}
-                </div>
-            )}
+                                    <h4 style={{ margin: '0 0 4px', color: '#374151' }}>{d.title}</h4>
+                                    <p style={{ margin: 0, color: '#4b5563' }}>{d.content}</p>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )
+            }
+
+            {/* Sessions Tab */}
+            {
+                activeTab === 'sessions' && (
+                    <div className={styles.section} style={{ padding: '24px' }}>
+                        {sessions.length === 0 ? (
+                            <p style={{ color: '#6b7280', textAlign: 'center' }}>No sessions found.</p>
+                        ) : (
+                            sessions.map(session => (
+                                <div
+                                    key={session._id}
+                                    className={styles.discussionItem}
+                                    style={{
+                                        borderBottom: '1px solid #e5e7eb',
+                                        paddingBottom: '16px',
+                                        marginBottom: '16px',
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px' }}>
+                                            <div style={{
+                                                padding: '4px 8px',
+                                                borderRadius: '4px',
+                                                fontSize: '12px',
+                                                fontWeight: 'bold',
+                                                backgroundColor: session.status === 'live' ? '#ef4444' :
+                                                    session.status === 'scheduled' ? '#3b82f6' : '#9ca3af',
+                                                color: 'white',
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                {session.status}
+                                            </div>
+                                            <span style={{ color: '#6b7280', fontSize: '14px' }}>
+                                                {new Date(session.scheduledAt).toLocaleString('en-GB')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <h4 style={{ margin: '0 0 8px', color: '#111827', fontSize: '16px' }}>{session.title}</h4>
+                                    {session.description && <p style={{ margin: '0 0 12px', color: '#4b5563', fontSize: '14px' }}>{session.description}</p>}
+
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {session.hostId?.avatar ? (
+                                            <img
+                                                src={session.hostId.avatar}
+                                                alt={session.hostId.fullName}
+                                                style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+                                            />
+                                        ) : (
+                                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#ccc' }}></div>
+                                        )}
+                                        <span style={{ fontSize: '14px', color: '#374151' }}>
+                                            Host: <strong>{session.hostId?.fullName || 'Unknown'}</strong>
+                                        </span>
+                                    </div>
+
+                                    {session.status === 'ended' && (
+                                        <div style={{ marginTop: '12px' }}>
+                                            <button
+                                                onClick={() => setViewingHistoryId(session._id)}
+                                                style={{
+                                                    padding: '6px 12px',
+                                                    borderRadius: '4px',
+                                                    border: '1px solid #d1d5db',
+                                                    background: 'white',
+                                                    cursor: 'pointer',
+                                                    fontSize: '13px',
+                                                    color: '#374151'
+                                                }}
+                                            >
+                                                View Chat History
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                )
+            }
 
             {/* Discussion Modal */}
-            {selectedDiscussionId && (
-                <DiscussionModal
-                    discussionId={selectedDiscussionId}
-                    isOpen={true}
-                    onClose={() => {
-                        setSelectedDiscussionId(null);
-                        fetchCourseDetail(); // Refresh to show updates if any
-                    }}
-                    isEnrolled={true} // Admin can view everything
-                    isReadOnly={true} // Admin views as read-only in modal
-                    courseTeacherId={course.teacherId?._id}
-                />
-            )}
+            {
+                selectedDiscussionId && (
+                    <DiscussionModal
+                        discussionId={selectedDiscussionId}
+                        isOpen={true}
+                        onClose={() => {
+                            setSelectedDiscussionId(null);
+                            fetchCourseDetail(); // Refresh to show updates if any
+                        }}
+                        isEnrolled={true} // Admin can view everything
+                        isReadOnly={true} // Admin views as read-only in modal
+                        courseTeacherId={course.teacherId?._id}
+                    />
+                )
+            }
 
             {/* Session History Modal */}
-            {viewingHistoryId && (
-                <SessionHistoryModal
-                    sessionId={viewingHistoryId}
-                    onClose={() => setViewingHistoryId(null)}
-                />
-            )}
+            {
+                viewingHistoryId && (
+                    <SessionHistoryModal
+                        sessionId={viewingHistoryId}
+                        onClose={() => setViewingHistoryId(null)}
+                    />
+                )
+            }
 
-            {/* Reject Modal */}
-            {showRejectModal && (
-                <div className={styles.modalOverlay} onClick={() => setShowRejectModal(false)}>
-                    <div className={styles.modal} onClick={e => e.stopPropagation()}>
-                        <h2 className={styles.modalTitle}>Reject Course</h2>
-                        <textarea
-                            className={styles.textarea}
-                            rows={4}
-                            placeholder="Enter reason for rejection..."
-                            value={rejectReason}
-                            onChange={(e) => setRejectReason(e.target.value)}
-                        />
-                        <div className={styles.modalFooter}>
-                            <button className={styles.cancelBtn} onClick={() => setShowRejectModal(false)}>Cancel</button>
-                            <button className={styles.confirmRejectBtn} onClick={handleReject}>Confirm Rejection</button>
+            {/* Approve Modal */}
+            {
+                showApproveModal && (
+                    <div className={styles.modalOverlay} onClick={() => setShowApproveModal(false)}>
+                        <div className={styles.modal} onClick={e => e.stopPropagation()}>
+                            <h2 className={styles.modalTitle}>Approve Course</h2>
+                            <p className={styles.modalText} style={{ marginBottom: '24px', color: '#4b5563' }}>
+                                Are you sure you want to approve "<strong>{course.title}</strong>"?
+                                <br />
+                                This will make the course valid for publishing by the teacher.
+                            </p>
+                            <div className={styles.modalFooter}>
+                                <button className={styles.cancelBtn} onClick={() => setShowApproveModal(false)}>Cancel</button>
+                                <button
+                                    className={styles.approveBtn}
+                                    onClick={confirmApprove}
+                                    style={{ marginLeft: '12px' }}
+                                >
+                                    Confirm Approval
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+
+            {/* Reject Modal */}
+            {
+                showRejectModal && (
+                    <div className={styles.modalOverlay} onClick={() => setShowRejectModal(false)}>
+                        <div className={styles.modal} onClick={e => e.stopPropagation()}>
+                            <h2 className={styles.modalTitle}>Reject Course</h2>
+                            <textarea
+                                className={styles.textarea}
+                                rows={4}
+                                placeholder="Enter reason for rejection..."
+                                value={rejectReason}
+                                onChange={(e) => setRejectReason(e.target.value)}
+                            />
+                            <div className={styles.modalFooter}>
+                                <button className={styles.cancelBtn} onClick={() => setShowRejectModal(false)}>Cancel</button>
+                                <button className={styles.confirmRejectBtn} onClick={handleReject}>Confirm Rejection</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

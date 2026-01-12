@@ -12,6 +12,10 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
+  if (user.role === 'teacher' && user.profileApprovalStatus === 'pending') {
+    return <Navigate to="/teacher/approval-pending" replace />;
+  }
+
   return <Outlet />;
 };
 

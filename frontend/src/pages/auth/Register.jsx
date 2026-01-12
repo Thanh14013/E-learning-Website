@@ -55,7 +55,17 @@ export function Register() {
       registerData.append("role", formData.role);
       if (dobString) registerData.append("dateOfBirth", dobString);
 
-      if (formData.role === "teacher" && formData.cv) {
+      if (formData.role === "teacher") {
+        if (!formData.cv) {
+          setError("Please upload your CV (PDF format) to register as a teacher.");
+          setLoading(false);
+          return;
+        }
+        if (formData.cv.type !== "application/pdf") {
+          setError("CV must be in PDF format.");
+          setLoading(false);
+          return;
+        }
         registerData.append("cv", formData.cv);
       }
 
@@ -118,9 +128,7 @@ export function Register() {
               placeholder="Nguyen Van A"
               required
             />
-            {(fieldErrors.fullName || fieldErrors.name) && (
-              <p className={styles.fieldError}>{fieldErrors.fullName || fieldErrors.name}</p>
-            )}
+
           </div>
 
           <div className={styles.formGroup}>
@@ -134,7 +142,7 @@ export function Register() {
               placeholder="name@example.com"
               required
             />
-            {fieldErrors.email && <p className={styles.fieldError}>{fieldErrors.email}</p>}
+
           </div>
 
           <div className={styles.formGroup}>
@@ -168,7 +176,7 @@ export function Register() {
           {formData.role === "teacher" && (
             <div className={styles.formGroup}>
               <label className={styles.label}>
-                Upload CV (PDF) <span style={{ fontSize: "0.8em", color: "#666" }}>(Recommended)</span>
+                Upload CV (PDF) <span style={{ color: "red" }}>*</span>
               </label>
               <input
                 type="file"
@@ -176,6 +184,7 @@ export function Register() {
                 accept=".pdf"
                 onChange={(e) => setFormData({ ...formData, cv: e.target.files[0] })}
                 className={styles.input}
+                required
               />
               <p style={{ fontSize: "0.8rem", color: "#888", marginTop: "4px" }}>
                 Only PDF files are accepted. Max size 5MB.
@@ -234,7 +243,7 @@ export function Register() {
                 placeholder="Min. 8 characters"
                 required
               />
-              {fieldErrors.password && <p className={styles.fieldError}>{fieldErrors.password}</p>}
+
               <button
                 type="button"
                 className={styles.toggleBtn}

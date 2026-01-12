@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
@@ -16,31 +16,17 @@ const CompleteTeacherProfile = () => {
         expertise: "",
         qualifications: "",
     });
-    const [cvFile, setCvFile] = useState(null);
     const [error, setError] = useState("");
+
+    // Redirect if profile is already completed
+    useEffect(() => {
+        if (user?.profileCompleted) {
+            navigate("/teacher/dashboard");
+        }
+    }, [user, navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            // Validate file type
-            if (file.type !== "application/pdf") {
-                setError("Only PDF files are accepted");
-                setCvFile(null);
-                return;
-            }
-            // Validate file size (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                setError("File must not exceed 5MB");
-                setCvFile(null);
-                return;
-            }
-            setCvFile(file);
-            setError("");
-        }
     };
 
     const handleSubmit = async (e) => {
@@ -59,30 +45,24 @@ const CompleteTeacherProfile = () => {
             return;
         }
 
-        if (!cvFile) {
-            setError("Please upload your CV");
-            return;
-        }
-
         setLoading(true);
 
         try {
-            const formDataToSend = new FormData();
-            formDataToSend.append("phone", formData.phone);
-            formDataToSend.append("address", formData.address);
-            formDataToSend.append("bio", formData.bio);
-            formDataToSend.append("expertise", formData.expertise);
-            formDataToSend.append("qualifications", formData.qualifications);
-            formDataToSend.append("cv", cvFile);
+            // No need for FormData anymore since we aren't uploading files
+            // But detailed implementation suggests backend still expects json body or we can keep FormData logic but without file
+            // The backend uses req.body for fields, so we can send JSON or FormData (multer handles text fields too)
+            // To be safe and minimal change, we can switch to JSON or keep FormData. 
+            // The backend controller receives req.body. Let's send a simple JSON object to clean it up.
+
+            // Wait, previous backend code used multer which expects multipart/form-data for text fields too if configured that way.
+            // Let's stick to JSON since we removed the file upload logic in backend controller?
+            // Actually, backend controller extracts fields from req.body. Express body-parser (or express.json()) handles JSON. 
+            // Multer also populates req.body for multipart forms.
+            // Let's toggle to JSON for cleaner code since no file is sent.
 
             const response = await api.post(
                 "/users/complete-teacher-profile",
-                formDataToSend,
-                {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                }
+                formData
             );
 
             if (response.data.success) {
@@ -174,20 +154,6 @@ const CompleteTeacherProfile = () => {
                             rows="3"
                             required
                         />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                        <label className={styles.label}>Upload CV (PDF) *</label>
-                        <input
-                            type="file"
-                            accept=".pdf"
-                            onChange={handleFileChange}
-                            className={styles.fileInput}
-                            required
-                        />
-                        {cvFile && (
-                            <p className={styles.fileName}>Selected file: {cvFile.name}</p>
-                        )}
                     </div>
 
                     <button

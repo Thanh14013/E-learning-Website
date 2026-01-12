@@ -40,7 +40,7 @@ const TeacherApprovalPending = () => {
                     No email notifications are sent. Please come back and sign in to check your status.
                 </p>
                 <button onClick={handleBackToHome} className={styles.button}>
-                    Back to home
+                    Back to login
                 </button>
             </div>
         </div>

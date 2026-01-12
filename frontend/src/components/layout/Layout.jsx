@@ -5,7 +5,7 @@ import ChatManager from "../chat/ChatManager.jsx";
 
 export function Layout() {
   const location = useLocation();
-  const hideHeaderFooter = ['/login', '/register', '/admin/login'].includes(location.pathname);
+  const hideHeaderFooter = ['/login', '/register', '/admin/login', '/teacher/approval-pending'].includes(location.pathname);
 
   if (hideHeaderFooter) {
     return (

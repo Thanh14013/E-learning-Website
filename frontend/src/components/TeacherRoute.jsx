@@ -15,6 +15,10 @@ const TeacherRoute = ({ children }) => {
         return <Navigate to="/login" replace />;
     }
 
+    if (user.profileApprovalStatus === "pending") {
+        return <Navigate to="/teacher/approval-pending" replace />;
+    }
+
     return children ? children : <Outlet />;
 };
 

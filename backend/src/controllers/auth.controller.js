@@ -51,14 +51,19 @@ export const register = async (req, res, next) => {
       return res.status(400).json({ message: "Email already exists." });
     }
 
-    // Create new user (auto-verified)
-    const user = await User.create({
-      fullName,
-      email: email.toLowerCase(),
-      password,
-      role: role || "student", // Default role
-      isVerified: true,
-    });
+    // Require CV for teachers
+    if (role === "teacher") {
+        if (!req.file) {
+            return res.status(400).json({ message: "CV upload is required for teacher registration." });
+        }
+        if (req.file.mimetype !== "application/pdf") {
+            // cleanup if by chance a non-pdf file passed through multer (unlikely if multer filter is good, but safe to check)
+             if (fs.existsSync(req.file.path)) {
+                fs.unlinkSync(req.file.path);
+             }
+             return res.status(400).json({ message: "CV must be in PDF format." });
+        }
+    }
 
     let cvUrl = "";
     let cvPublicId = "";
@@ -84,6 +89,15 @@ export const register = async (req, res, next) => {
         // Continue registration but log error (or could revert)
       }
     }
+
+    // Create new user (auto-verified)
+    const user = await User.create({
+      fullName,
+      email: email.toLowerCase(),
+      password,
+      role: role || "student", // Default role
+      isVerified: true,
+    });
 
     // Create profile linked to user with optional CV
     await UserProfile.create({ 
@@ -261,15 +275,11 @@ export const login = async (req, res) => {
     }
 
     if (user.role === "teacher") {
-      if (!user.profileCompleted) {
+      // Allow incomplete/pending profiles to login so frontend can redirect them
+      if (user.profileApprovalStatus === "rejected") {
         return res
           .status(403)
-          .json({ message: "Please complete your teacher profile first." });
-      }
-      if (user.profileApprovalStatus !== "approved") {
-        return res
-          .status(403)
-          .json({ message: "Your teacher profile is pending admin approval." });
+          .json({ message: "Your teacher profile has been rejected. Please contact the administrator." });
       }
     }
 

@@ -487,30 +487,6 @@ export const completeTeacherProfile = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
-    // Check if CV file was uploaded
-    if (!req.file) {
-      return res.status(400).json({ message: "CV file is required." });
-    }
-
-    // Upload CV to Cloudinary
-    let cvUrl, cvPublicId;
-    try {
-      const result = await uploadFile(req.file.path, {
-        folder: "cvs",
-        resource_type: "raw",
-      });
-      cvUrl = result.secure_url;
-      cvPublicId = result.public_id;
-
-      // Delete local file after upload
-      if (fs.existsSync(req.file.path)) {
-        fs.unlinkSync(req.file.path);
-      }
-    } catch (uploadError) {
-      console.error("CV upload error:", uploadError);
-      return res.status(500).json({ message: "Failed to upload CV." });
-    }
-
     // Update user profile
     let profile = await UserProfile.findOne({ userId });
     if (!profile) {
@@ -522,8 +498,7 @@ export const completeTeacherProfile = async (req, res) => {
     profile.bio = bio.trim();
     profile.expertise = expertise.trim();
     profile.qualifications = qualifications.trim();
-    profile.cvUrl = cvUrl;
-    profile.cvPublicId = cvPublicId;
+    // cvUrl and cvPublicId are already set during registration
 
     await profile.save();
 
