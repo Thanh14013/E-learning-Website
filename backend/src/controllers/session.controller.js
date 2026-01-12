@@ -405,6 +405,16 @@ export const endSession = async (req, res) => {
         sessionId: session._id,
         timestamp: new Date().toISOString(),
       });
+
+      // Also notify course subscribers
+      const { sendNotificationToCourse } = (await import("../socket/notification.handler.js"));
+      sendNotificationToCourse(req.io, session.courseId, {
+        type: "session_ended",
+        title: "Session Ended",
+        message: `Live session "${session.title}" has ended`,
+        courseId: session.courseId,
+        sessionId: session._id,
+      });
     }
 
     return res.status(200).json({

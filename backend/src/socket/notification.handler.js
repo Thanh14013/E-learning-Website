@@ -273,12 +273,19 @@ export const sendNotificationToUser = (io, userId, notification) => {
   const notificationNamespace = io.of("/notification");
   const userRoom = `user:${userId}`;
 
-  notificationNamespace.to(userRoom).emit("notification:new", {
+  // Determine event name based on type
+  let eventName = "notification:new";
+  if (notification.type === "notification_count") eventName = "notification:count";
+  if (notification.type === "notification_updated") eventName = "notification:updated";
+  if (notification.type === "notification_deleted") eventName = "notification:deleted";
+  if (notification.type === "notifications_all_read") eventName = "notifications_all_read";
+
+  notificationNamespace.to(userRoom).emit(eventName, {
     ...notification,
     timestamp: new Date().toISOString(),
   });
 
-  console.log(`🔔 Notification sent to user ${userId}`);
+  console.log(`🔔 Notification sent to user ${userId} [Event: ${eventName}]`);
 };
 
 /**
@@ -291,12 +298,17 @@ export const sendNotificationToCourse = (io, courseId, notification) => {
   const notificationNamespace = io.of("/notification");
   const courseRoom = `course:${courseId}`;
 
-  notificationNamespace.to(courseRoom).emit("notification:new", {
+  let eventName = "notification:new";
+  // Course notifications are usually just 'new', but we support others if needed
+  if (notification.type === "notification_updated") eventName = "notification:updated";
+  if (notification.type === "notification_deleted") eventName = "notification:deleted";
+
+  notificationNamespace.to(courseRoom).emit(eventName, {
     ...notification,
     timestamp: new Date().toISOString(),
   });
 
-  console.log(`🔔 Notification sent to course ${courseId}`);
+  console.log(`🔔 Notification sent to course ${courseId} [Event: ${eventName}]`);
 };
 
 /**
@@ -306,8 +318,12 @@ export const sendNotificationToCourse = (io, courseId, notification) => {
  */
 export const broadcastNotification = (io, notification) => {
   const notificationNamespace = io.of("/notification");
-
-  notificationNamespace.emit("notification:broadcast", {
+  
+  // Broadcasts usually have their own dedicated event or use 'notification:broadcast'
+  // But if we want to mimic the logic above:
+  let eventName = "notification:broadcast";
+  
+  notificationNamespace.emit(eventName, {
     ...notification,
     timestamp: new Date().toISOString(),
   });

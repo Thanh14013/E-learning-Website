@@ -95,11 +95,17 @@ export const markNotificationRead = async (req, res) => {
     const userId = req.user.id;
     const notificationId = req.params.id;
 
-    // Find notification
-    const notification = await Notification.findOne({
-      _id: notificationId,
-      userId,
-    });
+    // Find and update in one go, returning lean object
+    const notification = await Notification.findOneAndUpdate(
+      { _id: notificationId, userId },
+      { 
+        $set: { 
+          isRead: true, 
+          readAt: new Date() 
+        } 
+      },
+      { new: true }
+    ).lean();
 
     if (!notification) {
       return res.status(404).json({
@@ -108,19 +114,13 @@ export const markNotificationRead = async (req, res) => {
       });
     }
 
-    // Mark as read
-    notification.isRead = true;
-    notification.readAt = new Date();
-    await notification.save();
-
     // Emit socket event
-    const io = req.io; // Assuming req.io is available, or use getSocketIOInstance
+    const io = req.io;
     if (io) {
-       // Import dynamically to avoid circular dependencies if any, or use the helper from socket/index
        const { sendNotificationToUser } = (await import("../socket/notification.handler.js"));
        sendNotificationToUser(io, userId, {
          type: "notification_updated",
-         notification
+         notification: notification // Already a plain object due to lean()
        });
        
        // Also emit unread count update

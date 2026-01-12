@@ -207,6 +207,8 @@ export const markLessonCompleted = async (req, res) => {
       });
     }
 
+    const wasCompleted = progress ? progress.isCompleted : false;
+
     progress.isCompleted = true;
     await progress.save();
 
@@ -236,64 +238,93 @@ export const markLessonCompleted = async (req, res) => {
 
     const isCourseCompleted = completedCount === totalLessons;
 
-    // Create notification for lesson completion
-    const course = await Course.findById(courseId);
-    
-    await Notification.create({
-      userId,
-      type: 'progress',
-      title: 'Lesson Completed!',
-      content: `You completed "${lesson.title}" in ${course?.title}. Progress: ${completedCount}/${totalLessons} lessons`,
-      link: `/courses/${courseId}/lessons/${lessonId}`,
-      isRead: false,
-    });
-
-    // If Course is fully completed (100%), notify the Teacher
-    if (isCourseCompleted && course.teacherId) {
-        try {
-            await Notification.create({
-                userId: course.teacherId,
-                type: 'course',
-                title: 'Student Completed Course',
-                content: `${user.fullName} has completed 100% of your course "${course.title}"`,
-                link: `/courses/${courseId}/analytics`,
-                isRead: false,
-            });
-            
-             // Real-time socket for teacher
-            if (req.io) {
-                 req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
-                    type: 'course',
-                    title: 'Student Completed Course',
-                    message: `${user.fullName} has completed 100% of your course "${course.title}"`,
-                 });
-            }
-        } catch (errNotify) {
-            console.error('Failed to notify teacher of course completion:', errNotify);
-        }
-    }
-
-    // Emit notification via socket (if available)
-    if (req.io) {
-      try {
-        req.io.of("/notification").to(userId.toString()).emit("notification:new", {
+    // Create notification for lesson completion (ONLY IF NEWLY COMPLETED)
+    if (!wasCompleted) {
+        const course = await Course.findById(courseId);
+        
+        await Notification.create({
+          userId,
           type: 'progress',
           title: 'Lesson Completed!',
-          message: `Progress: ${completedCount}/${totalLessons} lessons`,
+          content: `You completed "${lesson.title}" in ${course?.title}. Progress: ${completedCount}/${totalLessons} lessons`,
+          link: `/courses/${courseId}/lessons/${lessonId}`,
+          isRead: false,
         });
-
-        // Emit socket
-        req.io.of("/progress").emit("progress:updated", {
-          userId,
-          lessonId,
-          progress,
-          courseCompleted: isCourseCompleted,
-          completedCount,
-          totalLessons,
-        });
-      } catch (socketErr) {
-        console.error('Socket emit error:', socketErr);
-      }
+    
+        // If Course is fully completed (100%), notify the Teacher
+        if (isCourseCompleted && course.teacherId) {
+            try {
+                await Notification.create({
+                    userId: course.teacherId,
+                    type: 'course',
+                    title: 'Student Completed Course',
+                    content: `${user.fullName} has completed 100% of your course "${course.title}"`,
+                    link: `/courses/${courseId}/analytics`,
+                    isRead: false,
+                });
+                
+                 // Real-time socket for teacher
+                if (req.io) {
+                     req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
+                        type: 'course',
+                        title: 'Student Completed Course',
+                        message: `${user.fullName} has completed 100% of your course "${course.title}"`,
+                        courseId: courseId,
+                     });
+                }
+            } catch (errNotify) {
+                console.error('Failed to notify teacher of course completion:', errNotify);
+            }
+        } else if (course.teacherId) {
+            // Also notify teacher for individual lesson completion
+            try {
+                 await Notification.create({
+                    userId: course.teacherId,
+                    type: 'progress',
+                    title: 'Student Completed Lesson',
+                    content: `${user.fullName} has completed lesson "${lesson.title}" in "${course.title}"`,
+                    link: `/courses/${courseId}/analytics`,
+                    isRead: false,
+                });
+    
+                if (req.io) {
+                     req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
+                        type: 'progress',
+                        title: 'progress', // Frontend expects 'type' often to be just 'progress' for icon? Or maybe title? 
+                        title: 'Student Completed Lesson',
+                        message: `${user.fullName} completed "${lesson.title}"`,
+                        courseId: courseId,
+                     });
+                }
+            } catch (errNotify) {
+                 console.error('Failed to notify teacher of lesson completion:', errNotify);
+            }
+        }
+    
+        // Emit notification via socket (if available) - Student
+        if (req.io) {
+          try {
+            req.io.of("/notification").to(userId.toString()).emit("notification:new", {
+              type: 'progress',
+              title: 'Lesson Completed!',
+              content: `Progress: ${completedCount}/${totalLessons} lessons`,
+            });
+          } catch (socketErr) {
+            console.error('Socket emit error:', socketErr);
+          }
+        }
+    }
+    
+    // Always emit progress:updated
+    if (req.io) {
+         req.io.of("/progress").emit("progress:updated", {
+           userId,
+           lessonId,
+           progress,
+           courseCompleted: isCourseCompleted,
+           completedCount,
+           totalLessons,
+         });
     }
 
     return res.json({

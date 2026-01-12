@@ -5,6 +5,7 @@ import { useCourses } from '../../contexts/CoursesContext';
 import { useDiscussions } from '../../contexts/DiscussionContext';
 import api from '../../services/api';
 import toast from '../../services/toastService';
+import socketService from '../../services/socketService';
 import styles from './courseDetail.module.css';
 import CourseContentAccordion from '../../components/course/CourseContentAccordion.jsx';
 import DiscussionModal from '../../components/discussion/DiscussionModal.jsx';
@@ -172,6 +173,39 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
     };
 
     loadSessions();
+
+    // Listen for realtime updates
+    // Assuming socketService is available globally or imported
+    // The backend emits 'notification:new' with type 'session_live' or 'session_ended'
+    // to the 'course:{id}' room which the user auto-joins on connection if enrolled.
+    const handleNotification = (data) => {
+      if (
+        data.courseId === course._id &&
+        (data.type === 'session_live' || data.type === 'session_ended' || data.type === 'session_created')
+      ) {
+        console.log('Refreshing sessions due to socket event:', data.type);
+        loadSessions();
+      }
+    };
+
+    // We need to import socketService to use it here. 
+    // Since we can't easily add import at top with this tool, 
+    // we'll assume it's passed or try to use window if exposed, 
+    // OR BETTER: rely on the user having imported it (which we need to check/do)
+    // Actually, looking at the file context, socketService is NOT imported in CourseDetail.jsx
+    // Wait, let me check the imports.
+    // ... Checked imports: import api ... import toast ...
+    // Need to add import socketService from '../../services/socketService';
+    // But I'm inside a function component.
+
+    // Using import() dynamically inside useEffect is possible but hacky.
+    // Better to modify the file imports first.
+    // For now, I will use the imported context's socket if available or just import it.
+    // Wait, I see `import { useDiscussions } from ...` which uses socketService internally.
+    // I should fix imports separately. For now, let's just use the `socketService` from global scope if possible? No.
+    // I will add the import in a separate step or assume I can add it now?
+    // I CANNOT add imports with this tool easily in the same step.
+    // I will skip adding the listener logic here and do it properly by adding the import first.
   }, [course?._id, isEnrolled]);
 
   return (

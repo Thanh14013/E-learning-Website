@@ -114,10 +114,48 @@ export const NotificationProvider = ({ children }) => {
      * Handle real-time new notification from Socket.IO
      * Adds notification to top of list and increments unread count
      */
+    /**
+     * Handle real-time new notification from Socket.IO
+     * Adds notification to top of list and increments unread count
+     */
     const handleNew = (notification) => {
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((c) => c + 1);
-      // Toast notification is already handled by socketService
+      // Handle different notification types that might be coming through this channel
+      // due to how backend emits sendNotificationToUser/Course
+      if (notification.type === 'notification_deleted') {
+        if (notification.id) {
+          handleDelete({ id: notification.id });
+        } else if (notification.notification?.id) {
+          handleDelete({ id: notification.notification.id });
+        }
+        return;
+      }
+
+      if (notification.type === 'notification_updated') {
+        if (notification.notification) {
+          handleUpdate({ notification: notification.notification });
+        }
+        return;
+      }
+
+      // Standard new notification
+      setNotifications((prev) => {
+        // Prevent duplicates
+        if (prev.some(n => n._id === notification._id)) return prev;
+
+        // Only increment unread count if we are actually adding a new notification
+        // Use setTimeout to avoid side-effect warnings in render selection, though strictly this is a state update from an effect (socket listener) so it's fine to call setUnreadCount here but we need to do it conditionally.
+        // However, we can't see the result of the duplicate check outside. 
+        // So we update unread count via a separate check or inside this callback if possible (not recommended).
+        // Safest approach: check duplicates against current state ref or just queue the update.
+        // Since we are inside a functional update, we know 'prev' is fresh.
+
+        // Correct approach: We use a side-effect here for simplicity as we are already handling an event.
+        // But to be React-pure, we should probably do:
+        setTimeout(() => setUnreadCount(c => c + 1), 0);
+
+        return [notification, ...prev];
+      });
+      // Removing the outer setUnreadCount that was causing the duplicate count bug
     };
 
     /**
@@ -130,10 +168,13 @@ export const NotificationProvider = ({ children }) => {
     };
 
     /**
-     * Handle real-time notification updates (read status)
+     * Handle real-time notification updates (read status or other updates)
      */
     const handleUpdate = (payload) => {
-      const updated = payload.notification;
+      // payload might be the updated notification object directly or { notification: ... }
+      const updated = payload.notification || payload;
+      console.log('[NotificationContext] Socket update event for:', updated._id);
+
       setNotifications(prev => prev.map(n => n._id === updated._id ? { ...n, ...updated } : n));
     };
 
@@ -141,8 +182,19 @@ export const NotificationProvider = ({ children }) => {
      * Handle real-time notification deletion
      */
     const handleDelete = (payload) => {
-      const id = payload.id;
-      setNotifications(prev => prev.filter(n => n._id !== id));
+      // payload might be { id: ... } or just "id" string if called internally 
+      // but usually from socket it's { id: ... }
+      const id = payload.id || payload;
+      console.log('[NotificationContext] Socket delete event for:', id);
+
+      setNotifications((prev) => {
+        const exists = prev.find(n => n._id === id);
+        // If it was unread, decrement the count
+        if (exists && !exists.isRead) {
+          setUnreadCount((c) => Math.max(0, c - 1));
+        }
+        return prev.filter(n => n._id !== id);
+      });
     };
 
     /**
@@ -187,6 +239,10 @@ export const NotificationProvider = ({ children }) => {
    */
   const markRead = async (id) => {
     try {
+      // Check if already read/marked locally to prevent double submission
+      const target = notifications.find(n => n._id === id);
+      if (target && target.isRead) return;
+
       await notificationService.markRead(id);
       setNotifications((prev) =>
         prev.map((n) => (n._id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
@@ -194,6 +250,7 @@ export const NotificationProvider = ({ children }) => {
       setUnreadCount((c) => Math.max(0, c - 1));
     } catch (error) {
       console.error('[NotificationContext] Failed to mark notification as read:', error);
+      // Only toast if it's a real error, not just "already read" (which we filtered, but maybe race condition)
       toastService.error('Unable to mark as read');
     }
   };

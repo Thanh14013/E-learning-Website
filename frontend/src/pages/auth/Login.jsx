@@ -60,21 +60,31 @@ const Login = () => {
   }, [googleClientId]);
 
   useEffect(() => {
-    if (!googleReady || !googleClientId || !googleButtonRef.current) return;
+    // We need googleReady and googleClientId to initialize
+    if (!googleReady || !googleClientId) return;
     if (!window.google?.accounts?.id) return;
 
-    window.google.accounts.id.initialize({
-      client_id: googleClientId,
-      callback: (response) => handleGoogleCredential(response),
-    });
+    try {
+      // Initialize always
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response) => handleGoogleCredential(response),
+      });
 
-    window.google.accounts.id.renderButton(googleButtonRef.current, {
-      theme: "outline",
-      size: "large",
-      type: "standard",
-      shape: "pill",
-      text: "continue_with",
-    });
+      // Validating if we have the ref before rendering the standard button
+      // But for custom button (prompt), we just need initialize
+      if (googleButtonRef.current) {
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "outline",
+          size: "large",
+          type: "standard",
+          shape: "pill",
+          text: "continue_with",
+        });
+      }
+    } catch (err) {
+      console.error("Google Sign-In initialization failed:", err);
+    }
   }, [googleReady, googleClientId]);
 
   const handlePostLogin = (user) => {
@@ -145,8 +155,19 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
+    // Check for client ID availability first to prevent GSI crash
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+      setError("Google Login is not configured (missing client ID).");
+      return;
+    }
+
     if (window.google && window.google.accounts && window.google.accounts.id) {
-      window.google.accounts.id.prompt();
+      try {
+        window.google.accounts.id.prompt();
+      } catch (err) {
+        console.error("Google Prompt Error:", err);
+        setError("Google Login error. check console.");
+      }
     } else {
       setError("Google SSO is not ready. Please try again.");
     }

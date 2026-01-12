@@ -183,9 +183,9 @@ export default function StudentHeader() {
                                   <div className={styles.notifTitleText}>
                                     {n.title || "Notification"}
                                   </div>
-                                  {n.content && (
+                                  {(n.content || n.message) && (
                                     <div className={styles.notifDesc}>
-                                      {n.content}
+                                      {n.content || n.message}
                                     </div>
                                   )}
                                 </div>
