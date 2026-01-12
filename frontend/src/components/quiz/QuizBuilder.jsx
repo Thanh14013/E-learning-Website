@@ -86,41 +86,53 @@ export default function QuizBuilder({ courseId, quizId = null, lessonId = null, 
         try {
             setSaving(true);
 
-            if (quizId) {
-                // Update existing quiz
-                await api.put(`/teacher/quizzes/${quizId}`, quizData);
-                toastService.success('Quiz updated successfully');
+            let currentQuizId = quizId;
+
+            // 1. Save or Create Quiz
+            if (currentQuizId) {
+                await api.put(`/teacher/quizzes/${currentQuizId}`, quizData);
             } else {
-                // Create new quiz
                 const response = await api.post('/teacher/quizzes', quizData);
-                const newQuizId = response.data.quiz._id;
+                currentQuizId = response.data.quiz._id;
+            }
 
-                // Create questions for the new quiz
-                for (const q of questions) {
-                    // Transform frontend data to backend format
-                    const backendQuestion = {
-                        quizId: newQuizId,
-                        type: q.type,
-                        questionText: q.question, // Map 'question' to 'questionText'
-                        explanation: q.explanation,
-                        order: q.order // If we supported manual order in frontend
-                    };
+            // 2. Save Questions
+            const questionPromises = questions.map((q, index) => {
+                // Transform frontend data to backend format
+                const backendQuestion = {
+                    quizId: currentQuizId,
+                    type: q.type,
+                    questionText: q.question || q.questionText,
+                    explanation: q.explanation,
+                    order: index + 1
+                };
 
-                    if (q.type === 'multiple_choice') {
-                        backendQuestion.options = q.options;
+                if (q.type === 'multiple_choice') {
+                    backendQuestion.options = q.options;
+                    // If we have index, use it. fallback to finding by string.
+                    if (q.correctAnswerIndex !== undefined && q.correctAnswerIndex !== null) {
+                        backendQuestion.correctOption = q.correctAnswerIndex;
+                    } else {
                         backendQuestion.correctOption = q.options.indexOf(q.correctAnswer);
-                    } else if (q.type === 'true_false') {
-                        // Ensure boolean
-                        backendQuestion.correctBoolean = q.correctAnswer === 'true' || q.correctAnswer === true;
-                    } else if (q.type === 'fill_blank') {
-                        backendQuestion.correctText = q.correctAnswer;
                     }
-
-                    await api.post(`/teacher/questions/quiz/${newQuizId}`, backendQuestion);
+                } else if (q.type === 'true_false') {
+                    backendQuestion.correctBoolean = q.correctAnswer === 'true' || q.correctAnswer === true;
+                } else if (q.type === 'fill_blank') {
+                    backendQuestion.correctText = q.correctAnswer;
                 }
 
-                toastService.success('Quiz created successfully');
-            }
+                if (q._id) {
+                    // Update existing question
+                    return api.put(`/teacher/questions/${q._id}`, backendQuestion);
+                } else {
+                    // Create new question
+                    return api.post(`/teacher/questions/quiz/${currentQuizId}`, backendQuestion);
+                }
+            });
+
+            await Promise.all(questionPromises);
+
+            toastService.success(quizId ? 'Quiz updated successfully' : 'Quiz created successfully');
 
             if (onClose) {
                 onClose();
@@ -145,11 +157,26 @@ export default function QuizBuilder({ courseId, quizId = null, lessonId = null, 
         setShowQuestionModal(true);
     };
 
-    const handleDeleteQuestion = (index) => {
-        if (window.confirm('Are you sure you want to delete this question?')) {
-            setQuestions(prev => prev.filter((_, i) => i !== index));
-            toastService.success('Question deleted');
+    const handleDeleteQuestion = async (index) => {
+        if (!window.confirm('Are you sure you want to delete this question?')) {
+            return;
         }
+
+        const questionToDelete = questions[index];
+
+        // If question has _id, delete from backend
+        if (questionToDelete._id) {
+            try {
+                await api.delete(`/teacher/questions/${questionToDelete._id}`);
+            } catch (error) {
+                console.error('Error deleting question:', error);
+                toastService.error('Failed to delete question');
+                return;
+            }
+        }
+
+        setQuestions(prev => prev.filter((_, i) => i !== index));
+        toastService.success('Question deleted');
     };
 
     const handleSaveQuestion = (questionData) => {
@@ -320,8 +347,8 @@ function QuestionModal({ question, onSave, onClose }) {
             explanation: ''
         };
 
-        if (initialData.type === 'multiple_choice' && 
-            initialData.correctAnswer && 
+        if (initialData.type === 'multiple_choice' &&
+            initialData.correctAnswer &&
             (initialData.correctAnswerIndex === undefined || initialData.correctAnswerIndex === null)) {
             initialData.correctAnswerIndex = initialData.options.indexOf(initialData.correctAnswer);
         }
@@ -346,11 +373,11 @@ function QuestionModal({ question, onSave, onClose }) {
         }));
     };
 
-const handleRemoveOption = (indexToRemove) => {
+    const handleRemoveOption = (indexToRemove) => {
         setQuestionData(prev => {
             const newOptions = prev.options.filter((_, i) => i !== indexToRemove);
             let newCorrectIndex = prev.correctAnswerIndex;
-            
+
             if (prev.correctAnswerIndex === indexToRemove) {
                 newCorrectIndex = null;
             } else if (prev.correctAnswerIndex > indexToRemove) {
@@ -364,7 +391,7 @@ const handleRemoveOption = (indexToRemove) => {
         });
     };
 
-const handleSubmit = () => {
+    const handleSubmit = () => {
         if (!questionData.question.trim()) {
             toastService.error('Please enter a question');
             return;
@@ -384,7 +411,7 @@ const handleSubmit = () => {
         onSave(questionData);
     };
 
-return (
+    return (
         <Modal isOpen onClose={onClose} >
             <div className={styles.questionModal}>
                 <h3>{question ? 'Edit Question' : 'Add New Question'}</h3>
@@ -430,8 +457,8 @@ return (
                     <div className={styles.formGroup}>
                         <label>Options</label>
                         {questionData.options.map((option, index) => (
-                            <div 
-                                key={index} 
+                            <div
+                                key={index}
                                 // Sử dụng index để so sánh class
                                 className={`${styles.optionRow} ${questionData.correctAnswerIndex === index ? styles.isCorrect : ''}`}
                             >

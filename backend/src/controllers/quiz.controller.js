@@ -144,32 +144,39 @@ export const getQuizDetail = async (req, res) => {
     }
 
     let isEnrolled = false;
+    let isTeacherOrAdmin = false;
 
     if (userId) {
-      const user = await User.findById(userId);
-      console.log("🔍 [QUIZ] Check enrollment:");
-      console.log("   User:", user?.fullName, `(${userId})`);
-      console.log("   Course:", quiz.courseId.title);
-      console.log("   CourseId:", quiz.courseId._id.toString());
-      console.log(
-        "   Enrolled:",
-        user?.enrolledCourses?.map((c) => c.toString())
-      );
+      if (req.user?.role === "admin") {
+        isTeacherOrAdmin = true;
+      } else {
+        const user = await User.findById(userId);
+        console.log("🔍 [QUIZ] Check enrollment:");
+        console.log("   User:", user?.fullName, `(${userId})`);
+        console.log("   Course:", quiz.courseId.title);
+        console.log("   CourseId:", quiz.courseId._id.toString());
+        console.log("   TeacherId:", quiz.courseId.teacherId.toString());
 
-      isEnrolled = user?.enrolledCourses?.some(
-        (courseObjId) => courseObjId.toString() === quiz.courseId._id.toString()
-      );
+        isEnrolled = user?.enrolledCourses?.some(
+          (courseObjId) => courseObjId.toString() === quiz.courseId._id.toString()
+        );
 
-      console.log("   ✅ Result:", isEnrolled);
+        if (String(quiz.courseId.teacherId) === String(userId)) {
+          isTeacherOrAdmin = true;
+          console.log("   ✅ User is the Teacher/Owner");
+        }
+        
+        console.log("   ✅ Enrolled:", isEnrolled);
+      }
     }
 
     let questions = [];
 
-    if (isEnrolled) {
+    if (isEnrolled || isTeacherOrAdmin) {
       questions = await Question.find({ quizId }).sort({ order: 1 }).lean();
       console.log("   📝 Questions:", questions.length);
     } else {
-      console.log("   ❌ Blocked - not enrolled");
+      console.log("   ❌ Blocked - not enrolled or authorized");
     }
 
     // Prevent caching for quiz questions (enrollment status may change)
@@ -181,7 +188,7 @@ export const getQuizDetail = async (req, res) => {
       success: true,
       data: {
         quiz,
-        canViewQuestions: isEnrolled,
+        canViewQuestions: isEnrolled || isTeacherOrAdmin,
         questions,
       },
     });
