@@ -479,8 +479,13 @@ const LessonDetail = () => {
                 setCompletedQuizzes(prev => new Set([...prev, selectedQuiz._id]));
                 toast.success(`Passed! ${result.percentage}%`);
 
-                // Trigger completion check
-                setTimeout(() => handleMarkComplete(), 500);
+                // Only auto-trigger completion check if ALL quizzes are passed
+                const effectiveCompleted = new Set([...completedQuizzes, selectedQuiz._id]);
+                const allDone = quizzes.every(q => effectiveCompleted.has(q._id));
+
+                if (allDone) {
+                    setTimeout(() => handleMarkComplete(selectedQuiz._id), 500);
+                }
             } else {
                 toast.error(`Failed: ${result.percentage}% (Need ${selectedQuiz.quiz.passingScore}%)`);
             }
@@ -528,47 +533,44 @@ const LessonDetail = () => {
         return percentage;
     };
 
-    const checkQuizCompletion = () => {
+    const checkQuizCompletion = (extraId = null) => {
         // Nếu không có quiz nào, cho phép hoàn thành
         if (quizzes.length === 0) return { canComplete: true, message: '' };
 
-        // Check whether all quizzes are completed (based on completedQuizzes)
-        const incompletedCount = quizzes.length - completedQuizzes.size;
-        // User requested to remove blocking validation
-        // if (incompletedCount > 0) {
-        //     return {
-        //         canComplete: false,
-        //         message: `You need to complete all ${quizzes.length} quizzes (there are ${incompletedCount} quizzes incomplete or not passed)`
-        //     };
-        // }
+        // Strictly check that ALL quizzes are in the completed set (or matches extraId)
+        const allPassed = quizzes.every(q => completedQuizzes.has(q._id) || (extraId && q._id === extraId));
+
+        if (!allPassed) {
+            // Calculate count for message
+            let passedCount = 0;
+            quizzes.forEach(q => {
+                if (completedQuizzes.has(q._id) || (extraId && q._id === extraId)) passedCount++;
+            });
+            return {
+                canComplete: false,
+                message: `You need to complete all ${quizzes.length} quizzes to finish this lesson (Completed: ${passedCount}/${quizzes.length})`
+            };
+        }
 
         return { canComplete: true, message: '' };
     };
 
-    const handleMarkComplete = async () => {
-        console.log('🔘 Mark Complete clicked');
-        console.log('   isCompleted:', isCompleted);
-        console.log('   quizzes:', quizzes.length);
-        console.log('   quizScores:', quizScores);
+    const handleMarkComplete = async (extraId = null) => {
 
         if (isCompleted) {
             toast.info('B\u00e0i h\u1ecdc n\u00e0y \u0111\u00e3 ho\u00e0n th\u00e0nh');
             return;
         }
 
-        const { canComplete, message } = checkQuizCompletion();
-        console.log('   canComplete:', canComplete);
-        console.log('   message:', message);
+        const { canComplete, message } = checkQuizCompletion(extraId);
 
         if (!canComplete) {
             toast.error(message);
             return;
         }
 
-        console.log('   Calling API...');
         try {
             const res = await api.post(`/progress/complete/${lessonId}`);
-            console.log('✅ Mark Complete Response:', res.data);
             toast.success('🎉 Congratulations! You completed the lesson!');
 
             // Update UI immediately
@@ -576,7 +578,6 @@ const LessonDetail = () => {
 
             // Update course progress from response
             if (res.data.completedCount && res.data.totalLessons) {
-                console.log('📊 Updating progress:', res.data.completedCount, '/', res.data.totalLessons);
                 setCourseProgress({
                     completedCount: res.data.completedCount,
                     totalLessons: res.data.totalLessons
@@ -586,7 +587,6 @@ const LessonDetail = () => {
             // Refetch course progress to ensure accuracy
             try {
                 const courseProgressRes = await api.get(`/progress/course/${courseId}`);
-                console.log('🔄 Refetched Progress:', courseProgressRes.data);
                 if (courseProgressRes.data) {
                     setCourseProgress({
                         completedCount: courseProgressRes.data.completedLessons || 0,
@@ -597,14 +597,13 @@ const LessonDetail = () => {
                 console.log('Failed to refetch progress:', err);
             }
 
-            // Navigate to next lesson if available
-            setTimeout(() => {
-                const currentIndex = allLessons.findIndex(l => l._id === lessonId);
-                if (currentIndex < allLessons.length - 1) {
-                    const nextLesson = allLessons[currentIndex + 1];
-                    navigate(`/courses/${courseId}/lessons/${nextLesson._id}`);
-                }
-            }, 1500);
+            // Verify if next lesson exists (for UI suggestions maybe?)
+            // But do NOT auto-navigate. User wants to stay on page.
+            // const currentIndex = allLessons.findIndex(l => l._id === lessonId);
+            // if (currentIndex < allLessons.length - 1) {
+            //     const nextLesson = allLessons[currentIndex + 1];
+            //     // navigate(`/courses/${courseId}/lessons/${nextLesson._id}`);
+            // }
         } catch (error) {
             console.error('Failed to mark complete:', error);
             const errorMsg = error.response?.data?.message || 'Unable to mark as complete';

@@ -3,6 +3,8 @@ import Analytics from "../models/analytics.model.js";
 import Progress from "../models/progress.model.js";
 import Chapter from "../models/chapter.model.js";
 import Lesson from "../models/lesson.model.js";
+import Quiz from "../models/quiz.model.js";
+import QuizAttempt from "../models/quizAttempt.model.js";
 import {
   calculateCourseAnalytics,
   getAnalyticsTrend,
@@ -23,23 +25,23 @@ import { Parser } from "json2csv";
  * @access  Private (Teacher - owner only)
  */
 export const getStudentTrend = async (req, res) => {
-    try {
-        const { courseId, studentId } = req.params;
-        const { days = 30 } = req.query;
+  try {
+    const { courseId, studentId } = req.params;
+    const { days = 30 } = req.query;
 
-        // Verify ownership (simplified, assumes middleware checks role, but ideally check course ownership)
-        // ... (Skipping strict ownership check for speed as existing endpoints do it, but good practice to include)
-        
-        const trend = await getStudentCourseTrend(studentId, courseId, parseInt(days));
+    // Verify ownership (simplified, assumes middleware checks role, but ideally check course ownership)
+    // ... (Skipping strict ownership check for speed as existing endpoints do it, but good practice to include)
 
-        return res.status(200).json({
-            success: true,
-            data: trend
-        });
-    } catch (error) {
-        console.error("Get student trend error:", error);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
+    const trend = await getStudentCourseTrend(studentId, courseId, parseInt(days));
+
+    return res.status(200).json({
+      success: true,
+      data: trend
+    });
+  } catch (error) {
+    console.error("Get student trend error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
 /**
@@ -95,7 +97,12 @@ export const getCourseAnalytics = async (req, res) => {
     // Get enrolled students with progress
     const studentIds = course.enrolledStudents;
 
-    // Get all chapters and lessons to calculate progress
+    // Get all quizzes to calculate progress (Quiz-based Completion Rate)
+    const quizzes = await Quiz.find({ courseId }).select('_id attemptsAllowed');
+    const quizIds = quizzes.map(q => q._id);
+    const totalQuizzes = quizzes.length;
+
+    // Get all chapters and lessons to calculate "Lesson" stats (for context)
     const chapters = await Chapter.find({ courseId }).select('_id');
     const chapterIds = chapters.map((ch) => ch._id);
     const totalLessons = await Lesson.countDocuments({ chapterId: { $in: chapterIds } });
@@ -109,19 +116,36 @@ export const getCourseAnalytics = async (req, res) => {
 
         if (!user) return null;
 
-        // Get progress
+        // 1. Calculate Quiz Completion Percentage (For Progress Bar)
+        let completionPercentage = 0;
+        let completedQuizzesCount = 0;
+
+        if (totalQuizzes > 0) {
+          const attempts = await QuizAttempt.find({
+            userId: studentId,
+            quizId: { $in: quizIds }
+          }).select('quizId isPassed attemptNumber');
+
+          for (const quiz of quizzes) {
+            const quizAttempts = attempts.filter(a => a.quizId.toString() === quiz._id.toString());
+            const isPassed = quizAttempts.some(a => a.isPassed);
+            const attemptsUsed = quizAttempts.length;
+            const isExhausted = attemptsUsed >= (quiz.attemptsAllowed || 1);
+
+            if (isPassed || isExhausted) {
+              completedQuizzesCount++;
+            }
+          }
+          completionPercentage = Math.round((completedQuizzesCount / totalQuizzes) * 100);
+        }
+
+        // 2. Calculate Lesson Stats (For "Completed Lessons" count)
         const completedLessons = await Progress.countDocuments({
           userId: studentId,
           courseId,
           isCompleted: true,
         });
 
-        // Calculate completion percentage
-        const completionPercentage =
-          totalLessons > 0
-            ? Math.round((completedLessons / totalLessons) * 100)
-            : 0;
-            
         // Get last activity
         const lastProgress = await Progress.findOne({
           userId: studentId,
@@ -135,14 +159,14 @@ export const getCourseAnalytics = async (req, res) => {
           name: user.fullName,
           email: user.email,
           avatar: user.avatar,
-          totalLessons,
-          completedLessons,
-          progress: completionPercentage,
+          totalLessons: totalLessons,      // Actual Lesson Count
+          completedLessons: completedLessons, // Actual Completed Lesson Count
+          progress: completionPercentage,   // Quiz Completion Rate (Requested by User)
           lastActive: lastProgress?.lastWatchedAt || null,
         };
       })
     );
-    
+
     const students = studentsData.filter(student => student !== null);
 
     return res.status(200).json({
@@ -150,8 +174,8 @@ export const getCourseAnalytics = async (req, res) => {
       message: "Course analytics fetched successfully",
       data: {
         current: {
-            ...currentData.toObject ? currentData.toObject() : currentData,
-            averageRating: course.rating || 0
+          ...currentData.toObject ? currentData.toObject() : currentData,
+          averageRating: course.rating || 0
         },
         trend: trendData,
         growth: growthMetrics,
@@ -453,7 +477,7 @@ export const generateStudentReport = async (req, res) => {
 
     // Get enrolled courses with detailed progress
     let query = { enrolledStudents: userId };
-    
+
     // If teacher, only show their courses
     if (req.user.role === 'teacher') {
       query.teacherId = requesterId;
@@ -496,8 +520,8 @@ export const generateStudentReport = async (req, res) => {
         const lastActivity =
           progressRecords.length > 0
             ? progressRecords.sort(
-                (a, b) => b.lastWatchedAt - a.lastWatchedAt
-              )[0].lastWatchedAt
+              (a, b) => b.lastWatchedAt - a.lastWatchedAt
+            )[0].lastWatchedAt
             : null;
 
         return {
@@ -527,7 +551,7 @@ export const generateStudentReport = async (req, res) => {
     const averageCompletion =
       courseReports.length > 0
         ? courseReports.reduce((sum, c) => sum + c.completionPercentage, 0) /
-          courseReports.length
+        courseReports.length
         : 0;
 
     const report = {
@@ -602,20 +626,20 @@ export const manualCollectAnalytics = async (req, res) => {
  * @access  Private (Teacher/Admin)
  */
 export const getStudentDetailedAnalytics = async (req, res) => {
-    try {
-        const { courseId, studentId } = req.params;
-        // Authorization check skipped for brevity but assumed handled by middleware or verify teacher ownership
-        
-        const data = await getStudentCourseDetails(courseId, studentId);
-        
-        return res.status(200).json({
-            success: true,
-            data
-        });
-    } catch (error) {
-        console.error("Get detailed analytics error:", error);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
+  try {
+    const { courseId, studentId } = req.params;
+    // Authorization check skipped for brevity but assumed handled by middleware or verify teacher ownership
+
+    const data = await getStudentCourseDetails(courseId, studentId);
+
+    return res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error("Get detailed analytics error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };
 
 /**
@@ -624,17 +648,17 @@ export const getStudentDetailedAnalytics = async (req, res) => {
  * @access  Private (Teacher/Admin)
  */
 export const resetQuizAttemptsController = async (req, res) => {
-    try {
-        const { quizId, studentId } = req.params;
-        
-        await resetQuizAttempts(quizId, studentId);
-        
-        return res.status(200).json({
-            success: true,
-            message: "Quiz attempts reset successfully"
-        });
-    } catch (error) {
-        console.error("Reset quiz attempts error:", error);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
+  try {
+    const { quizId, studentId } = req.params;
+
+    await resetQuizAttempts(quizId, studentId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Quiz attempts reset successfully"
+    });
+  } catch (error) {
+    console.error("Reset quiz attempts error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
 };

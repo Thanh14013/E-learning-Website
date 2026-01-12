@@ -1137,9 +1137,11 @@ export const getStudentCourseDetails = async (courseId, studentId) => {
     const completedLessons = progressList.filter(p => p.isCompleted).length;
 
     // Quiz-based completion rate: quizzes that can't be retaken (passed OR exhausted attempts)
+    // Quiz-based completion rate: quizzes that can't be retaken (passed OR exhausted attempts)
     const completedQuizzes = quizzesData.filter(q =>
       q.isPassed || (q.attemptsUsed >= q.attemptsAllowed && q.attemptsUsed > 0)
     ).length;
+
     const quizCompletionRate = quizzes.length > 0 ? (completedQuizzes / quizzes.length) * 100 : 0;
 
     const totalWatchTime = progressList.reduce((sum, p) => sum + (p.watchedDuration || 0), 0);
