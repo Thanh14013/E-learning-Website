@@ -32,17 +32,17 @@ export const calculateCourseAnalytics = async (courseId, date) => {
     // Use QuizAttempt instead of Progress
     // Use QuizAttempt to calculate active students
 
-    
+
     // Allow me to query efficiently. 
     // Optimization: QuizAttempt doesn't have courseId. Quiz has courseId.
     // So: Find quizzes for course -> Find attempts for those quizzes.
     const courseQuizIds = await (await import("../models/quiz.model.js")).default.distinct("_id", { courseId });
-    
+
     const activeStudentsCount = await QuizAttempt.distinct("userId", {
       quizId: { $in: courseQuizIds },
       updatedAt: { $gte: sevenDaysAgo, $lte: date } // updatedAt implies "completed" or "attempted" recently
     });
-    
+
     const activeStudents = activeStudentsCount.length;
 
     // Get all chapters and lessons
@@ -59,10 +59,60 @@ export const calculateCourseAnalytics = async (courseId, date) => {
     });
 
     // Calculate completion rate
+    // Calculate completion rate based on Quizzes (Average of all students' completion rate)
+    // Formula: Sum(StudentCompletedQuizzes / TotalQuizzes) / TotalStudents
     let completionRate = 0;
-    if (totalStudents > 0 && totalLessons > 0) {
-      const totalPossibleCompletions = totalStudents * totalLessons;
-      completionRate = (completedLessons / totalPossibleCompletions) * 100;
+
+    // Get all quizzes for this course
+    const allCourseQuizzes = await (await import("../models/quiz.model.js")).default.find({ courseId }).select('_id attemptsAllowed');
+    const totalQuizzesCount = allCourseQuizzes.length;
+
+    // Count passed/exhausted quizzes for each enrolled student
+    // Optimization involves complex aggregation, doing simplified loop for now as specific student progress is needed
+    // NOTE: For scale, this should be an aggregation pipeline
+
+    if (totalStudents > 0 && totalQuizzesCount > 0) {
+      if (!course.enrolledStudents || course.enrolledStudents.length === 0) {
+        completionRate = 0;
+      } else {
+        // We need to fetch attempts for these students
+        // Let's aggregate: Group by userId, quizId.
+        const quizIds = allCourseQuizzes.map(q => q._id);
+
+        // Find all attempts for this course's quizzes by enrolled students
+        const allAttempts = await QuizAttempt.find({
+          quizId: { $in: quizIds },
+          userId: { $in: course.enrolledStudents }
+        }).select('userId quizId isPassed attemptNumber');
+
+        // Calculate per student
+        let totalPercentSum = 0;
+
+        for (const sId of course.enrolledStudents) {
+          const sAttempts = allAttempts.filter(a => a.userId.toString() === sId.toString());
+          let sCompletedCount = 0;
+
+          for (const quiz of allCourseQuizzes) {
+            const qAttempts = sAttempts.filter(a => a.quizId.toString() === quiz._id.toString());
+            const isPassed = qAttempts.some(a => a.isPassed);
+            const isExhausted = qAttempts.length >= (quiz.attemptsAllowed || 1);
+
+            if (isPassed || isExhausted) sCompletedCount++;
+          }
+
+          totalPercentSum += (sCompletedCount / totalQuizzesCount);
+        }
+
+        completionRate = (totalPercentSum / totalStudents) * 100;
+      }
+    } else if (totalStudents > 0 && totalQuizzesCount === 0) {
+      // If no quizzes, maybe fall back to lesson completion? 
+      // User asked specifically for logic "like detail", which is quiz based.
+      // If no quizzes, completion rate is arguably 100% or 0% depending on definition.
+      // Let's align with lesson completion if no quizzes exist, or just 0. 
+      // Detailed view says 0/0 quizzes.
+      // Let's keep 0 to likely prompt teacher to add quizzes.
+      completionRate = 0;
     }
 
     // Calculate average score (if quizzes exist, placeholder for now)
@@ -208,7 +258,7 @@ export const getAnalyticsTrend = async (courseId, days = 7) => {
     const chapterIds = chapters.map(ch => ch._id);
     const totalLessons = await Lesson.countDocuments({ chapterId: { $in: chapterIds } });
     const currentTotalStudents = course.enrolledStudents?.length || 0;
-    
+
     // Get all progress for this course
     const allProgress = await Progress.find({ courseId }).select('userId isCompleted updatedAt');
 
@@ -216,17 +266,17 @@ export const getAnalyticsTrend = async (courseId, days = 7) => {
     for (let i = days - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const startOfDay = new Date(d.setHours(0,0,0,0));
-      const endOfDay = new Date(d.setHours(23,59,59,999));
-      
+      const startOfDay = new Date(d.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(d.setHours(23, 59, 59, 999));
+
       dates.push(startOfDay);
 
       // 1. Active Students (Unique users with activity on this day)
       const activeUsers = new Set(
         allProgress
           .filter(p => {
-             const pDate = new Date(p.updatedAt);
-             return pDate >= startOfDay && pDate <= endOfDay;
+            const pDate = new Date(p.updatedAt);
+            return pDate >= startOfDay && pDate <= endOfDay;
           })
           .map(p => p.userId.toString())
       );
@@ -235,10 +285,10 @@ export const getAnalyticsTrend = async (courseId, days = 7) => {
       // 2. Completion Rate (Cumulative)
       // Count accumulated cancellations up to end of this day
       if (currentTotalStudents > 0 && totalLessons > 0) {
-        const completedCount = allProgress.filter(p => 
-            p.isCompleted && new Date(p.updatedAt) <= endOfDay
+        const completedCount = allProgress.filter(p =>
+          p.isCompleted && new Date(p.updatedAt) <= endOfDay
         ).length;
-        
+
         const possibleCompletions = currentTotalStudents * totalLessons;
         const rate = (completedCount / possibleCompletions) * 100;
         completionRateData.push(Math.round(rate * 100) / 100);
@@ -251,11 +301,11 @@ export const getAnalyticsTrend = async (courseId, days = 7) => {
       // a) Return flat current count
       // b) Count unique users who had strictly touched progress by this day (Proxy for "Started")
       // Let's use Option B for a nice growth curve, bounded by currentTotalStudents
-      
+
       const studentsStartedByNow = new Set(
         allProgress
-            .filter(p => new Date(p.updatedAt) <= endOfDay)
-            .map(p => p.userId.toString())
+          .filter(p => new Date(p.updatedAt) <= endOfDay)
+          .map(p => p.userId.toString())
       );
       // If a student joined but did nothing, B misses them. 
       // User likely wants to see the "Current" number mostly, but maybe linear growth?
@@ -266,7 +316,7 @@ export const getAnalyticsTrend = async (courseId, days = 7) => {
       // Compromise: Use current Total if > 0, else 0. 
       // Wait, user complained "Yesterday 0, Today 1".
       // Let's use the Proxy: Unique Users in Progress.
-      totalStudentsData.push(studentsStartedByNow.size); 
+      totalStudentsData.push(studentsStartedByNow.size);
     }
 
     return {
@@ -288,41 +338,41 @@ export const getAnalyticsTrend = async (courseId, days = 7) => {
  * @param {Number} days
  */
 export const getStudentCourseTrend = async (userId, courseId, days = 30) => {
-    try {
-        const dates = [];
-        const completionRateData = [];
-        
-        const chapters = await Chapter.find({ courseId }).select('_id');
-        const chapterIds = chapters.map(ch => ch._id);
-        const totalLessons = await Lesson.countDocuments({ chapterId: { $in: chapterIds } });
+  try {
+    const dates = [];
+    const completionRateData = [];
 
-        const studentProgress = await Progress.find({ userId, courseId, isCompleted: true }).select('updatedAt');
+    const chapters = await Chapter.find({ courseId }).select('_id');
+    const chapterIds = chapters.map(ch => ch._id);
+    const totalLessons = await Lesson.countDocuments({ chapterId: { $in: chapterIds } });
 
-        for (let i = days - 1; i >= 0; i--) {
-            const d = new Date();
-            d.setDate(d.getDate() - i);
-            const endOfDay = new Date(d.setHours(23,59,59,999));
-            dates.push(new Date(d.setHours(0,0,0,0))); // Start of day label
+    const studentProgress = await Progress.find({ userId, courseId, isCompleted: true }).select('updatedAt');
 
-            if (totalLessons === 0) {
-                completionRateData.push(0);
-                continue;
-            }
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const endOfDay = new Date(d.setHours(23, 59, 59, 999));
+      dates.push(new Date(d.setHours(0, 0, 0, 0))); // Start of day label
 
-            const completedCount = studentProgress.filter(p => new Date(p.updatedAt) <= endOfDay).length;
-            const rate = (completedCount / totalLessons) * 100;
-            completionRateData.push(Math.round(rate * 100) / 100);
-        }
+      if (totalLessons === 0) {
+        completionRateData.push(0);
+        continue;
+      }
 
-        return {
-            dates,
-            completionRate: completionRateData
-        };
-
-    } catch (error) {
-        console.error("Get student trend error:", error);
-        throw error;
+      const completedCount = studentProgress.filter(p => new Date(p.updatedAt) <= endOfDay).length;
+      const rate = (completedCount / totalLessons) * 100;
+      completionRateData.push(Math.round(rate * 100) / 100);
     }
+
+    return {
+      dates,
+      completionRate: completionRateData
+    };
+
+  } catch (error) {
+    console.error("Get student trend error:", error);
+    throw error;
+  }
 };
 
 /**
@@ -342,31 +392,31 @@ export const calculateGrowthMetrics = async (courseId, days = 7) => {
     const today = new Date();
     const currentStart = new Date();
     currentStart.setDate(today.getDate() - days);
-    
+
     const prevStart = new Date(currentStart);
     prevStart.setDate(prevStart.getDate() - days);
 
     // 1. Student Growth (Net change in new starters)
     // Find all progress for this course, sorted by date asc (to find first interaction)
     const allProgress = await Progress.find({ courseId }).sort({ createdAt: 1 });
-    
+
     // Map userId -> firstSeenDate
     const firstSeenMap = new Map();
     allProgress.forEach(p => {
-        if (!firstSeenMap.has(p.userId.toString())) {
-            firstSeenMap.set(p.userId.toString(), p.createdAt);
-        }
+      if (!firstSeenMap.has(p.userId.toString())) {
+        firstSeenMap.set(p.userId.toString(), p.createdAt);
+      }
     });
 
     let currentNew = 0;
     let prevNew = 0;
 
     firstSeenMap.forEach((date) => {
-        if (date >= currentStart && date <= today) {
-            currentNew++;
-        } else if (date >= prevStart && date < currentStart) {
-            prevNew++;
-        }
+      if (date >= currentStart && date <= today) {
+        currentNew++;
+      } else if (date >= prevStart && date < currentStart) {
+        prevNew++;
+      }
     });
 
     const studentsGrowth = currentNew - prevNew; // The "Number" user asked for (e.g. +4 or -3)
@@ -375,17 +425,17 @@ export const calculateGrowthMetrics = async (courseId, days = 7) => {
     // Distinct users with ANY progress activity in [currentStart, today]
     const activeUserIds = new Set();
     allProgress.forEach(p => {
-        // use updatedAt for activity
-        if (p.updatedAt >= currentStart && p.updatedAt <= today) {
-            activeUserIds.add(p.userId.toString());
-        }
+      // use updatedAt for activity
+      if (p.updatedAt >= currentStart && p.updatedAt <= today) {
+        activeUserIds.add(p.userId.toString());
+      }
     });
     const activeStudentsCount = activeUserIds.size;
 
     // 3. Completion Rate Growth (Optional/Removed from request but good to keep logic if needed, 
     // but user wanted to remove the card. I'll just return standard comparison or null.)
     // Let's just return 0 as placeholder since it's being removed.
-    
+
     return {
       studentsGrowth: studentsGrowth, // returns integer delta
       activeStudentsGrowth: activeStudentsCount, // returns count (User said "Active students... is the count")
@@ -457,7 +507,7 @@ export const getStudentStatistics = async (userId) => {
     const averageCompletion =
       courseProgress.length > 0
         ? courseProgress.reduce((sum, c) => sum + c.percentage, 0) /
-          courseProgress.length
+        courseProgress.length
         : 0;
 
     // Get quiz scores (placeholder)
@@ -476,7 +526,7 @@ export const getStudentStatistics = async (userId) => {
       lastActivity:
         progressData.length > 0
           ? progressData.sort((a, b) => b.lastWatchedAt - a.lastWatchedAt)[0]
-              .lastWatchedAt
+            .lastWatchedAt
           : null,
     };
   } catch (error) {
@@ -509,7 +559,7 @@ export const getTeacherDashboard = async (teacherId) => {
     const averageRating =
       coursesWithRating.length > 0
         ? coursesWithRating.reduce((sum, c) => sum + c.rating, 0) /
-          coursesWithRating.length
+        coursesWithRating.length
         : 0;
 
     // Get latest analytics for each course
@@ -521,10 +571,10 @@ export const getTeacherDashboard = async (teacherId) => {
 
         // If no analytics found, use lightweight fallback instead of heavy calculation
         if (!analyticsData) {
-            analyticsData = {
-                completionRate: 0,
-                activeStudents: 0
-            };
+          analyticsData = {
+            completionRate: 0,
+            activeStudents: 0
+          };
         }
 
         return {
@@ -546,12 +596,12 @@ export const getTeacherDashboard = async (teacherId) => {
     // Calculate New Discussions (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
+
     // Find discussions in these courses created recently
     const courseIds = courses.map(c => c._id);
     const newDiscussionsCount = await Discussion.countDocuments({
-        courseId: { $in: courseIds },
-        createdAt: { $gte: sevenDaysAgo }
+      courseId: { $in: courseIds },
+      createdAt: { $gte: sevenDaysAgo }
     });
 
     // --- Calculate Aggregate Trend (30 Days) ---
@@ -561,18 +611,18 @@ export const getTeacherDashboard = async (teacherId) => {
     const trendCompletionRate = [];
 
     // Fetch all progress for teacher's courses ONCE (for Enrollment trend)
-    const allTeacherProgress = await Progress.find({ 
-        courseId: { $in: courseIds } 
+    const allTeacherProgress = await Progress.find({
+      courseId: { $in: courseIds }
     }).select('userId courseId isCompleted updatedAt createdAt');
 
     // Fetch all quiz attempts for teacher's courses ONCE (for Active Students trend)
     // 1. Get all quizzes for these courses
     const Quiz = (await import("../models/quiz.model.js")).default;
     const allTeacherQuizIds = await Quiz.distinct('_id', { courseId: { $in: courseIds } });
-    
+
     // 2. Get attempts
     const allTeacherAttempts = await QuizAttempt.find({
-        quizId: { $in: allTeacherQuizIds }
+      quizId: { $in: allTeacherQuizIds }
     }).select('userId updatedAt');
 
     // Pre-calculate total lessons per course
@@ -581,78 +631,78 @@ export const getTeacherDashboard = async (teacherId) => {
     let totalLessonsCount = 0;
 
     for (const course of courses) {
-         const chapters = await Chapter.find({ courseId: course._id }).select('_id');
-         totalChaptersCount += chapters.length;
+      const chapters = await Chapter.find({ courseId: course._id }).select('_id');
+      totalChaptersCount += chapters.length;
 
-         const chIds = chapters.map(c => c._id);
-         const count = await Lesson.countDocuments({ chapterId: { $in: chIds } });
-         totalLessonsCount += count;
-         
-         courseLessonCounts[course._id.toString()] = count;
+      const chIds = chapters.map(c => c._id);
+      const count = await Lesson.countDocuments({ chapterId: { $in: chIds } });
+      totalLessonsCount += count;
+
+      courseLessonCounts[course._id.toString()] = count;
     }
 
     const DAYS_TREND = 30;
     for (let i = DAYS_TREND - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const startOfDay = new Date(d.setHours(0,0,0,0));
-        const endOfDay = new Date(d.setHours(23,59,59,999));
-        
-        trendDates.push(startOfDay);
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const startOfDay = new Date(d.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(d.setHours(23, 59, 59, 999));
 
-        // 1. Active Students (Unique users active on this day)
-        // 1. Active Students (Unique users active on this day via Quiz)
-        const activeUsersSet = new Set();
-        // Check past 7 days window relative to 'startOfDay'? 
-        // User said "Active students is ... in the last week". 
-        // So for the trend point at 'startOfDay', we should look at [startOfDay - 6 days, startOfDay].
-        // Or if the trend is "Daily Active Users", it's just that day. 
-        // "Active Students" card usually implies "Currently Active" (Last 7 days).
-        // If the chart plots "Active Students", it usually plots the rolling 7-day count OR daily active users.
-        // Given the scale (0-4), let's assume it's Daily Active or Rolling. 
-        // Let's stick to the definition: "Active ... in last week". 
-        // So for each data point `date`, we count users who did a quiz in [date - 7 days, date].
-        
-        const trendWindowStart = new Date(startOfDay);
-        trendWindowStart.setDate(trendWindowStart.getDate() - 7);
+      trendDates.push(startOfDay);
 
-        allTeacherAttempts.forEach(a => {
-             const aDate = new Date(a.updatedAt);
-             if (aDate >= trendWindowStart && aDate <= endOfDay) {
-                 activeUsersSet.add(a.userId.toString());
-             }
-        });
-        trendActiveStudents.push(activeUsersSet.size);
+      // 1. Active Students (Unique users active on this day)
+      // 1. Active Students (Unique users active on this day via Quiz)
+      const activeUsersSet = new Set();
+      // Check past 7 days window relative to 'startOfDay'? 
+      // User said "Active students is ... in the last week". 
+      // So for the trend point at 'startOfDay', we should look at [startOfDay - 6 days, startOfDay].
+      // Or if the trend is "Daily Active Users", it's just that day. 
+      // "Active Students" card usually implies "Currently Active" (Last 7 days).
+      // If the chart plots "Active Students", it usually plots the rolling 7-day count OR daily active users.
+      // Given the scale (0-4), let's assume it's Daily Active or Rolling. 
+      // Let's stick to the definition: "Active ... in last week". 
+      // So for each data point `date`, we count users who did a quiz in [date - 7 days, date].
 
-        // 2. Total Students (Unique started enrollments by this day)
-        const enrolledPairs = new Set();
-        allTeacherProgress.forEach(p => {
-            if (new Date(p.updatedAt) <= endOfDay) {
-                enrolledPairs.add(`${p.userId}-${p.courseId}`); // unique enrollment signature
-            }
-        });
-        trendTotalStudents.push(enrolledPairs.size);
+      const trendWindowStart = new Date(startOfDay);
+      trendWindowStart.setDate(trendWindowStart.getDate() - 7);
 
-        // 3. Overall Completion Rate
-        let totalCompletedLessonsCount = 0;
-        let totalPossibleLessonsCount = 0;
-        
-        // Filter progress up to this day
-        const relevantProgress = allTeacherProgress.filter(p => new Date(p.updatedAt) <= endOfDay);
-        totalCompletedLessonsCount = relevantProgress.filter(p => p.isCompleted).length;
-        
-        // Sum total lessons for all started enrollments
-        enrolledPairs.forEach(pair => {
-            const cId = pair.split('-')[1];
-            totalPossibleLessonsCount += (courseLessonCounts[cId] || 0);
-        });
-        
-        if (totalPossibleLessonsCount > 0) {
-            const rate = (totalCompletedLessonsCount / totalPossibleLessonsCount) * 100;
-            trendCompletionRate.push(Math.round(rate * 100) / 100);
-        } else {
-            trendCompletionRate.push(0);
+      allTeacherAttempts.forEach(a => {
+        const aDate = new Date(a.updatedAt);
+        if (aDate >= trendWindowStart && aDate <= endOfDay) {
+          activeUsersSet.add(a.userId.toString());
         }
+      });
+      trendActiveStudents.push(activeUsersSet.size);
+
+      // 2. Total Students (Unique started enrollments by this day)
+      const enrolledPairs = new Set();
+      allTeacherProgress.forEach(p => {
+        if (new Date(p.updatedAt) <= endOfDay) {
+          enrolledPairs.add(`${p.userId}-${p.courseId}`); // unique enrollment signature
+        }
+      });
+      trendTotalStudents.push(enrolledPairs.size);
+
+      // 3. Overall Completion Rate
+      let totalCompletedLessonsCount = 0;
+      let totalPossibleLessonsCount = 0;
+
+      // Filter progress up to this day
+      const relevantProgress = allTeacherProgress.filter(p => new Date(p.updatedAt) <= endOfDay);
+      totalCompletedLessonsCount = relevantProgress.filter(p => p.isCompleted).length;
+
+      // Sum total lessons for all started enrollments
+      enrolledPairs.forEach(pair => {
+        const cId = pair.split('-')[1];
+        totalPossibleLessonsCount += (courseLessonCounts[cId] || 0);
+      });
+
+      if (totalPossibleLessonsCount > 0) {
+        const rate = (totalCompletedLessonsCount / totalPossibleLessonsCount) * 100;
+        trendCompletionRate.push(Math.round(rate * 100) / 100);
+      } else {
+        trendCompletionRate.push(0);
+      }
     }
 
     return {
@@ -664,15 +714,15 @@ export const getTeacherDashboard = async (teacherId) => {
       averageRating: Math.round(averageRating * 100) / 100,
       courseAnalytics,
       topCourses,
-      pendingQuizzes: 0, 
+      pendingQuizzes: 0,
       newDiscussions: newDiscussionsCount,
       recentActivities: [],
       activeStudents: trendActiveStudents[trendActiveStudents.length - 1] || 0,
       trend: {
-          dates: trendDates,
-          totalStudents: trendTotalStudents,
-          activeStudents: trendActiveStudents,
-          completionRate: trendCompletionRate
+        dates: trendDates,
+        totalStudents: trendTotalStudents,
+        activeStudents: trendActiveStudents,
+        completionRate: trendCompletionRate
       }
     };
   } catch (error) {
@@ -686,64 +736,64 @@ export const getTeacherDashboard = async (teacherId) => {
  * @returns {Object} Dashboard summary
  */
 export const getAdminDashboardStats = async () => {
-    try {
-        // Get all courses
-        const courses = await Course.find().populate('teacherId', 'fullName email');
+  try {
+    // Get all courses
+    const courses = await Course.find().populate('teacherId', 'fullName email');
 
-        const totalCourses = courses.length;
-        const publishedCourses = courses.filter((c) => c.isPublished).length;
+    const totalCourses = courses.length;
+    const publishedCourses = courses.filter((c) => c.isPublished).length;
 
-        // Calculate total students
-        const totalStudents = courses.reduce(
-            (sum, c) => sum + (c.enrolledStudents?.length || 0),
-            0
-        );
+    // Calculate total students
+    const totalStudents = courses.reduce(
+      (sum, c) => sum + (c.enrolledStudents?.length || 0),
+      0
+    );
 
-        // Get average rating
-        const coursesWithRating = courses.filter((c) => c.rating > 0);
-        const averageRating =
-            coursesWithRating.length > 0
-                ? coursesWithRating.reduce((sum, c) => sum + c.rating, 0) /
-                coursesWithRating.length
-                : 0;
+    // Get average rating
+    const coursesWithRating = courses.filter((c) => c.rating > 0);
+    const averageRating =
+      coursesWithRating.length > 0
+        ? coursesWithRating.reduce((sum, c) => sum + c.rating, 0) /
+        coursesWithRating.length
+        : 0;
 
-        // Get latest analytics for each course
-        const courseAnalytics = await Promise.all(
-            courses.map(async (course) => {
-                const latestAnalytics = await Analytics.findOne({
-                     courseId: course._id,
-                }).sort({ date: -1 });
-
-                return {
-                    courseId: course._id,
-                    courseName: course.title,
-                    students: course.enrolledStudents?.length || 0,
-                    rating: course.rating,
-                    completionRate: latestAnalytics?.completionRate || 0,
-                    activeStudents: latestAnalytics?.activeStudents || 0,
-                };
-            })
-        );
-        
-        // Calculate New Discussions (last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const newDiscussionsCount = await Discussion.countDocuments({
-            createdAt: { $gte: sevenDaysAgo }
-        });
+    // Get latest analytics for each course
+    const courseAnalytics = await Promise.all(
+      courses.map(async (course) => {
+        const latestAnalytics = await Analytics.findOne({
+          courseId: course._id,
+        }).sort({ date: -1 });
 
         return {
-            totalCourses,
-            publishedCourses,
-            totalStudents,
-            averageRating: Math.round(averageRating * 100) / 100,
-            courseAnalytics,
-            newDiscussions: newDiscussionsCount,
+          courseId: course._id,
+          courseName: course.title,
+          students: course.enrolledStudents?.length || 0,
+          rating: course.rating,
+          completionRate: latestAnalytics?.completionRate || 0,
+          activeStudents: latestAnalytics?.activeStudents || 0,
         };
-    } catch (error) {
-        console.error("Get admin dashboard stats error:", error);
-        throw error;
-    }
+      })
+    );
+
+    // Calculate New Discussions (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const newDiscussionsCount = await Discussion.countDocuments({
+      createdAt: { $gte: sevenDaysAgo }
+    });
+
+    return {
+      totalCourses,
+      publishedCourses,
+      totalStudents,
+      averageRating: Math.round(averageRating * 100) / 100,
+      courseAnalytics,
+      newDiscussions: newDiscussionsCount,
+    };
+  } catch (error) {
+    console.error("Get admin dashboard stats error:", error);
+    throw error;
+  }
 };
 
 /**
@@ -792,28 +842,28 @@ export const getPlatformStatistics = async () => {
     while (currentMonth <= now) {
       const monthStr = currentMonth.toISOString().slice(0, 7); // YYYY-MM
       const found = userGrowthRaw.find(u => u._id === monthStr);
-      
+
       // We want cumulative growth ideally, or net new? 
       // User asked for "Chart số liệu thực tế" - usually "Total Users" over time or "New Users".
       // Let's provide "New Users" per month for a Bar/Area chart, and total cumulative as a separate stat if needed.
       // Actually, Sparklines usually show "New Users" trend.
-      
+
       userGrowth.push({
         name: monthStr,
         users: found ? found.count : 0
       });
-      
+
       currentMonth.setMonth(currentMonth.getMonth() + 1);
     }
 
     // 2. Active Students (Last 30 Days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+
     // Count unique users who created a Progress or QuizAttempt in last 30 days
     const activeProgressUsers = await Progress.distinct("userId", { updatedAt: { $gte: thirtyDaysAgo } });
     const activeQuizUsers = await QuizAttempt.distinct("userId", { updatedAt: { $gte: thirtyDaysAgo } });
-    
+
     // Combine unique IDs
     const activeUserSet = new Set([...activeProgressUsers.map(id => id.toString()), ...activeQuizUsers.map(id => id.toString())]);
     const activeUsersCount = activeUserSet.size;
@@ -827,28 +877,28 @@ export const getPlatformStatistics = async () => {
     // 4. Enrollment Trend (Monthly - Proxy via Progress creation if Enrollment Date not tracked)
     // Actually, Progress is created when student starts. Use Progress.createdAt as proxy for enrollment.
     const enrollmentGrowthRaw = await Progress.aggregate([
-       { $match: { createdAt: { $gte: sixMonthsAgo } } },
-       // Deduplicate by (userId, courseId) if user resets progress? 
-       // Usually Progress document is unique per course-student.
-       {
-         $group: {
-            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-            count: { $sum: 1 }
-         }
-       },
-       { $sort: { "_id": 1 } }
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      // Deduplicate by (userId, courseId) if user resets progress? 
+      // Usually Progress document is unique per course-student.
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { "_id": 1 } }
     ]);
-    
+
     const enrollmentGrowth = [];
     currentMonth = new Date(sixMonthsAgo);
     while (currentMonth <= now) {
-        const monthStr = currentMonth.toISOString().slice(0, 7);
-        const found = enrollmentGrowthRaw.find(e => e._id === monthStr);
-        enrollmentGrowth.push({
-            name: monthStr,
-            enrollments: found ? found.count : 0
-        });
-        currentMonth.setMonth(currentMonth.getMonth() + 1);
+      const monthStr = currentMonth.toISOString().slice(0, 7);
+      const found = enrollmentGrowthRaw.find(e => e._id === monthStr);
+      enrollmentGrowth.push({
+        name: monthStr,
+        enrollments: found ? found.count : 0
+      });
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
     }
 
 
@@ -900,14 +950,14 @@ export const getPlatformStatistics = async () => {
     // 8. Overview of Ratings (Vote Statistics)
     // Aggregating all reviews from all courses
     const ratingsRaw = await Course.aggregate([
-       { $unwind: "$reviews" },
-       { $group: { _id: "$reviews.rating", count: { $sum: 1 } } },
-       { $sort: { "_id": 1 } }
+      { $unwind: "$reviews" },
+      { $group: { _id: "$reviews.rating", count: { $sum: 1 } } },
+      { $sort: { "_id": 1 } }
     ]);
     // Ensure all 1-5 stars are present
     const ratingDistribution = [1, 2, 3, 4, 5].map(star => {
-        const found = ratingsRaw.find(r => r._id === star);
-        return { name: `${star} Stars`, value: found ? found.count : 0 };
+      const found = ratingsRaw.find(r => r._id === star);
+      return { name: `${star} Stars`, value: found ? found.count : 0 };
     });
 
     // 9. Student Progress Distribution (Completion Buckets)
@@ -918,23 +968,23 @@ export const getPlatformStatistics = async () => {
     // Calculating exact course completion % per student requires aggregating all lessons per course.
     // Simplifying: Let's view "Lesson Completion Status" distribution for now, 
     // OR roughly estimate based on `isCompleted` flag in Progress (completed lessons vs total).
-    
+
     // Better metric: Count of "Completed Lessons" vs "In Progress" vs "Not Started" across platform?
     // Or: "Course Completion Rates" - requires expensive aggregation (User x Course -> count(completed lessons) / total lessons).
-    
+
     // Alternative: Let's stick to "Lesson Progress Distribution" which is readily available in `Progress` model.
     // Or simpler: "Completed vs In-Progress Lessons"
     const completedLessons = await Progress.countDocuments({ isCompleted: true });
     // For "In Progress", we assume existing Progress docs where isCompleted: false
     const inProgressLessons = await Progress.countDocuments({ isCompleted: false });
-    
+
     // But user asked "Mức độ hoàn thành của student" (Student completion level). 
     // Let's try an aggregation to get average completion per course enrollment if possible.
     // Since complex aggregation might be slow, let's provide "Lesson Status Distribution" as a proxy for engagement.
-    
+
     const lessonProgressDistribution = [
-       { name: 'Completed', value: completedLessons, color: '#10B981' },
-       { name: 'In Progress', value: inProgressLessons, color: '#3B82F6' }
+      { name: 'Completed', value: completedLessons, color: '#10B981' },
+      { name: 'In Progress', value: inProgressLessons, color: '#3B82F6' }
     ];
 
     // 10. Learning Frequency (Last 30 Days) -> NOW: Video Call Frequency
@@ -955,14 +1005,14 @@ export const getPlatformStatistics = async () => {
     // Fill in missing dates
     const dailyActivity = [];
     for (let i = 0; i < 30; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - (29 - i));
-        const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
-        const found = activityRaw.find(a => a._id === dateStr);
-        dailyActivity.push({
-            date: dateStr, // Or format as MM-DD for shorter labels
-            activities: found ? found.count : 0
-        });
+      const d = new Date();
+      d.setDate(d.getDate() - (29 - i));
+      const dateStr = d.toISOString().split('T')[0]; // YYYY-MM-DD
+      const found = activityRaw.find(a => a._id === dateStr);
+      dailyActivity.push({
+        date: dateStr, // Or format as MM-DD for shorter labels
+        activities: found ? found.count : 0
+      });
     }
 
     return {
@@ -996,116 +1046,149 @@ export const getPlatformStatistics = async () => {
  * @param {String} studentId 
  */
 export const getStudentCourseDetails = async (courseId, studentId) => {
-    try {
-        const User = (await import("../models/user.model.js")).default;
-        
-        // 1. Get Student Info
-        const student = await User.findById(studentId).select('fullName email avatar createdAt');
-        if (!student) throw new Error('Student not found');
+  try {
+    const User = (await import("../models/user.model.js")).default;
 
-        // 1b. Get Enrollment Date (from Notification)
-        const Notification = (await import("../models/notification.model.js")).default;
-        const enrollmentNotification = await Notification.findOne({
-            userId: studentId,
-            "metadata.courseId": courseId,
-            type: "course"
-        }).sort({ createdAt: 1 });
-        
-        const enrollmentDate = enrollmentNotification ? enrollmentNotification.createdAt : null;
+    // 1. Get Student Info
+    const student = await User.findById(studentId).select('fullName email avatar createdAt');
+    if (!student) throw new Error('Student not found');
 
-        // 2. Get Course Structure (Chapters & Lessons)
-        const chapters = await Chapter.find({ courseId }).sort({ order: 1 });
-        const chapterIds = chapters.map(c => c._id);
-        const lessons = await Lesson.find({ chapterId: { $in: chapterIds } }).sort({ order: 1 });
-        
-        // Map lessons by chapter for easier frontend consumption
-        const courseStructure = chapters.map(ch => ({
-            id: ch._id,
-            title: ch.title,
-            order: ch.order,
-            lessons: lessons.filter(l => l.chapterId.toString() === ch._id.toString()).map(l => ({
-                id: l._id,
-                title: l.title,
-                order: l.order,
-                videoDuration: l.videoDuration
-            }))
-        }));
+    // 1b. Get Enrollment Date (from Notification)
+    const Notification = (await import("../models/notification.model.js")).default;
+    const enrollmentNotification = await Notification.findOne({
+      userId: studentId,
+      "metadata.courseId": courseId,
+      type: "course"
+    }).sort({ createdAt: 1 });
 
-        // 3. Get Student Progress (Map to Lesson IDs)
-        const progressList = await Progress.find({ courseId, userId: studentId });
-        const progressMap = {};
-        progressList.forEach(p => {
-            progressMap[p.lessonId.toString()] = {
-                isCompleted: p.isCompleted,
-                watchedDuration: p.watchedDuration,
-                lastWatchedAt: p.lastWatchedAt,
-                videoProgressPercent: p.videoProgressPercent
-            };
-        });
+    const enrollmentDate = enrollmentNotification ? enrollmentNotification.createdAt : null;
 
-        // 4. Get Quiz Attempts
-        // Find all quizzes for this course
-        const Quiz = (await import("../models/quiz.model.js")).default;
-        const quizzes = await Quiz.find({ courseId }).sort({ order: 1 });
-        const quizIds = quizzes.map(q => q._id);
-
-        const attempts = await QuizAttempt.find({ 
-            userId: studentId, 
-            quizId: { $in: quizIds } 
-        }).sort({ createdAt: -1 });
-
-        // Map attempts by quiz
-        const quizzesData = quizzes.map(q => {
-            const studentAttempts = attempts.filter(a => a.quizId.toString() === q._id.toString());
-            const bestAttempt = studentAttempts.reduce((prev, current) => (prev && prev.score > current.score) ? prev : current, null);
-            const latestAttempt = studentAttempts[0] || null;
-
-            return {
-                id: q._id,
-                title: q.title,
-                lessonId: q.lessonId,
-                passingScore: q.passingScore,
-                attemptsAllowed: q.attemptsAllowed,
-                attemptsUsed: studentAttempts.length,
-                bestScore: bestAttempt ? bestAttempt.score : null,
-                isPassed: bestAttempt ? bestAttempt.isPassed : false,
-                lastAttemptDate: latestAttempt ? latestAttempt.createdAt : null
-            };
-        });
-
-        // 5. Calculate Overviews
-        const totalLessons = lessons.length;
-        const completedLessons = progressList.filter(p => p.isCompleted).length;
-        const completionRate = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
-        
-        const totalWatchTime = progressList.reduce((sum, p) => sum + (p.watchedDuration || 0), 0);
-        
-        const attemptedQuizzes = quizzesData.filter(q => q.attemptsUsed > 0);
-        const avgQuizScore = attemptedQuizzes.length > 0
-            ? attemptedQuizzes.reduce((sum, q) => sum + (q.bestScore || 0), 0) / attemptedQuizzes.length
-            : 0;
-
-        return {
-            student: {
-                ...student.toObject(),
-                enrollmentDate
-            },
-            overview: {
-                completionRate: Math.round(completionRate * 100) / 100,
-                totalWatchTime, // seconds
-                avgQuizScore: Math.round(avgQuizScore * 10), 
-                completedLessons,
-                totalLessons
-            },
-            courseStructure, 
-            progressMap,
-            quizzes: quizzesData
-        };
-
-    } catch (error) {
-        console.error("Get student course details error:", error);
-        throw error;
+    // Fallback if no notification: usage of first Progress record
+    let finalEnrollmentDate = enrollmentDate;
+    if (!finalEnrollmentDate) {
+      const firstProgress = await Progress.findOne({ userId: studentId, courseId }).sort({ createdAt: 1 });
+      if (firstProgress) {
+        finalEnrollmentDate = firstProgress.createdAt;
+      }
     }
+
+    // 2. Get Course Structure (Chapters & Lessons)
+    const chapters = await Chapter.find({ courseId }).sort({ order: 1 });
+    const chapterIds = chapters.map(c => c._id);
+    const lessons = await Lesson.find({ chapterId: { $in: chapterIds } }).sort({ order: 1 });
+
+    // Map lessons by chapter for easier frontend consumption
+    const courseStructure = chapters.map(ch => ({
+      id: ch._id,
+      title: ch.title,
+      order: ch.order,
+      lessons: lessons.filter(l => l.chapterId.toString() === ch._id.toString()).map(l => ({
+        id: l._id,
+        title: l.title,
+        order: l.order,
+        videoDuration: l.videoDuration
+      }))
+    }));
+
+    // 3. Get Student Progress (Map to Lesson IDs)
+    const progressList = await Progress.find({ courseId, userId: studentId });
+    const progressMap = {};
+    progressList.forEach(p => {
+      progressMap[p.lessonId.toString()] = {
+        isCompleted: p.isCompleted,
+        watchedDuration: p.watchedDuration,
+        lastWatchedAt: p.lastWatchedAt,
+        videoProgressPercent: p.videoProgressPercent
+      };
+    });
+
+    // 4. Get Quiz Attempts
+    // Find all quizzes for this course
+    const Quiz = (await import("../models/quiz.model.js")).default;
+    const quizzes = await Quiz.find({ courseId }).sort({ order: 1 });
+    const quizIds = quizzes.map(q => q._id);
+
+    const attempts = await QuizAttempt.find({
+      userId: studentId,
+      quizId: { $in: quizIds }
+    }).sort({ createdAt: -1 });
+
+    // Map attempts by quiz
+    const quizzesData = quizzes.map(q => {
+      const studentAttempts = attempts.filter(a => a.quizId.toString() === q._id.toString());
+      const bestAttempt = studentAttempts.reduce((prev, current) => (prev && prev.percentage > current.percentage) ? prev : current, null);
+      const latestAttempt = studentAttempts[0] || null;
+
+      return {
+        id: q._id,
+        title: q.title,
+        lessonId: q.lessonId,
+        passingScore: q.passingScore,
+        attemptsAllowed: q.attemptsAllowed,
+        attemptsUsed: studentAttempts.length,
+        bestScore: bestAttempt ? bestAttempt.percentage : null,
+        isPassed: bestAttempt ? bestAttempt.isPassed : false,
+        lastAttemptDate: latestAttempt ? latestAttempt.createdAt : null
+      };
+    });
+
+    // 5. Calculate Overviews
+    const totalLessons = lessons.length;
+    const completedLessons = progressList.filter(p => p.isCompleted).length;
+
+    // Quiz-based completion rate: quizzes that can't be retaken (passed OR exhausted attempts)
+    const completedQuizzes = quizzesData.filter(q =>
+      q.isPassed || (q.attemptsUsed >= q.attemptsAllowed && q.attemptsUsed > 0)
+    ).length;
+    const quizCompletionRate = quizzes.length > 0 ? (completedQuizzes / quizzes.length) * 100 : 0;
+
+    const totalWatchTime = progressList.reduce((sum, p) => sum + (p.watchedDuration || 0), 0);
+
+    const attemptedQuizzes = quizzesData.filter(q => q.attemptsUsed > 0);
+    const avgQuizScore = attemptedQuizzes.length > 0
+      ? attemptedQuizzes.reduce((sum, q) => sum + (q.bestScore || 0), 0) / attemptedQuizzes.length
+      : 0;
+
+    // Build allAttempts array for Activity Log (each individual attempt)
+    const quizTitleMap = {};
+    quizzes.forEach(q => { quizTitleMap[q._id.toString()] = q.title; });
+
+    const allAttempts = attempts.map(a => ({
+      id: a._id,
+      quizId: a.quizId,
+      quizTitle: quizTitleMap[a.quizId.toString()] || 'Unknown Quiz',
+      attemptNumber: a.attemptNumber || 1,
+      attemptsAllowed: quizzes.find(q => q._id.toString() === a.quizId.toString())?.attemptsAllowed || 3,
+      percentage: a.percentage,
+      isPassed: a.isPassed,
+      createdAt: a.createdAt,
+      submittedAt: a.submittedAt
+    }));
+
+    return {
+      student: {
+        ...student.toObject(),
+        enrollmentDate: finalEnrollmentDate
+      },
+      overview: {
+        completionRate: Math.round(quizCompletionRate * 100) / 100, // Quiz-based now
+        totalWatchTime, // seconds
+        avgQuizScore: Math.round(avgQuizScore * 100) / 100, // Fixed: no more * 10
+        completedLessons,
+        totalLessons,
+        completedQuizzes,
+        totalQuizzes: quizzes.length
+      },
+      courseStructure,
+      progressMap,
+      quizzes: quizzesData,
+      allAttempts // NEW: Individual attempts for Activity Log
+    };
+
+  } catch (error) {
+    console.error("Get student course details error:", error);
+    throw error;
+  }
 };
 
 /**
@@ -1114,11 +1197,11 @@ export const getStudentCourseDetails = async (courseId, studentId) => {
  * @param {String} studentId 
  */
 export const resetQuizAttempts = async (quizId, studentId) => {
-    try {
-        await QuizAttempt.deleteMany({ quizId, userId: studentId });
-        return { success: true };
-    } catch (error) {
-        console.error("Reset quiz attempts error:", error);
-        throw error;
-    }
+  try {
+    await QuizAttempt.deleteMany({ quizId, userId: studentId });
+    return { success: true };
+  } catch (error) {
+    console.error("Reset quiz attempts error:", error);
+    throw error;
+  }
 };

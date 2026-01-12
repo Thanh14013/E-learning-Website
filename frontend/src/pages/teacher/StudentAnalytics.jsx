@@ -19,6 +19,7 @@ const StudentAnalytics = () => {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
     const [activeTab, setActiveTab] = useState('lessons'); // lessons | quizzes
+    const [scoreSortDir, setScoreSortDir] = useState('desc'); // 'desc' or 'asc'
 
     useEffect(() => {
         fetchData();
@@ -72,7 +73,7 @@ const StudentAnalytics = () => {
     if (loading) return <div className={styles.loadingContainer}><div className={styles.spinner}></div> Loading details...</div>;
     if (!data) return <div className={styles.errorContainer}>Student data not found.</div>;
 
-    const { student, overview, courseStructure, progressMap, quizzes } = data;
+    const { student, overview, courseStructure, progressMap, quizzes, allAttempts } = data;
 
     // Helper: format duration
     const formatDuration = (seconds) => {
@@ -80,6 +81,19 @@ const StudentAnalytics = () => {
         const m = Math.floor((seconds % 3600) / 60);
         return h > 0 ? `${h}h ${m}m` : `${m}m`;
     };
+
+    // Sort quizzes by best score (un-attempted always last)
+    const sortedQuizzes = [...quizzes].sort((a, b) => {
+        // Un-attempted quizzes always go to the end
+        if (a.attemptsUsed === 0 && b.attemptsUsed === 0) return 0;
+        if (a.attemptsUsed === 0) return 1;
+        if (b.attemptsUsed === 0) return -1;
+
+        // Sort by best score
+        const scoreA = a.bestScore ?? 0;
+        const scoreB = b.bestScore ?? 0;
+        return scoreSortDir === 'desc' ? scoreB - scoreA : scoreA - scoreB;
+    });
 
     const getActivityLog = () => {
         if (!data) return [];
@@ -101,18 +115,20 @@ const StudentAnalytics = () => {
             });
         });
 
-        // 2. Quiz Attempts
-        quizzes.forEach(quiz => {
-            if (quiz.lastAttemptDate) {
-                activities.push({
-                    id: `quiz-${quiz.id}`,
-                    type: 'quiz',
-                    title: quiz.title,
-                    date: new Date(quiz.lastAttemptDate),
-                    details: `Score: ${quiz.bestScore}% - ${quiz.isPassed ? 'Passed' : 'Failed'}`
-                });
-            }
-        });
+        // 2. Quiz Attempts - Log EACH individual attempt
+        if (allAttempts && allAttempts.length > 0) {
+            allAttempts.forEach(attempt => {
+                if (attempt.submittedAt || attempt.createdAt) {
+                    activities.push({
+                        id: `attempt-${attempt.id}`,
+                        type: 'quiz',
+                        title: attempt.quizTitle,
+                        date: new Date(attempt.submittedAt || attempt.createdAt),
+                        details: `Attempt ${attempt.attemptNumber}/${attempt.attemptsAllowed} - Score: ${attempt.percentage?.toFixed(1) ?? 0}% - ${attempt.isPassed ? 'Passed' : 'Failed'}`
+                    });
+                }
+            });
+        }
 
         return activities.sort((a, b) => b.date - a.date);
     };
@@ -247,13 +263,15 @@ const StudentAnalytics = () => {
                                         <th>Quiz Title</th>
                                         <th>Status</th>
                                         <th>Attempts Used</th>
-                                        <th>Best Score</th>
+                                        <th style={{ cursor: 'pointer' }} onClick={() => setScoreSortDir(prev => prev === 'desc' ? 'asc' : 'desc')}>
+                                            Best Score {scoreSortDir === 'desc' ? '↓' : '↑'}
+                                        </th>
                                         <th>Last Attempt</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {quizzes.length > 0 ? quizzes.map(quiz => (
+                                    {sortedQuizzes.length > 0 ? sortedQuizzes.map(quiz => (
                                         <tr key={quiz.id}>
                                             <td>{quiz.title}</td>
                                             <td>
