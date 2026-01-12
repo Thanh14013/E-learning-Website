@@ -508,7 +508,7 @@ export const loginWithGoogle = async (req, res) => {
     console.error("Google login error:", error);
     return res
       .status(500)
-      .json({ message: "Server error during Google login." });
+      .json({ message: "Server error during Google login.", error: error.message });
   }
 };
 

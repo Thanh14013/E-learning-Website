@@ -30,8 +30,7 @@ const safeGetIO = () => {
   }
 };
 
-const buildSessionLink = (courseId, sessionId) =>
-  `/courses/${courseId}/sessions/${sessionId}/join`;
+const buildCourseLink = (courseId) => `/courses/${courseId}`;
 
 const createNotifications = async (userIds, payload) => {
   const ids = uniqueUserIds(userIds);
@@ -74,10 +73,10 @@ export const notifyEnrollment = async (
 
   await createNotifications([studentId], {
     type: "course",
-    title: `Đăng ký khóa học thành công`,
-    content: `Bạn đã đăng ký khóa học "${
-      course?.title ?? "Khóa học"
-    }" với ${teacherName}.`,
+    title: `Course Enrollment Successful`,
+    content: `You have successfully enrolled in course "${
+      course?.title ?? "Course"
+    }" with ${teacherName}.`,
     link: courseId ? `/courses/${courseId}` : undefined,
     metadata: {
       courseId,
@@ -88,9 +87,9 @@ export const notifyEnrollment = async (
 
   await createNotifications([teacherId], {
     type: "course",
-    title: "Học viên mới đăng ký",
-    content: `${studentName} vừa đăng ký khóa học "${
-      course?.title ?? "của bạn"
+    title: "New Student Enrolled",
+    content: `${studentName} has enrolled in your course "${
+      course?.title ?? "your course"
     }".`,
     link: courseId ? `/courses/${courseId}/students` : undefined,
     metadata: {
@@ -112,15 +111,14 @@ export const notifySessionScheduled = async (
 
   await createNotifications(recipients, {
     type: "session",
-    title: "Buổi học trực tuyến mới",
-    content: `Buổi học "${session?.title ?? "trực tuyến"}" đã được lên lịch.
-Thời gian: ${
+    title: "New Live Session Scheduled",
+    content: `Session "${session?.title ?? "Live Session"}" has been scheduled.
+Time: ${
       session?.scheduledAt
         ? new Date(session.scheduledAt).toLocaleString()
-        : "Đang cập nhật"
+        : "Pending"
     }.`,
-    link:
-      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    link: courseId ? `/courses/${courseId}` : "/courses",
     metadata: {
       courseId,
       sessionId,
@@ -141,15 +139,14 @@ export const notifySessionUpdated = async (
 
   await createNotifications(recipients, {
     type: "session",
-    title: "Cập nhật lịch buổi học",
-    content: `Buổi học "${session?.title ?? "trực tuyến"}" đã được cập nhật.
-Thời gian mới: ${
+    title: "Session Schedule Updated",
+    content: `Session "${session?.title ?? "Live Session"}" has been updated.
+New time: ${
       session?.scheduledAt
         ? new Date(session.scheduledAt).toLocaleString()
-        : "Đang cập nhật"
+        : "Pending"
     }.`,
-    link:
-      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    link: courseId ? `/courses/${courseId}` : "/courses",
     metadata: {
       courseId,
       sessionId,
@@ -170,12 +167,11 @@ export const notifySessionStarted = async (
 
   await createNotifications(recipients, {
     type: "session",
-    title: "Buổi học đang diễn ra",
-    content: `Buổi học "${
-      session?.title ?? "trực tuyến"
-    }" đã bắt đầu. Tham gia ngay!`,
-    link:
-      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    title: "Live Session In Progress",
+    content: `Session "${
+      session?.title ?? "Live Session"
+    }" has started. Join now!`,
+    link: courseId ? `/courses/${courseId}` : "/courses",
     metadata: {
       courseId,
       sessionId,
@@ -196,15 +192,14 @@ export const notifySessionCanceled = async (
 
   await createNotifications(recipients, {
     type: "session",
-    title: "Buổi học đã bị hủy",
-    content: `Buổi học "${
-      session?.title ?? "trực tuyến"
-    }" đã bị hủy. Vui lòng chờ lịch cập nhật.
+    title: "Session Canceled",
+    content: `Session "${
+      session?.title ?? "Live Session"
+    }" has been canceled. Please wait for updates.
 ${
-  session?.cancellationReason ? `Lý do: ${session.cancellationReason}` : ""
+  session?.cancellationReason ? `Reason: ${session.cancellationReason}` : ""
 }`.trim(),
-    link:
-      courseId && sessionId ? buildSessionLink(courseId, sessionId) : undefined,
+    link: courseId ? `/courses/${courseId}` : "/courses",
     metadata: {
       courseId,
       sessionId,
@@ -232,11 +227,11 @@ export const notifyDiscussionCreated = async (
 
   await createNotifications(recipients, {
     type: "discussion",
-    title: "Thảo luận mới",
-    content: `${creator?.fullName ?? "Một người dùng"} đã tạo thảo luận "${
-      discussion?.title ?? "mới"
+    title: "New Discussion",
+    content: `${creator?.fullName ?? "A user"} created a new discussion "${
+      discussion?.title ?? "new discussion"
     }".
-Tham gia trao đổi ngay!`,
+Join the conversation!`,
     link:
       courseId && discussion?._id
         ? `/courses/${courseId}/discussions/${discussion._id}`
@@ -257,9 +252,9 @@ export const notifyDiscussionLiked = async (
 ) => {
   await createNotifications([targetUserId], {
     type: "discussion",
-    title: "Thảo luận của bạn được thích",
-    content: `${liker?.fullName ?? "Một người dùng"} đã thích thảo luận "${
-      discussion?.title ?? "của bạn"
+    title: "Your Discussion Received a Like",
+    content: `${liker?.fullName ?? "A user"} liked your discussion "${
+      discussion?.title ?? "your discussion"
     }".`,
     link:
       courseId && discussion?._id
@@ -286,9 +281,9 @@ export const notifyDiscussionPinned = async (courseId, discussion, teacher) => {
 
   await createNotifications(recipients, {
     type: "discussion",
-    title: "Thảo luận được ghim",
-    content: `${teacher?.fullName ?? "Giảng viên"} đã ghim thảo luận "${
-      discussion?.title ?? "trong khóa học"
+    title: "Discussion Pinned",
+    content: `${teacher?.fullName ?? "Teacher"} pinned the discussion "${
+      discussion?.title ?? "in course"
     }".`,
     link:
       courseId && discussion?._id
@@ -311,10 +306,10 @@ export const notifyCommentCreated = async (
 ) => {
   await createNotifications([targetUserId], {
     type: "discussion",
-    title: "Bình luận mới trên thảo luận của bạn",
+    title: "New Comment on Your Discussion",
     content: `${
-      commenter?.fullName ?? "Một người dùng"
-    } đã bình luận trên thảo luận "${discussionTitle ?? "của bạn"}".`,
+      commenter?.fullName ?? "A user"
+    } commented on your discussion "${discussionTitle ?? "your discussion"}".`,
     link:
       courseId && comment?.discussionId
         ? `/courses/${courseId}/discussions/${comment.discussionId}`
@@ -337,10 +332,10 @@ export const notifyCommentReply = async (
 ) => {
   await createNotifications([targetUserId], {
     type: "discussion",
-    title: "Có phản hồi cho bình luận của bạn",
+    title: "Reply to Your Comment",
     content: `${
-      commenter?.fullName ?? "Một người dùng"
-    } đã trả lời bình luận của bạn trong thảo luận "${discussionTitle ?? ""}".`,
+      commenter?.fullName ?? "A user"
+    } replied to your comment in discussion "${discussionTitle ?? ""}".`,
     link:
       courseId && comment?.discussionId
         ? `/courses/${courseId}/discussions/${comment.discussionId}`

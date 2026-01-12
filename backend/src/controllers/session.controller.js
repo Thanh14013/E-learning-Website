@@ -323,7 +323,7 @@ export const startSession = async (req, res) => {
         type: "session_live",
         title: "Live Session Started",
         content: `The session "${session.title}" is now live! Join now.`,
-        link: `/courses/${session.courseId._id}/sessions/${session._id}/join`,
+        link: `/courses/${session.courseId._id}`,
         sessionId: session._id,
       });
 

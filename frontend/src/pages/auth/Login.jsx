@@ -18,75 +18,30 @@ const Login = () => {
   const [googleReady, setGoogleReady] = useState(false);
   const googleButtonRef = useRef(null);
 
+  /* Refactored Google Login (GSI v2) */
   useEffect(() => {
     if (!googleClientId) return;
 
-    const existingScript = document.getElementById("google-identity-script");
-
-    const handleLoad = () => {
-      setGoogleReady(true);
-    };
-
-    if (existingScript) {
-      if (existingScript.getAttribute("data-loaded") === "true") {
+    // 1. Load the GSI script if not present
+    const loadScript = () => {
+      if (document.getElementById("google-gsi-script")) {
         setGoogleReady(true);
         return;
       }
-      existingScript.addEventListener("load", handleLoad);
-      return () => {
-        existingScript.removeEventListener("load", handleLoad);
-      };
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.id = "google-identity-script";
-    script.onload = () => {
-      script.setAttribute("data-loaded", "true");
-      setGoogleReady(true);
-    };
-    script.onerror = () => {
-      setError("Không thể tải Google SSO. Vui lòng thử lại sau.");
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client?hl=en";
+      script.async = true;
+      script.defer = true;
+      script.id = "google-gsi-script";
+      script.onload = () => setGoogleReady(true);
+      script.onerror = () => setError("Failed to load Google Sign-In");
+      document.body.appendChild(script);
     };
 
-    document.head.appendChild(script);
-
-    return () => {
-      script.onload = null;
-      script.onerror = null;
-    };
+    loadScript();
   }, [googleClientId]);
 
-  useEffect(() => {
-    // We need googleReady and googleClientId to initialize
-    if (!googleReady || !googleClientId) return;
-    if (!window.google?.accounts?.id) return;
-
-    try {
-      // Initialize always
-      window.google.accounts.id.initialize({
-        client_id: googleClientId,
-        callback: (response) => handleGoogleCredential(response),
-      });
-
-      // Validating if we have the ref before rendering the standard button
-      // But for custom button (prompt), we just need initialize
-      if (googleButtonRef.current) {
-        window.google.accounts.id.renderButton(googleButtonRef.current, {
-          theme: "outline",
-          size: "large",
-          type: "standard",
-          shape: "pill",
-          text: "continue_with",
-        });
-      }
-    } catch (err) {
-      console.error("Google Sign-In initialization failed:", err);
-    }
-  }, [googleReady, googleClientId]);
-
+  /* Handlers */
   const handlePostLogin = (user) => {
     if (user.role === "teacher") {
       if (!user.profileCompleted) {
@@ -154,24 +109,33 @@ const Login = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    // Check for client ID availability first to prevent GSI crash
-    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-      setError("Google Login is not configured (missing client ID).");
-      return;
-    }
+  useEffect(() => {
+    // 2. Initialize and Render Button when script & ID are ready
+    if (!googleReady || !googleClientId || !window.google?.accounts?.id) return;
 
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      try {
-        window.google.accounts.id.prompt();
-      } catch (err) {
-        console.error("Google Prompt Error:", err);
-        setError("Google Login error. check console.");
+    try {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: handleGoogleCredential,
+        // ux_mode: "popup", // Default
+      });
+
+      // Render the standard Google button
+      // This is required for "Sign In with Google" (ID Token) flow
+      if (googleButtonRef.current) {
+        window.google.accounts.id.renderButton(googleButtonRef.current, {
+          theme: "filled_blue",
+          size: "large",
+          type: "standard",
+          shape: "pill",
+          text: "signin_with",
+          logo_alignment: "left"
+        });
       }
-    } else {
-      setError("Google SSO is not ready. Please try again.");
+    } catch (err) {
+      console.error("GSI Init Error:", err);
     }
-  };
+  }, [googleReady, googleClientId]);
 
   return (
     <div className={styles.pageWrapper}>
@@ -206,8 +170,6 @@ const Login = () => {
             />
           </div>
 
-
-
           <button type="submit" className={styles.loginBtn} disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
           </button>
@@ -215,11 +177,9 @@ const Login = () => {
 
         <div className={styles.divider}>or</div>
 
-        <div className={styles.googleContainer}>
-          <button onClick={handleGoogleLogin} className={styles.googleBtn}>
-            <FcGoogle className={styles.googleIcon} />
-            Continue with Google
-          </button>
+        {/* Standard Google Button Container */}
+        <div className={styles.googleContainer} style={{ display: 'flex', justifyContent: 'center' }}>
+          <div ref={googleButtonRef} />
         </div>
 
         <p className={styles.registerText}>
@@ -231,6 +191,8 @@ const Login = () => {
       </div>
     </div>
   );
+
+
 };
 
 export default Login;

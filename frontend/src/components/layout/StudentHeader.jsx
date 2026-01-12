@@ -99,6 +99,11 @@ export default function StudentHeader() {
       return `/courses/${courseId}/learn?tab=discussions`;
     }
 
+    // Force session notifications to course detail
+    if ((notif?.type === 'session' || notif?.type === 'session_live') && courseId) {
+      return `/courses/${courseId}`;
+    }
+
     return notif?.link;
   };
 
