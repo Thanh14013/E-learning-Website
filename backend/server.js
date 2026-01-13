@@ -55,6 +55,10 @@ initializeAllNamespaces(io);
 setupAnalyticsCronJobs();
 
 // Security middleware - Helmet sets various HTTP headers for security
+// Trust Render proxy (Critical for correct protocol detection)
+app.set("trust proxy", 1);
+
+// Security middleware
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -79,7 +83,8 @@ app.use(
         frameSrc: ["'self'", "https://accounts.google.com"],
       },
     },
-    crossOriginEmbedderPolicy: false, // Allow embedding resources from other origins
+    crossOriginEmbedderPolicy: false,
+    hsts: false, // Disable HSTS to allow HTTP for SSL validation on Render
   })
 );
 
@@ -189,8 +194,7 @@ async function startServer(startPort, maxAttempts = 10) {
           console.log(`   - /notification namespace: Real-time notifications`);
           console.log(`   - /progress namespace: Learning progress tracking`);
           console.log(
-            `✅ Rate limiting disabled: ${
-              process.env.DISABLE_RATE_LIMIT === "true"
+            `✅ Rate limiting disabled: ${process.env.DISABLE_RATE_LIMIT === "true"
             }`
           );
           resolve();
