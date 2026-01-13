@@ -96,6 +96,26 @@ const VideoRoom = () => {
         }
     }, [isHost]);
 
+    // Added: Sync State to Tracks (Fix for Black Screen)
+    useEffect(() => {
+        if (localStream) {
+            localStream.getAudioTracks().forEach(t => t.enabled = isAudioEnabled);
+            localStream.getVideoTracks().forEach(t => t.enabled = isVideoEnabled);
+
+            // Also ensure we tell peers if we change it here (though usually triggered by buttons)
+            // But if it's initial load, buttons haven't been clicked.
+            // The buttons call webrtcService.toggleAudio() which emits.
+            // But if we set state here programmatically, we might need to emit manually OR 
+            // rely on the fact that toggleAudio/Video calls set state.
+
+            // Actually, we just want to ensure physical hardware matches state.
+            // The socket events are handled by the button clicks. 
+            // BUT, for initial load (Host), we set state=true. 
+            // We need to ensure tracks are enabled. 
+            // AND we probably should emit "I am on" to anyone already there (though host is first).
+        }
+    }, [localStream, isAudioEnabled, isVideoEnabled]);
+
     // 1. Fetch Session Details (Wait for this before anything)
     useEffect(() => {
         const fetchSession = async () => {
@@ -326,7 +346,8 @@ const VideoRoom = () => {
             console.log("Session force ended");
             toastService.info("The host has ended the session.");
             webrtcService.leaveSession();
-            navigate('/dashboard'); // Or back to course: `/courses/${session.courseId}` if available
+            // Force redirect
+            window.location.href = '/dashboard';
         };
 
         // Attach listeners

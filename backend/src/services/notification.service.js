@@ -181,7 +181,7 @@ export const notifySessionStarted = async (
   if (recipients.length === 0) return;
 
   await createNotifications(recipients, {
-    type: "session",
+    type: "session_live",
     title: "Live Session In Progress",
     content: `Session "${session?.title ?? "Live Session"
       }" has started. Join now!`,

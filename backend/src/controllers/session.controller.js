@@ -319,13 +319,9 @@ export const startSession = async (req, res) => {
 
     // Broadcast session live notification via Socket.IO
     if (req.io) {
-      sendNotificationToCourse(req.io, session.courseId._id, {
-        type: "session_live",
-        title: "Live Session Started",
-        content: `The session "${session.title}" is now live! Join now.`,
-        link: `/courses/${session.courseId._id}`,
-        sessionId: session._id,
-      });
+      // NOTE: We removed the explicit sendNotificationToCourse call here because 
+      // notifySessionStarted (called above) handles it. We just need to ensure 
+      // notifySessionStarted uses the correct type ('session_live').
 
       // Also emit to session namespace
       const sessionNamespace = req.io.of("/session");
