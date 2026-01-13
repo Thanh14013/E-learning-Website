@@ -266,6 +266,7 @@
 .courseCard:hover {
   transform: translateY(-8px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
 }
 
 .courseImage {
@@ -281,31 +282,47 @@
 
 .courseMeta {
   display: flex;
-  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-bottom: 12px;
 }
-
 .courseCategory {
   display: inline-block;
-  padding: 4px 12px;
-  background: rgba(99, 102, 241, 0.1);
-  color: var(--color-student-primary);
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: 5px 12px;
+  background: #e0e7ff;
+  color: #4338ca;
+  border-radius: 999px;
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
 }
-
+.courseCard:hover .courseCategory {
+  background: #c7d2fe;
+  color: #312e81;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.28);
+  transform: translateY(-1px) scale(1.05);
+}
 .courseLevel {
   display: inline-block;
-  padding: 4px 12px;
-  background: var(--color-gray-100);
-  color: var(--text-secondary);
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  padding: 5px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
   text-transform: capitalize;
+  letter-spacing: 0.2px;
+  transition: all 0.2s ease;
 }
-
+.courseCard:hover .courseLevel {
+  background: #fde68a;
+  color: #78350f;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.28);
+  transform: translateY(-1px) scale(1.05);
+}
 .courseCard h3 {
   font-size: 1.2rem;
   margin-bottom: 10px;
