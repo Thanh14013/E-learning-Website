@@ -722,6 +722,110 @@ export const initializeSessionNamespace = (io) => {
       }
     });
 
+    /**
+     * Kick Participant
+     */
+    socket.on("session:kick-participant", async (data) => {
+      try {
+        const { sessionId, userId } = data;
+        const session = await LiveSession.findById(sessionId);
+        if (!session || session.hostId.toString() !== socket.user.id) return;
+
+        const room = sessionNamespace.adapter.rooms.get(`session:${sessionId}`);
+        if (room) {
+          for (const socketId of room) {
+            const s = sessionNamespace.sockets.get(socketId);
+            if (s && s.user.id === userId) {
+              s.emit("session:kicked", { message: "You have been removed by the host." });
+              s.disconnect(true);
+              break;
+            }
+          }
+        }
+        await session.removeParticipant(userId);
+        socket.to(`session:${sessionId}`).emit("session:participant-left", { userId });
+      } catch (e) {
+        console.error("Kick error:", e.message);
+      }
+    });
+
+    /**
+     * Approve Join Request
+     */
+    socket.on("session:approve-request", async (data) => {
+      try {
+        const { sessionId, userId } = data;
+        const session = await LiveSession.findById(sessionId);
+        if (!session || session.hostId.toString() !== socket.user.id) return;
+
+        const room = sessionNamespace.adapter.rooms.get(`waiting:${sessionId}`);
+        if (room) {
+          for (const socketId of room) {
+            const s = sessionNamespace.sockets.get(socketId);
+            if (s && s.user.id === userId) {
+              await session.addParticipant(userId, s.id);
+              s.leave(`waiting:${sessionId}`);
+              s.join(`session:${sessionId}`);
+              s.sessionId = sessionId;
+
+              s.emit("session:join-approved");
+              s.emit("session:joined", { sessionId, userId, message: "Request approved" });
+
+              // Notify others
+              socket.to(`session:${sessionId}`).emit("session:participant-joined", {
+                userId, userName: s.userName, role: s.user.role, socketId: s.id
+              });
+              
+              // Send participants list to new user
+               const sessionRoom = sessionNamespace.adapter.rooms.get(`session:${sessionId}`);
+               if (sessionRoom) {
+                   const participants = [];
+                   sessionRoom.forEach((sid) => {
+                       const pSocket = sessionNamespace.sockets.get(sid);
+                       if (pSocket && pSocket.id !== s.id) {
+                           participants.push({
+                               userId: pSocket.user.id,
+                               userName: pSocket.userName,
+                               role: pSocket.user.role,
+                               socketId: pSocket.id,
+                           });
+                       }
+                   });
+                   s.emit("session:participants-list", { participants });
+               }
+
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Approve error", e.message);
+      }
+    });
+
+    /**
+     * Deny Join Request
+     */
+    socket.on("session:deny-request", async (data) => {
+        try {
+            const { sessionId, userId } = data;
+            const session = await LiveSession.findById(sessionId);
+            if (!session || session.hostId.toString() !== socket.user.id) return;
+
+            const room = sessionNamespace.adapter.rooms.get(`waiting:${sessionId}`);
+            if (room) {
+                for (const socketId of room) {
+                    const s = sessionNamespace.sockets.get(socketId);
+                    if (s && s.user.id === userId) {
+                        s.emit("session:join-denied");
+                        s.leave(`waiting:${sessionId}`);
+                        break;
+                    }
+                }
+            }
+        } catch (e) { console.error("Deny error", e.message); }
+    });
+
     // Handle disconnection
     socket.on("disconnect", async () => {
       console.log(

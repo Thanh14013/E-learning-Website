@@ -8,10 +8,6 @@ import { Button } from '../common/Button';
 import styles from './VideoRoom.module.css';
 
 /**
- * VideoRoom Component
- * Live video call room with WebRTC, Lobby, and Waiting Room
- */
-/**
  * Remote Video Component
  * Renders remote participant's video/audio stream
  */
@@ -24,15 +20,7 @@ function RemoteVideo({ participant }) {
         }
     }, [participant.stream]);
 
-    // Choose class based on context (isMain is passed if it's the spotlight)
-    const videoClass = participant.isMain ? styles.mainVideoElement : styles.videoElement;
-    const containerClass = participant.isMain ? styles.mainVideoWrapper : styles.videoContainer;
-
     if (participant.isMain) {
-        // Special render for Spotlight (No container wrapper here because parent does it? 
-        // Actually parent creates wrapper. Let's just return the inner content or manage style.)
-        // Parent code: <div className={styles.mainVideoWrapper}> <RemoteVideo ... /> </div>
-        // So here we validly render the VIDEO tag.
         return (
             <>
                 <video
@@ -44,7 +32,7 @@ function RemoteVideo({ participant }) {
                 />
                 {(!participant.isVideoOn || !participant.stream) && (
                     <div className={styles.mainLoadingOverlay}>
-                        <div className={styles.avatarLarge}>User</div>
+                        <div className={styles.avatarLarge}>{participant.userName ? participant.userName.charAt(0).toUpperCase() : '?'}</div>
                         <h3>{participant.userName}</h3>
                         <span className={styles.statusText}>Camera Off</span>
                     </div>
@@ -91,7 +79,6 @@ const VideoRoom = () => {
     const [viewMode, setViewMode] = useState('lobby'); // 'lobby', 'waiting', 'room'
     const [isLoading, setIsLoading] = useState(true);
 
-    // Media State
     // Media State
     const [localStream, setLocalStream] = useState(null);
     const localVideoRef = useRef(null);
@@ -235,27 +222,15 @@ const VideoRoom = () => {
 
         const handleRemoteStream = (e) => {
             const { userId, stream } = e.detail;
-
             setParticipants(prev => {
                 const next = new Map(prev);
                 const existing = next.get(userId) || {};
-
-                // Fallback: If no name, and it's host, call them Teacher
                 let fallbackName = "User";
                 if (userId === session.hostId || (session.hostId?._id && userId === session.hostId._id)) {
                     fallbackName = "Teacher (Host)";
                 }
-
                 const userName = existing.userName || getParticipantName(userId) || fallbackName;
-
-                next.set(userId, {
-                    ...existing,
-                    userId,
-                    stream,
-                    userName,
-                    isVideoOn: true,
-                    isAudioOn: true
-                });
+                next.set(userId, { ...existing, userId, stream, userName, isVideoOn: true, isAudioOn: true });
                 return next;
             });
         };
@@ -270,62 +245,51 @@ const VideoRoom = () => {
 
         const handleUserJoined = (e) => {
             const { userId, userName, avatar, isMuted, isVideoOff } = e.detail;
-            console.log("User joined event:", e.detail);
+            if (userId === (user._id || user.id)) return;
 
-            // Prevent adding self
-            if (userId === user._id) return;
-
-            // Check if it's host -> Override name
             let finalName = userName || "User";
             const hostId = session.hostId._id || session.hostId;
-            if (userId === hostId) {
-                finalName = "Teacher (Host)";
-            }
+            if (userId === hostId) finalName = "Teacher (Host)";
 
             setParticipants(prev => {
+                if (prev.has(userId)) return prev;
                 const next = new Map(prev);
-                if (!next.has(userId)) {
-                    next.set(userId, {
-                        userId,
-                        userName: finalName,
-                        avatar,
-                        isAudioOn: !isMuted,
-                        isVideoOn: !isVideoOff
-                    });
-                }
+                next.set(userId, { userId, userName: finalName, avatar, isAudioOn: !isMuted, isVideoOn: !isVideoOff });
                 return next;
             });
-            toastService.info(`${finalName} joined the session`);
+            toastService.info(`${finalName} joined`);
         };
 
         const handleUserLeft = (e) => {
-            // Remove from participants
+            const { userId } = e.detail;
             setParticipants(prev => {
                 const next = new Map(prev);
-                next.delete(e.detail.userId);
+                next.delete(userId);
                 return next;
             });
         };
 
-        const handleWaiting = () => {
-            setViewMode('waiting');
-        };
+        const handleWaiting = () => setViewMode('waiting');
 
         const handleApproved = () => {
-            toastService.success("Host approved your request!");
             setViewMode('room');
-            // WebrtcService socket logic should handle list fetching or we just wait for events
+            toastService.success("Join request approved!");
         };
 
         const handleDenied = () => {
-            toastService.error("Host denied your request.");
-            navigate('/dashboard'); // Or back to course
+            toastService.error("Join request denied.");
+            navigate('/dashboard');
         };
 
-        const handleKicked = () => {
-            toastService.error("You have been kicked from the session.");
+        const handleKicked = (e) => {
+            toastService.error(e.detail?.message || "You have been kicked from the session.");
+            window.location.href = '/dashboard';
+        };
+
+        const handleSessionEnded = () => {
+            toastService.info("Session has ended.");
             webrtcService.leaveSession();
-            navigate('/dashboard');
+            window.location.href = '/dashboard';
         };
 
         const handleJoinRequest = (e) => {
@@ -334,21 +298,21 @@ const VideoRoom = () => {
                     if (prev.find(r => r.userId === e.detail.userId)) return prev;
                     return [...prev, e.detail];
                 });
-                toastService.info(`${e.detail.userName} wants to join`);
-                setActiveSidebar('people'); // Open sidebar to show request
+                toastService.info(`${e.detail.userName} asked to join.`);
+                setActiveSidebar('people');
             }
         };
 
         const handleMessage = (e) => {
-            setChatMessages(prev => [...prev, e.detail]);
-            if (activeSidebar !== 'chat') {
-                // Show unread indicator? For now just toast
-                // toastService.info(`New message from ${e.detail.userName}`);
+            const { userId, message, userName } = e.detail;
+            const isMe = userId === (user._id || user.id);
+            setChatMessages(prev => [...prev, { userId, userName, message, isMe }]);
+            if (!isMe && activeSidebar !== 'chat') {
+                toastService.info(`New message from ${userName}`);
             }
         };
 
         const handleVideoToggle = (e) => {
-            // Backend sends 'videoEnabled', not 'enabled'
             const { userId, videoEnabled } = e.detail;
             setParticipants(prev => {
                 const p = prev.get(userId);
@@ -358,7 +322,6 @@ const VideoRoom = () => {
         };
 
         const handleAudioToggle = (e) => {
-            // Backend sends 'audioEnabled', not 'enabled'
             const { userId, audioEnabled } = e.detail;
             setParticipants(prev => {
                 const p = prev.get(userId);
@@ -367,25 +330,15 @@ const VideoRoom = () => {
             });
         };
 
-        // Attach listeners
-        const handleSessionEnded = (e) => {
-            console.log("Session force ended");
-            toastService.info("The host has ended the session.");
-            webrtcService.leaveSession();
-            // Force redirect
-            window.location.href = '/dashboard';
-        };
-
-        // Attach listeners
         window.addEventListener('webrtc:stream', handleRemoteStream);
         window.addEventListener('webrtc:peer-removed', handlePeerRemoved);
         window.addEventListener('session:user-joined', handleUserJoined);
         window.addEventListener('session:user-left', handleUserLeft);
         window.addEventListener('session:waiting', handleWaiting);
-        window.addEventListener('session:approved', handleApproved);
-        window.addEventListener('session:denied', handleDenied);
+        window.addEventListener('session:join-approved', handleApproved);
+        window.addEventListener('session:join-denied', handleDenied);
         window.addEventListener('session:kicked', handleKicked);
-        window.addEventListener('session:ended', handleSessionEnded); // Added listener
+        window.addEventListener('session:ended', handleSessionEnded);
         window.addEventListener('session:join-request', handleJoinRequest);
         window.addEventListener('session:chat-message', handleMessage);
         window.addEventListener('session:participant-video-toggled', handleVideoToggle);
@@ -397,28 +350,16 @@ const VideoRoom = () => {
             window.removeEventListener('session:user-joined', handleUserJoined);
             window.removeEventListener('session:user-left', handleUserLeft);
             window.removeEventListener('session:waiting', handleWaiting);
-            window.removeEventListener('session:approved', handleApproved);
-            window.removeEventListener('session:denied', handleDenied);
+            window.removeEventListener('session:join-approved', handleApproved);
+            window.removeEventListener('session:join-denied', handleDenied);
             window.removeEventListener('session:kicked', handleKicked);
-            window.removeEventListener('session:ended', handleSessionEnded); // Removed listener
-            window.removeEventListener('session:join-request', handleJoinRequest);
-            window.removeEventListener('session:chat-message', handleMessage);
-            window.removeEventListener('session:participant-video-toggled', handleVideoToggle);
-            window.removeEventListener('session:participant-audio-toggled', handleAudioToggle);
-            window.removeEventListener('webrtc:stream', handleRemoteStream);
-            window.removeEventListener('webrtc:peer-removed', handlePeerRemoved);
-            window.removeEventListener('session:user-joined', handleUserJoined);
-            window.removeEventListener('session:user-left', handleUserLeft);
-            window.removeEventListener('session:waiting', handleWaiting);
-            window.removeEventListener('session:approved', handleApproved);
-            window.removeEventListener('session:denied', handleDenied);
-            window.removeEventListener('session:kicked', handleKicked);
+            window.removeEventListener('session:ended', handleSessionEnded);
             window.removeEventListener('session:join-request', handleJoinRequest);
             window.removeEventListener('session:chat-message', handleMessage);
             window.removeEventListener('session:participant-video-toggled', handleVideoToggle);
             window.removeEventListener('session:participant-audio-toggled', handleAudioToggle);
         };
-    }, [session, isHost, activeSidebar, navigate]);
+    }, [session, isHost, activeSidebar, navigate, user]);
 
     // Helper: Join Session
     const handleJoinClick = async () => {
@@ -462,6 +403,8 @@ const VideoRoom = () => {
         webrtcService.denyJoinRequest(req.userId);
         setJoinRequests(prev => prev.filter(r => r.userId !== req.userId));
     };
+
+
 
     const kickUser = (uid) => {
         if (!window.confirm("Kick this user?")) return;
@@ -510,6 +453,8 @@ const VideoRoom = () => {
         if (req) return req.userName;
         return 'Participant';
     };
+
+    // --- Renderers ---
 
     // --- Renderers ---
 
@@ -576,47 +521,47 @@ const VideoRoom = () => {
     // View: Room
     return (
         <div className={styles.videoRoom}>
-            <div className={styles.mainContent}>
-                {/* Header */}
-                <div className={styles.header}>
-                    <div className={styles.sessionInfo}>
-                        <h3>{session.title}</h3>
-                        <span className={styles.timer}>
-                            {/* Could add duration timer here */}
-                        </span>
-                    </div>
-                    <div className={styles.headerActions}>
-                        {isHost && (
-                            <Button
-                                variant="danger"
-                                size="small"
-                                onClick={() => setShowEndSessionModal(true)}
-                                style={{ marginRight: '10px' }}
-                            >
-                                End Session
-                            </Button>
-                        )}
-                        <Button variant="secondary" size="small" onClick={() => {
-                            webrtcService.leaveSession();
-
-                            // Close the tab for everyone
-                            window.close();
-
-                            // Fallback if browser blocks window.close()
-                            setTimeout(() => {
-                                if (!window.closed) {
-                                    toastService.info('Please close this tab manually');
-                                    // If still can't close, navigate away as last resort
-                                    navigate('/dashboard');
-                                }
-                            }, 100);
-                        }}>
-                            Leave
-                        </Button>
-                    </div>
+            {/* Header */}
+            <div className={styles.header}>
+                <div className={styles.sessionInfo}>
+                    <h3>{session.title}</h3>
+                    <span className={styles.timer}>
+                        {/* Could add duration timer here */}
+                    </span>
                 </div>
+                <div className={styles.headerActions}>
+                    {isHost && (
+                        <Button
+                            variant="danger"
+                            size="small"
+                            onClick={() => setShowEndSessionModal(true)}
+                            style={{ marginRight: '10px' }}
+                        >
+                            End Session
+                        </Button>
+                    )}
+                    <Button variant="secondary" size="small" onClick={() => {
+                        webrtcService.leaveSession();
 
-                {/* Spotlight Layout: Teacher Focused */}
+                        // Close the tab for everyone
+                        window.close();
+
+                        // Fallback if browser blocks window.close()
+                        setTimeout(() => {
+                            if (!window.closed) {
+                                toastService.info('Please close this tab manually');
+                                // If still can't close, navigate away as last resort
+                                navigate('/dashboard');
+                            }
+                        }, 100);
+                    }}>
+                        Leave
+                    </Button>
+                </div>
+            </div>
+
+            {/* Content Area (Video + Sidebar) */}
+            <div className={styles.contentArea}>
                 <div className={styles.spotlightContainer}>
                     {/* LOGIC:
                         - If I am Host: Show ME (LocalStream) in Main Area.
@@ -689,77 +634,68 @@ const VideoRoom = () => {
                             </div>
                         ))
                     }
-                </div>
+                </div> {/* End spotlightContainer */}
 
-                {/* Bottom Controls */}
-                <div className={styles.controlsBar}>
-                    {/* Everyone gets controls now */}
-                    <>
-                        {/* UPDATE: Use simple state toggles, rely on useEffect to call service */}
-                        <button onClick={() => setIsAudioEnabled(prev => !prev)} className={!isAudioEnabled ? styles.controlOff : ''}>
-                            {isAudioEnabled ? '🎤 Mute' : '🎤 Unmute'}
-                        </button>
-                        <button onClick={() => setIsVideoEnabled(prev => !prev)} className={!isVideoEnabled ? styles.controlOff : ''}>
-                            {isVideoEnabled ? '📷 Stop Video' : '📷 Start Video'}
-                        </button>
-                        <button onClick={() => {
-                            webrtcService.startScreenShare().then(() => setIsScreenSharing(true)).catch(() => setIsScreenSharing(false));
-                        }} className={isScreenSharing ? styles.controlActive : ''}>
-                            🖥️ Share
-                        </button>
-                        <div className={styles.divider} />
-                    </>
-                    <button onClick={() => setActiveSidebar(activeSidebar === 'people' ? null : 'people')}>
-                        👥 People {joinRequests.length > 0 && <span className={styles.badge}>{joinRequests.length}</span>}
-                    </button>
-                    <button onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}>
-                        💬 Chat
-                    </button>
-                </div>
-            </div >
-
-            {/* Sidebar */}
-            {
-                activeSidebar && (
+                {/* Sidebar Area */}
+                {activeSidebar && (
                     <div className={styles.sidebar}>
                         <div className={styles.sidebarHeader}>
                             <h4>{activeSidebar === 'people' ? 'Participants' : 'Chat'}</h4>
-                            <button onClick={() => setActiveSidebar(null)}>✕</button>
+                            <button onClick={() => setActiveSidebar(null)} className={styles.closeSidebarBtn}>✕</button>
                         </div>
 
                         {activeSidebar === 'people' && (
                             <div className={styles.peopleList}>
                                 {isHost && joinRequests.length > 0 && (
                                     <div className={styles.requestsSection}>
-                                        <h5>Waiting Room ({joinRequests.length})</h5>
+                                        <h5>Waiting Room <span className={styles.badge}>{joinRequests.length}</span></h5>
                                         {joinRequests.map(req => (
                                             <div key={req.userId} className={styles.requestItem}>
                                                 <div className={styles.reqInfo}>
-                                                    <span className={styles.avatar}>👤</span>
+                                                    <div className={styles.avatarSmall}>
+                                                        {req.userName.charAt(0).toUpperCase()}
+                                                    </div>
                                                     <span>{req.userName}</span>
                                                 </div>
                                                 <div className={styles.reqActions}>
-                                                    <button className={styles.btnApprove} onClick={() => approveUser(req)}>✓</button>
-                                                    <button className={styles.btnDeny} onClick={() => denyUser(req)}>✕</button>
+                                                    <button className={styles.btnApprove} onClick={() => approveUser(req)}>Accept</button>
+                                                    <button className={styles.btnDeny} onClick={() => denyUser(req)}>Deny</button>
                                                 </div>
                                             </div>
                                         ))}
-                                        <hr />
                                     </div>
                                 )}
 
-                                <h5>In Meeting ({participants.size + 1})</h5>
+                                <h5 className={styles.sectionTitle}>In Meeting ({participants.size + 1})</h5>
+
+                                {/* Me */}
                                 <div className={styles.participantItem}>
-                                    <span>You ({user.fullName})</span>
-                                    <span className={styles.role}>{isHost ? 'Host' : 'Me'}</span>
+                                    <div className={styles.participantInfo}>
+                                        <div className={styles.avatarSmall}>
+                                            {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+                                        </div>
+                                        <div className={styles.participantName}>
+                                            You ({user.fullName})
+                                            <span className={styles.roleTag}>{isHost ? 'Host' : 'Me'}</span>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {/* Others */}
                                 {Array.from(participants.values())
-                                    .filter(p => p.userId !== user._id) // Double check to exclude self
+                                    .filter(p => p.userId !== user._id)
                                     .map(p => (
                                         <div key={p.userId} className={styles.participantItem}>
-                                            <span>{p.userName}</span>
+                                            <div className={styles.participantInfo}>
+                                                <div className={styles.avatarSmall}>
+                                                    {p.userName ? p.userName.charAt(0).toUpperCase() : '?'}
+                                                </div>
+                                                <div className={styles.participantName}>
+                                                    {p.userName}
+                                                </div>
+                                            </div>
                                             {isHost && (
-                                                <button className={styles.kickSmall} onClick={() => kickUser(p.userId)}>Kick</button>
+                                                <button className={styles.kickBtnStyled} onClick={() => kickUser(p.userId)}>Remove</button>
                                             )}
                                         </div>
                                     ))}
@@ -769,72 +705,94 @@ const VideoRoom = () => {
                         {activeSidebar === 'chat' && (
                             <div className={styles.chatContainer}>
                                 <div className={styles.messageList}>
-                                    <div className={styles.chatMessage}>
-                                        {chatMessages.map((m, i) => (
-                                            <div key={i} className={styles.chatMessage}>
-                                                <strong>{m.userName}</strong>: {m.message}
+                                    {chatMessages.length === 0 && (
+                                        <div className={styles.emptyState}>No messages yet</div>
+                                    )}
+                                    {chatMessages.map((m, i) => (
+                                        <div key={i} className={`${styles.chatMessage} ${m.isMe ? styles.myMessage : ''}`}>
+                                            <div className={styles.messageHeader}>
+                                                <span className={styles.msgUser}>{m.userName}</span>
+                                                <span className={styles.msgTime}>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div className={styles.msgContent}>{m.message}</div>
+                                        </div>
+                                    ))}
                                 </div>
                                 <form onSubmit={(e) => {
                                     e.preventDefault();
                                     if (!chatInput.trim()) return;
-
-                                    // Send to server (others)
                                     webrtcService.sendChatMessage(chatInput, user);
-
-                                    // Add to local (self)
-                                    setChatMessages(prev => [...prev, {
-                                        userName: "You", // Or user.fullName
-                                        message: chatInput,
-                                        isMe: true // Optional for styling
-                                    }]);
-
+                                    setChatMessages(prev => [...prev, { userName: "You", message: chatInput, isMe: true }]);
                                     setChatInput('');
                                 }} className={styles.chatForm}>
                                     <input
                                         value={chatInput}
                                         onChange={e => setChatInput(e.target.value)}
                                         placeholder="Type a message..."
+                                        className={styles.chatInput}
                                     />
-                                    <button
-                                        type="submit"
-                                        className={styles.sendButton}
-                                        disabled={!chatInput.trim()}
-                                    >
-                                        Send
-                                    </button>
+                                    <button type="submit" className={styles.sendButton} disabled={!chatInput.trim()}>➤</button>
                                 </form>
                             </div>
                         )}
                     </div>
-                )
-            }
+                )}
+
+            </div> {/* End contentArea */}
+
+            {/* Bottom Controls */}
+            <div className={styles.controlsBar}>
+                {/* Everyone gets controls now */}
+                <>
+                    {/* UPDATE: Use simple state toggles, rely on useEffect to call service */}
+                    <button onClick={() => setIsAudioEnabled(prev => !prev)} className={!isAudioEnabled ? styles.controlOff : ''}>
+                        {isAudioEnabled ? '🎤 Mute' : '🎤 Unmute'}
+                    </button>
+                    <button onClick={() => setIsVideoEnabled(prev => !prev)} className={!isVideoEnabled ? styles.controlOff : ''}>
+                        {isVideoEnabled ? '📷 Stop Video' : '📷 Start Video'}
+                    </button>
+                    <button onClick={() => {
+                        webrtcService.startScreenShare().then(() => setIsScreenSharing(true)).catch(() => setIsScreenSharing(false));
+                    }} className={isScreenSharing ? styles.controlActive : ''}>
+                        🖥️ Share
+                    </button>
+                    <div className={styles.divider} />
+                </>
+                <button onClick={() => setActiveSidebar(activeSidebar === 'people' ? null : 'people')}>
+                    👥 People {joinRequests.length > 0 && <span className={styles.badge}>{joinRequests.length}</span>}
+                </button>
+                <button onClick={() => setActiveSidebar(activeSidebar === 'chat' ? null : 'chat')}>
+                    💬 Chat
+                </button>
+            </div>
+
+            {/* Video Grid Removed handled above */}
 
             {/* End Session Modal */}
-            {showEndSessionModal && (
-                <div className={styles.modalOverlay} onClick={() => setShowEndSessionModal(false)}>
-                    <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-                        <div className={styles.modalHeader}>
-                            <h3>End Session</h3>
-                            <button className={styles.modalClose} onClick={() => setShowEndSessionModal(false)}>✕</button>
-                        </div>
-                        <div className={styles.modalBody}>
-                            <p>Are you sure you want to end this session for everyone?</p>
-                            <p className={styles.modalWarning}>⚠️ All participants will be disconnected and the session will be marked as completed.</p>
-                        </div>
-                        <div className={styles.modalFooter}>
-                            <Button variant="secondary" onClick={() => setShowEndSessionModal(false)}>
-                                Cancel
-                            </Button>
-                            <Button variant="danger" onClick={handleEndSession}>
-                                End Session
-                            </Button>
+            {
+                showEndSessionModal && (
+                    <div className={styles.modalOverlay} onClick={() => setShowEndSessionModal(false)}>
+                        <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                            <div className={styles.modalHeader}>
+                                <h3>End Session</h3>
+                                <button className={styles.modalClose} onClick={() => setShowEndSessionModal(false)}>✕</button>
+                            </div>
+                            <div className={styles.modalBody}>
+                                <p>Are you sure you want to end this session for everyone?</p>
+                                <p className={styles.modalWarning}>⚠️ All participants will be disconnected and the session will be marked as completed.</p>
+                            </div>
+                            <div className={styles.modalFooter}>
+                                <Button variant="secondary" onClick={() => setShowEndSessionModal(false)}>
+                                    Cancel
+                                </Button>
+                                <Button variant="danger" onClick={handleEndSession}>
+                                    End Session
+                                </Button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </div >
     );
 };

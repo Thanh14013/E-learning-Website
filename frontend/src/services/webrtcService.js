@@ -200,6 +200,17 @@ class WebRTCService {
       );
     });
 
+    // Join Request Status
+    socket.on("session:join-approved", () => {
+        console.log("[WebRTC] Join request approved");
+        window.dispatchEvent(new CustomEvent("session:join-approved"));
+    });
+
+    socket.on("session:join-denied", () => {
+        console.log("[WebRTC] Join request denied");
+        window.dispatchEvent(new CustomEvent("session:join-denied"));
+    });
+
     // WebRTC Signaling: Offer
     socket.on("session:offer", ({ fromUserId, offer }) => {
       console.log(`[WebRTC] Received offer from ${fromUserId}`);
@@ -655,6 +666,8 @@ class WebRTCService {
         userId
     });
   }
+
+
 }
 
 const webrtcService = new WebRTCService();
