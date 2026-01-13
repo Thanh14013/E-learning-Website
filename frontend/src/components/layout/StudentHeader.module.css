@@ -349,18 +349,23 @@
   }
 }
 
-/* Responsive */
 @media (max-width: 768px) {
-  .StudentHeader {
-    padding: 12px 20px;
+  .notifDropdown {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 90vw; 
+    max-width: 400px;
+    max-height: 80vh;
+    z-index: 2000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    transform: none; 
   }
 
-  .userName,
-  .arrow {
+  .userName, .arrow {
     display: none;
-  }
-
-  .searchBar input {
-    width: 100%;
   }
 }

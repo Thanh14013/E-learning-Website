@@ -305,7 +305,7 @@
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.28);
   transform: translateY(-1px) scale(1.05);
 }
-.courseLevel.courseLevel {
+.courseLevel {
   display: inline-block;
   padding: 5px 12px;
   background: #fef3c7;

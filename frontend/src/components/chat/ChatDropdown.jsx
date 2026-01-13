@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import chatService from '../../services/chatService';
 import { useChat } from '../../contexts/ChatContext';
 import styles from './ChatDropdown.module.css';
+import { motion } from "framer-motion";
 
 const ChatDropdown = ({ onClose }) => {
     const { openChat, socket, onlineUsers, conversations, setConversations, markConversationRead } = useChat();
@@ -93,7 +94,13 @@ const ChatDropdown = ({ onClose }) => {
     };
 
     return (
-        <div className={styles.container}>
+        <motion.div 
+            className={styles.container}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+        >
             {/* Header */}
             <div className={styles.header}>
                 <h3 className={styles.title}>Chats</h3>
@@ -221,8 +228,7 @@ const ChatDropdown = ({ onClose }) => {
                     </div>
                 )}
             </div>
-
-        </div>
+        </motion.div>
     );
 };
 
