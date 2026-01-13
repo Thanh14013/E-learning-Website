@@ -360,8 +360,8 @@ export const initializeSessionNamespace = (io) => {
               userSocket.leave(`session:${sessionId}`);
             }
 
-            // Broadcast to others that they left (or kicked)
-            socket.to(`session:${sessionId}`).emit("session:participant-left", {
+            // Broadcast to everyone (including sender) that they left (or kicked)
+            sessionNamespace.to(`session:${sessionId}`).emit("session:participant-left", {
               userId: userId,
               userName: participant.userName || "User",
             });

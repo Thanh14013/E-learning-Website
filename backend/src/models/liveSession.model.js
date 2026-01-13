@@ -186,9 +186,9 @@ liveSessionSchema.methods.addParticipant = function (userId, socketId) {
 
 // Method to remove participant
 liveSessionSchema.methods.removeParticipant = function (userId) {
-  const participant = this.participants.find(
-    (p) => p.userId.toString() === userId.toString()
-  );
+  const participant = this.participants.find((p) => {
+    return (p.userId._id || p.userId).toString() === userId.toString();
+  });
 
   if (participant) {
     participant.leftAt = new Date();

@@ -185,6 +185,12 @@ class WebRTCService {
       );
     });
 
+    // Handle being kicked
+    socket.on("session:kicked", (data) => {
+        console.log("[WebRTC] You have been kicked");
+        window.dispatchEvent(new CustomEvent("session:kicked", { detail: data }));
+    });
+
     // Chat handling
     socket.on("session:chat-message", (data) => {
       window.dispatchEvent(
