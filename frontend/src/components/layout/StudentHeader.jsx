@@ -84,20 +84,22 @@ export default function StudentHeader() {
   const resolveLink = (notif) => {
     const courseId = notif?.metadata?.courseId || notif?.metadata?.courseID;
 
-    // Rule 1: Teacher -> /teacher/courses/:id for course/discussion
+    // Rule 1: Teacher -> Strict Teacher Routes
     if (user?.role === 'teacher') {
-      if (courseId && (
-        notif.type === 'course' ||
-        notif.type === 'discussion' ||
-        // Also capture enrollment specific actions if recorded as 'course' type
-        (notif.metadata?.action === 'enrollment')
-      )) {
-        return `/teacher/courses/${courseId}`;
+      if (courseId) {
+        // Analytics for Discussion/Enrollment (Requested)
+        if (notif.type === 'course' ||
+          notif.type === 'discussion' ||
+          (notif.metadata?.action === 'enrollment')) {
+          return `/teacher/courses/${courseId}/analytics`;
+        }
+
+        // Default Teacher Catch-all
+        return `/teacher/courses/${courseId}/analytics`;
       }
     }
 
-    // Rule 2: Student (or generic) -> /courses/:id for course/discussion/session
-    // This applies to students AND catches session notifications for everyone (unless overridden)
+    // Rule 2: Student (or generic) -> /courses/:id
     if (courseId && (
       notif.type === 'course' ||
       notif.type === 'discussion' ||

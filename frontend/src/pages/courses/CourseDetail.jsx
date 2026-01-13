@@ -218,14 +218,24 @@ const CourseSidebar = ({ course, isEnrolled, onEnroll }) => {
         )}
       </div>
       <div className={styles.sidebarContent}>
-        {user && user.role === 'student' ? (
-          isEnrolled ? (
-            <button className={styles.enrolledButton} disabled>✓ Enrolled</button>
-          ) : (
-            <button className={`btn btn-primary-student ${styles.enrollButton}`} onClick={() => onEnroll(course._id)}>
-              Enroll in Course
+        {user ? (
+          user.role === 'student' ? (
+            isEnrolled ? (
+              <button className={styles.enrolledButton} disabled>✓ Enrolled</button>
+            ) : (
+              <button className={`btn btn-primary-student ${styles.enrollButton}`} onClick={() => onEnroll(course._id)}>
+                Enroll in Course
+              </button>
+            )
+          ) : user.role === 'teacher' ? (
+            /* Teacher View */
+            <button
+              className={`btn btn-primary ${styles.enrollButton}`}
+              onClick={() => navigate(`/teacher/courses/${course._id}/edit`)}
+            >
+              ⚙ Manage Course
             </button>
-          )
+          ) : null
         ) : (
           <p className="text-center">Log in to enroll in the course.</p>
         )}
@@ -518,8 +528,8 @@ const CourseDetailPage = () => {
         setModules(courseData.chapters || []);
         setDiscussions(courseData.discussions || []);
 
-        // Fetch progress if enrolled
-        if (user && myCourses.some(c => c._id === courseId)) {
+        // Fetch progress ONLY if user is a student and enrolled
+        if (user?.role === 'student' && myCourses.some(c => c._id === courseId)) {
           try {
             const progressRes = await api.get(`/progress/course/${courseId}`);
             setCourse(prev => ({

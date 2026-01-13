@@ -89,7 +89,7 @@ export const notifyEnrollment = async (
     title: "New Student Enrolled",
     content: `${studentName} has enrolled in your course "${course?.title ?? "your course"
       }".`,
-    link: courseId ? `/teacher/courses/${courseId}` : undefined,
+    link: courseId ? `/teacher/courses/${courseId}/analytics` : undefined,
     metadata: {
       action: 'enrollment',
       courseId,
@@ -106,7 +106,13 @@ export const notifySessionScheduled = async (
 ) => {
   const courseId = toId(course?._id ?? session?.courseId);
   const sessionId = toId(session?._id ?? session?.id);
-  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
+  // Filter out teacher
+  const teacherId = toId(course?.teacherId?._id || course?.teacherId);
+  const recipients = (enrolledStudents || [])
+    .map((s) => s?._id || s)
+    .filter(id => toId(id) !== teacherId);
+
+  if (recipients.length === 0) return;
 
   await createNotifications(recipients, {
     type: "session",
@@ -133,7 +139,13 @@ export const notifySessionUpdated = async (
 ) => {
   const courseId = toId(course?._id ?? session?.courseId);
   const sessionId = toId(session?._id ?? session?.id);
-  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
+  // Filter out teacher
+  const teacherId = toId(course?.teacherId?._id || course?.teacherId);
+  const recipients = (enrolledStudents || [])
+    .map((s) => s?._id || s)
+    .filter(id => toId(id) !== teacherId);
+
+  if (recipients.length === 0) return;
 
   await createNotifications(recipients, {
     type: "session",
@@ -160,7 +172,13 @@ export const notifySessionStarted = async (
 ) => {
   const courseId = toId(course?._id ?? session?.courseId);
   const sessionId = toId(session?._id ?? session?.id);
-  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
+  // Filter out teacher
+  const teacherId = toId(course?.teacherId?._id || course?.teacherId);
+  const recipients = (enrolledStudents || [])
+    .map((s) => s?._id || s)
+    .filter(id => toId(id) !== teacherId);
+
+  if (recipients.length === 0) return;
 
   await createNotifications(recipients, {
     type: "session",
@@ -184,7 +202,13 @@ export const notifySessionCanceled = async (
 ) => {
   const courseId = toId(course?._id ?? session?.courseId);
   const sessionId = toId(session?._id ?? session?.id);
-  const recipients = (enrolledStudents || []).map((s) => s?._id || s);
+  // Filter out teacher
+  const teacherId = toId(course?.teacherId?._id || course?.teacherId);
+  const recipients = (enrolledStudents || [])
+    .map((s) => s?._id || s)
+    .filter(id => toId(id) !== teacherId);
+
+  if (recipients.length === 0) return;
 
   await createNotifications(recipients, {
     type: "session",
@@ -229,7 +253,7 @@ export const notifyDiscussionCreated = async (
       type: "discussion",
       title: "New Discussion",
       content: `${creator?.fullName ?? "A user"} created a new discussion "${discussion?.title ?? "new discussion"}"`,
-      link: `/teacher/courses/${courseId}`,
+      link: `/teacher/courses/${courseId}/analytics`,
       metadata: {
         courseId: toId(courseId),
         discussionId: toId(discussion?._id),
@@ -268,7 +292,7 @@ export const notifyDiscussionLiked = async (
     type: "discussion",
     title: "Your Discussion Received a Like",
     content: `${liker?.fullName ?? "A user"} liked your discussion "${discussion?.title ?? "your discussion"}"`,
-    link: isTargetTeacher ? `/teacher/courses/${courseId}` : `/courses/${courseId}`,
+    link: isTargetTeacher ? `/teacher/courses/${courseId}/analytics` : `/courses/${courseId}`,
     metadata: {
       courseId: toId(courseId),
       discussionId: toId(discussion?._id),
@@ -320,7 +344,7 @@ export const notifyCommentCreated = async (
     type: "discussion",
     title: "New Comment on Your Discussion",
     content: `${commenter?.fullName ?? "A user"} commented on your discussion "${discussionTitle ?? "your discussion"}".`,
-    link: isTargetTeacher ? `/teacher/courses/${courseId}` : `/courses/${courseId}`,
+    link: isTargetTeacher ? `/teacher/courses/${courseId}/analytics` : `/courses/${courseId}`,
     metadata: {
       courseId: toId(courseId),
       discussionId: toId(comment?.discussionId),
@@ -345,7 +369,7 @@ export const notifyCommentReply = async (
     type: "discussion",
     title: "Reply to Your Comment",
     content: `${commenter?.fullName ?? "A user"} replied to your comment in discussion "${discussionTitle ?? ""}".`,
-    link: isTargetTeacher ? `/teacher/courses/${courseId}` : `/courses/${courseId}`,
+    link: isTargetTeacher ? `/teacher/courses/${courseId}/analytics` : `/courses/${courseId}`,
     metadata: {
       courseId: toId(courseId),
       discussionId: toId(comment?.discussionId),

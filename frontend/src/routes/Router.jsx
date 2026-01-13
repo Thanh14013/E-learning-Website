@@ -112,7 +112,7 @@ const router = createBrowserRouter([
       { path: "dashboard", element: <TeacherDashboard /> },
       { path: "courses", element: <CourseManagement /> },
       { path: "courses/create", element: <CreateCourse /> },
-      { path: "courses/:courseId", element: <CourseDetailPage /> },
+      { path: "courses/:courseId", element: <Navigate to="analytics" replace /> },
       { path: "courses/:courseId/edit", element: <CourseEditor /> },
       { path: "courses/:courseId/analytics", element: <CourseAnalytics /> },
       {
