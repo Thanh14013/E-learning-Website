@@ -257,6 +257,7 @@ const StudentAnalytics = () => {
 
                     {activeTab === 'quizzes' && (
                         <div className={styles.quizzesView}>
+                            <div className={styles.tableWrapper}>
                             <table className={styles.dataTable}>
                                 <thead>
                                     <tr>
@@ -308,8 +309,10 @@ const StudentAnalytics = () => {
                                     )}
                                 </tbody>
                             </table>
+                            </div>
                         </div>
                     )}
+
 
                     {activeTab === 'activity' && (
                         <div className={styles.activityView}>
