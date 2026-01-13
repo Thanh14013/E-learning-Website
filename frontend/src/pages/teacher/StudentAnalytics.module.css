@@ -176,9 +176,12 @@
     display: flex;
     border-bottom: 1px solid #334155;
     background: #0f172a;
+    width: 100%;
 }
 
 .tabBtn {
+    flex: 1;
+    text-align: center;
     padding: 1rem 1.5rem;
     background: transparent;
     border: none;
@@ -306,12 +309,13 @@
 .dataTable tr:last-child td {
     border-bottom: none;
 }
-
 .badgeGreen, .badgeRed, .badgeGray {
     padding: 4px 10px;
     border-radius: 20px;
     font-size: 0.8rem;
     font-weight: 500;
+    white-space: nowrap; 
+    display: inline-block;
 }
 
 .badgeGreen {
@@ -436,4 +440,137 @@
 .activityDetails {
     color: #94a3b8;
     font-size: 0.9rem;
+}
+@media (max-width: 1024px) {
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .chartRow {
+        grid-template-columns: 1fr; /* Biểu đồ xếp dọc */
+        gap: 1.5rem;
+    }
+}
+
+/* Mobile Devices (Màn hình < 768px) */
+@media (max-width: 768px) {
+    /* Layout & Container */
+    .container {
+        padding: 1rem;
+    }
+    .profileSection {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .profileInfo h2 {
+        font-size: 1.25rem;
+        word-break: break-word;
+    }
+
+    /* Stats Grid  */
+    .statsGrid {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding-bottom: 12px;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+    }
+    .statsGrid::-webkit-scrollbar { display: none; }
+
+    .statCard {
+        min-width: 240px;
+        scroll-snap-align: start;
+        flex-shrink: 0;
+    }
+
+    /*Tab Navigation */
+    .tabsHeader {
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: none;
+    }
+    .tabsHeader::-webkit-scrollbar { display: none; }
+
+    .tabContent {
+        padding: 1rem 0.5rem;
+    }
+
+    /* DANH SÁCH QUIZ & BẢNG ĐIỂM -> SCROLL DỌC  */    
+    .tableWrapper {
+        width: 100%;
+        max-height: 500px; 
+        overflow-y: auto; 
+        overflow-x: auto;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .dataTable td {
+        white-space: nowrap; 
+    }
+    
+    .dataTable {
+        min-width: 600px;
+    }
+    /*sau này cần thêm sau*/
+    /* .quizGrid {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        max-height: 60vh;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+
+    .quizItem {
+        width: 100%;
+        flex-shrink: 0;
+        background: #0f172a;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 1rem;
+    } */
+
+    .quizScoreBadge {
+        margin-top: 0.5rem;
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    .chapterBlock {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .lessonRow {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        height: auto;
+    }
+
+    .lessonRow > div {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .lessonTitle {
+        white-space: normal;
+    }
+
+    .activityRow {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .activityDateCol {
+        flex-direction: row;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .activityIconCol { display: none; }
 }
