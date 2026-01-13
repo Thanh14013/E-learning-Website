@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useCourses } from '../../contexts/CoursesContext';
-import { useDiscussions } from '../../contexts/DiscussionContext';
-import api from '../../services/api';
-import toast from '../../services/toastService';
-import DiscussionModal from '../../components/discussion/DiscussionModal.jsx';
-import DiscussionForm from '../../components/course/DiscussionForm.jsx';
-import QuizModal from '../../components/quiz/QuizModal.jsx';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCourses } from '@/contexts/CoursesContext';
+import { useDiscussions } from '@/contexts/DiscussionContext';
+import api from '@/services/api';
+import toast from '@/services/toastService';
+import DiscussionModal from '@/components/discussion/DiscussionModal.jsx';
+import DiscussionForm from '@/components/course/DiscussionForm.jsx';
+import QuizModal from '@/components/quiz/QuizModal.jsx';
 import styles from './LessonDetail.module.css';
 
 const LessonDetail = () => {

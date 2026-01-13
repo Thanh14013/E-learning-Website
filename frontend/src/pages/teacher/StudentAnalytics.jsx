@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useConfirm } from '../../contexts/ConfirmDialogContext.jsx';
-import api from '../../services/api';
-import toastService from '../../services/toastService';
-import { Button } from '../../components/common/Button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useConfirm } from '@/contexts/ConfirmDialogContext.jsx';
+import api from '@/services/api';
+import toastService from '@/services/toastService';
+import { Button } from '@/components/common/Button';
 import {
     ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
     PieChart, Pie, Cell

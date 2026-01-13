@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useConfirm } from '../../contexts/ConfirmDialogContext.jsx';
-import api from '../../services/api';
-import toastService from '../../services/toastService';
-import socketService from '../../services/socketService';
-import { Button } from '../../components/common/Button';
-import { Input } from '../../components/common/Input';
-import { Modal } from '../../components/common/Modal';
-import SessionHistoryModal from '../../components/session/SessionHistoryModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { useConfirm } from '@/contexts/ConfirmDialogContext.jsx';
+import api from '@/services/api';
+import toastService from '@/services/toastService';
+import socketService from '@/services/socketService';
+import { Button } from '@/components/common/Button';
+import { Input } from '@/components/common/Input';
+import { Modal } from '@/components/common/Modal';
+import SessionHistoryModal from '@/components/session/SessionHistoryModal';
 import styles from './SessionScheduler.module.css';
 
 /**

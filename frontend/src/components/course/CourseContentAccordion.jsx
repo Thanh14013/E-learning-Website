@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import styles from '../../pages/courses/courseDetail.module.css';
+import styles from '@/pages/courses/CourseDetail.module.css';
 import { formatDuration, formatTotalMinutes } from '../../utils/formatters.js';
 
 

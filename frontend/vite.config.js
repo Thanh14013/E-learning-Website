@@ -7,6 +7,15 @@ export default defineConfig({
   define: {
     global: "globalThis",
   },
+  resolve: {
+    alias: {
+      "@": "/src",
+      process: "process/browser",
+      stream: "stream-browserify",
+      zlib: "browserify-zlib",
+      util: "util",
+    },
+  },
   server: {
     proxy: {
       // Proxy API requests to backend during development
@@ -16,14 +25,6 @@ export default defineConfig({
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '/api')
       }
-    },
-    resolve: {
-        alias: {
-            process: "process/browser",
-            stream: "stream-browserify",
-            zlib: "browserify-zlib",
-            util: "util",
-        },
     },
   },
   optimizeDeps: {

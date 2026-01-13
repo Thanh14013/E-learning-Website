@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { useAuth } from "../../contexts/AuthContext";
-import api from "../../services/api";
-import toastService from "../../services/toastService";
-import { Button } from "../../components/common/Button";
+import { useAuth } from "@/contexts/AuthContext";
+import api from "@/services/api";
+import toastService from "@/services/toastService";
+import { Button } from "@/components/common/Button";
 import styles from "./CourseAnalytics.module.css";
 import StudentAnalyticsModal from "./StudentAnalyticsModal";
 import DiscussionModal from "../../components/discussion/DiscussionModal";

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useCourses } from '../../contexts/CoursesContext';
-import api from '../../services/api';
-import toastService from '../../services/toastService';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCourses } from '@/contexts/CoursesContext';
+import api from '@/services/api';
+import toastService from '@/services/toastService';
 import styles from './CourseManagement.module.css';
 
 // Status Badge Component

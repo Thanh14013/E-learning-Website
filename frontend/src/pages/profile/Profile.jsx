@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../../contexts/AuthContext";
-import toast from "../../services/toastService";
-import api from "../../services/api";
+import { useAuth } from "@/contexts/AuthContext";
+import toast from "@/services/toastService";
+import api from "@/services/api";
 import styles from "./Profile.module.css";
 
 export default function Profile() {
