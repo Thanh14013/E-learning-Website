@@ -82,7 +82,16 @@ export default function StudentHeader() {
   };
 
   const resolveLink = (notif) => {
-    const courseId = notif?.metadata?.courseId || notif?.metadata?.courseID;
+    // Try metadata first, then extract from link as fallback
+    let courseId = notif?.metadata?.courseId || notif?.metadata?.courseID;
+
+    // Fallback: extract courseId from link if not in metadata
+    if (!courseId && notif?.link) {
+      const match = notif.link.match(/\/courses\/([a-f0-9]+)/i);
+      if (match) {
+        courseId = match[1];
+      }
+    }
 
     // Rule 1: Teacher -> ALWAYS redirect to analytics if courseId exists
     if (user?.role === 'teacher' && courseId) {
