@@ -341,9 +341,10 @@ export const initializeSessionNamespace = (io) => {
 
         if (session.hostId.toString() !== socket.user.id) return;
 
-        const participant = session.participants.find(
-          (p) => p.userId.toString() === userId && !p.leftAt
-        );
+        const participant = session.participants.find((p) => {
+             const pId = p.userId && (p.userId._id || p.userId).toString();
+             return pId === userId && !p.leftAt;
+        });
 
         if (participant) {
           await session.removeParticipant(userId);

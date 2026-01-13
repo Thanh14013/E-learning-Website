@@ -237,21 +237,33 @@ export const NotificationProvider = ({ children }) => {
    * Mark a single notification as read
    * @param {string} id - Notification ID to mark as read
    */
+  /**
+   * Mark a single notification as read
+   * @param {string} id - Notification ID to mark as read
+   */
   const markRead = async (id) => {
     try {
       // Check if already read/marked locally to prevent double submission
       const target = notifications.find(n => n._id === id);
       if (target && target.isRead) return;
 
-      await notificationService.markRead(id);
+      // Optimistic update
       setNotifications((prev) =>
         prev.map((n) => (n._id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n))
       );
       setUnreadCount((c) => Math.max(0, c - 1));
+
+      await notificationService.markRead(id);
     } catch (error) {
       console.error('[NotificationContext] Failed to mark notification as read:', error);
-      // Only toast if it's a real error, not just "already read" (which we filtered, but maybe race condition)
-      toastService.error('Unable to mark as read');
+      // If error is 404 (not found) or 400, silent fail or revert?
+      // For now, we won't revert optimistic update to avoid UI flickering, 
+      // as it might be read on another device.
+      // We only show error if it's a network issue or server error (5xx)
+      if (!error.response || error.response.status >= 500) {
+         toastService.error('Unable to mark as read');
+         // Revert could be here
+      }
     }
   };
 

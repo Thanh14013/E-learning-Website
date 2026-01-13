@@ -80,8 +80,8 @@ const VideoRoom = () => {
     useEffect(() => {
         if (!isLoading && session) {
             const initLocal = async () => {
-                // Students do NOT init local stream
-                if (!isHost) return;
+                // Initialize local stream for EVERYONE (Host & Students)
+                // if (!isHost) return; // Removed restriction
 
                 try {
                     const stream = await webrtcService.initializeLocalStream();
@@ -224,19 +224,21 @@ const VideoRoom = () => {
         };
 
         const handleVideoToggle = (e) => {
-            const { userId, enabled } = e.detail;
+            // Backend sends 'videoEnabled', not 'enabled'
+            const { userId, videoEnabled } = e.detail;
             setParticipants(prev => {
                 const p = prev.get(userId);
-                if (p) return new Map(prev).set(userId, { ...p, isVideoOn: enabled });
+                if (p) return new Map(prev).set(userId, { ...p, isVideoOn: videoEnabled });
                 return prev;
             });
         };
 
         const handleAudioToggle = (e) => {
-            const { userId, enabled } = e.detail;
+            // Backend sends 'audioEnabled', not 'enabled'
+            const { userId, audioEnabled } = e.detail;
             setParticipants(prev => {
                 const p = prev.get(userId);
-                if (p) return new Map(prev).set(userId, { ...p, isAudioOn: enabled });
+                if (p) return new Map(prev).set(userId, { ...p, isAudioOn: audioEnabled });
                 return prev;
             });
         };
@@ -386,36 +388,30 @@ const VideoRoom = () => {
                 <div className={styles.lobbyCard}>
                     <h2>{session.title}</h2>
                     <div className={styles.lobbyVideoPreview}>
-                        {isHost ? (
-                            <>
-                                <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoPreview} />
-                                <div className={styles.lobbyControls}>
-                                    <button
-                                        onClick={() => {
-                                            const enabled = webrtcService.toggleAudio();
-                                            setIsAudioEnabled(enabled);
-                                        }}
-                                        className={`${styles.lobbyBtn} ${!isAudioEnabled ? styles.off : ''}`}
-                                    >
-                                        {isAudioEnabled ? 'Mic on' : 'Mic off'}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            const enabled = webrtcService.toggleVideo();
-                                            setIsVideoEnabled(enabled);
-                                        }}
-                                        className={`${styles.lobbyBtn} ${!isVideoEnabled ? styles.off : ''}`}
-                                    >
-                                        {isVideoEnabled ? 'Camera on' : 'Camera off'}
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <div className={styles.studentPreview}>
-                                <div className={styles.avatarLarge}>🎓</div>
-                                <p>You are joining as a Student (Receive Only)</p>
+                        {/* Show preview for everyone */}
+                        <>
+                            <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoPreview} />
+                            <div className={styles.lobbyControls}>
+                                <button
+                                    onClick={() => {
+                                        const enabled = webrtcService.toggleAudio();
+                                        setIsAudioEnabled(enabled);
+                                    }}
+                                    className={`${styles.lobbyBtn} ${!isAudioEnabled ? styles.off : ''}`}
+                                >
+                                    {isAudioEnabled ? 'Mic on' : 'Mic off'}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const enabled = webrtcService.toggleVideo();
+                                        setIsVideoEnabled(enabled);
+                                    }}
+                                    className={`${styles.lobbyBtn} ${!isVideoEnabled ? styles.off : ''}`}
+                                >
+                                    {isVideoEnabled ? 'Camera on' : 'Camera off'}
+                                </button>
                             </div>
-                        )}
+                        </>
                     </div>
                     <div className={styles.lobbyActions}>
                         <Button variant="primary" size="large" onClick={handleJoinClick} style={{ width: '100%' }}>
@@ -499,22 +495,21 @@ const VideoRoom = () => {
 
                 {/* Bottom Controls */}
                 <div className={styles.controlsBar}>
-                    {isHost && (
-                        <>
-                            <button onClick={() => setIsAudioEnabled(webrtcService.toggleAudio())} className={!isAudioEnabled ? styles.controlOff : ''}>
-                                {isAudioEnabled ? '🎤 Mute' : '🎤 Unmute'}
-                            </button>
-                            <button onClick={() => setIsVideoEnabled(webrtcService.toggleVideo())} className={!isVideoEnabled ? styles.controlOff : ''}>
-                                {isVideoEnabled ? '📷 Stop Video' : '📷 Start Video'}
-                            </button>
-                            <button onClick={() => {
-                                webrtcService.startScreenShare().then(() => setIsScreenSharing(true)).catch(() => setIsScreenSharing(false));
-                            }} className={isScreenSharing ? styles.controlActive : ''}>
-                                🖥️ Share
-                            </button>
-                            <div className={styles.divider} />
-                        </>
-                    )}
+                    {/* Everyone gets controls now */}
+                    <>
+                        <button onClick={() => setIsAudioEnabled(webrtcService.toggleAudio())} className={!isAudioEnabled ? styles.controlOff : ''}>
+                            {isAudioEnabled ? '🎤 Mute' : '🎤 Unmute'}
+                        </button>
+                        <button onClick={() => setIsVideoEnabled(webrtcService.toggleVideo())} className={!isVideoEnabled ? styles.controlOff : ''}>
+                            {isVideoEnabled ? '📷 Stop Video' : '📷 Start Video'}
+                        </button>
+                        <button onClick={() => {
+                            webrtcService.startScreenShare().then(() => setIsScreenSharing(true)).catch(() => setIsScreenSharing(false));
+                        }} className={isScreenSharing ? styles.controlActive : ''}>
+                            🖥️ Share
+                        </button>
+                        <div className={styles.divider} />
+                    </>
                     <button onClick={() => setActiveSidebar(activeSidebar === 'people' ? null : 'people')}>
                         👥 People {joinRequests.length > 0 && <span className={styles.badge}>{joinRequests.length}</span>}
                     </button>
