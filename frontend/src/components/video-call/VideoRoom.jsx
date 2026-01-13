@@ -11,6 +11,50 @@ import styles from './VideoRoom.module.css';
  * VideoRoom Component
  * Live video call room with WebRTC, Lobby, and Waiting Room
  */
+/**
+ * Remote Video Component
+ * Renders remote participant's video/audio stream
+ */
+function RemoteVideo({ participant }) {
+    const videoRef = useRef(null);
+    useEffect(() => {
+        if (videoRef.current && participant.stream) {
+            videoRef.current.srcObject = participant.stream;
+        }
+    }, [participant.stream]);
+
+    return (
+        <div className={styles.videoContainer}>
+            {/* Always render video for Audio to work, even if video is off */}
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className={styles.videoElement}
+                style={{ display: (!participant.isVideoOn || !participant.stream) ? 'none' : 'block' }}
+            />
+
+            {(!participant.isVideoOn || !participant.stream) ? (
+                <div className={styles.videoPlaceholder}>
+                    <div className={styles.avatar}>
+                        {participant.userName ? participant.userName.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <span className={styles.placeholderName}>{participant.userName}</span>
+                    <span className={styles.statusText}>
+                        {!participant.isVideoOn ? 'Camera Off' : ''}
+                    </span>
+                </div>
+            ) : (
+                <div className={styles.nameTag}>{participant.userName}</div>
+            )}
+        </div>
+    );
+}
+
+/**
+ * VideoRoom Component
+ * Live video call room with WebRTC, Lobby, and Waiting Room
+ */
 const VideoRoom = () => {
     const { sessionId } = useParams();
     const navigate = useNavigate();
@@ -22,11 +66,12 @@ const VideoRoom = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     // Media State
+    // Media State
     const [localStream, setLocalStream] = useState(null);
     const localVideoRef = useRef(null);
-    // Media State: Students default to OFF, Host defaults to ON
-    const [isAudioEnabled, setIsAudioEnabled] = useState(isHost);
-    const [isVideoEnabled, setIsVideoEnabled] = useState(isHost);
+    // Media State: Assume OFF initially, enable if Host later
+    const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+    const [isVideoEnabled, setIsVideoEnabled] = useState(false);
     const [isScreenSharing, setIsScreenSharing] = useState(false);
 
     // Filter participants to exclude the local user (handled by local video)
@@ -42,6 +87,14 @@ const VideoRoom = () => {
     const [showEndSessionModal, setShowEndSessionModal] = useState(false);
 
     const isHost = session?.hostId === user?._id || session?.hostId?._id === user?._id;
+
+    // Enable media for Host once session is loaded
+    useEffect(() => {
+        if (isHost) {
+            setIsAudioEnabled(true);
+            setIsVideoEnabled(true);
+        }
+    }, [isHost]);
 
     // 1. Fetch Session Details (Wait for this before anything)
     useEffect(() => {
@@ -681,40 +734,6 @@ const VideoRoom = () => {
     );
 };
 
-const RemoteVideo = ({ participant }) => {
-    const videoRef = useRef(null);
-    useEffect(() => {
-        if (videoRef.current && participant.stream) {
-            videoRef.current.srcObject = participant.stream;
-        }
-    }, [participant.stream]);
 
-    return (
-        <div className={styles.videoContainer}>
-            {/* Always render video for Audio to work, even if video is off */}
-            <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className={styles.videoElement}
-                style={{ display: (!participant.isVideoOn || !participant.stream) ? 'none' : 'block' }}
-            />
-
-            {(!participant.isVideoOn || !participant.stream) ? (
-                <div className={styles.videoPlaceholder}>
-                    <div className={styles.avatar}>
-                        {participant.userName ? participant.userName.charAt(0).toUpperCase() : '?'}
-                    </div>
-                    <span className={styles.placeholderName}>{participant.userName}</span>
-                    <span className={styles.statusText}>
-                        {!participant.isVideoOn ? 'Camera Off' : ''}
-                    </span>
-                </div>
-            ) : (
-                <div className={styles.nameTag}>{participant.userName}</div>
-            )}
-        </div>
-    );
-};
 
 export default VideoRoom;
