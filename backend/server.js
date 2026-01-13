@@ -91,7 +91,10 @@ app.use(
 // CORS middleware - Enable Cross-Origin Resource Sharing
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173", // Allow frontend origin
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:5173",
+      "https://thanhnguyenvu.id.vn",
+    ], // Allow specific origins
     credentials: true, // Allow cookies to be sent
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"], // Allowed HTTP methods
     allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
