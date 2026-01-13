@@ -358,3 +358,58 @@
   color: #cbd5e1;
   font-size: 16px;
 }
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table {
+  min-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rangeSelect {
+    flex: 1;
+  }
+  .modalContent {
+    width: 95%;
+    max-height: 85vh;
+  }
+}
+@media (max-width: 480px) {
+  .summaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cardLabel {
+    font-size: 11px;
+  }
+  
+  .cardValue {
+    font-size: 18px;
+  }
+
+  .growthGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pagination button {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+}

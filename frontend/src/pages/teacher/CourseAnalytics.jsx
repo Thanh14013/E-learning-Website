@@ -244,6 +244,7 @@ const CourseAnalytics = () => {
                 <div className={styles.tableHeader}>
                     Students Progress ({students.length})
                 </div>
+                <div className={styles.tableWrapper}>
                 <table className={styles.table}>
                     <thead>
                         <tr>
@@ -300,6 +301,7 @@ const CourseAnalytics = () => {
                         )}
                     </tbody>
                 </table>
+                </div>
                 {/* Student Pagination */}
                 {totalStudentPages > 1 && (
                     <div className={styles.pagination}>
@@ -331,6 +333,7 @@ const CourseAnalytics = () => {
                     <div style={{ padding: '20px', textAlign: 'center' }}>Loading discussions...</div>
                 ) : (
                     <>
+                    <div className={styles.tableWrapper}>
                         <table className={styles.table}>
                             <thead>
                                 <tr>
@@ -422,6 +425,7 @@ const CourseAnalytics = () => {
                                 )}
                             </tbody>
                         </table>
+                        </div>
 
                         {/* Discussion Pagination */}
                         {totalDiscussionPages > 1 && (

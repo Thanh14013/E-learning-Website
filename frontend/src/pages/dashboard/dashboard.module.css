@@ -589,26 +589,8 @@
 
   .navList {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-start;
-  }
-  .navList > li {
-    flex: 1 1 0px;
-    min-width: 0;
-    width: 0;
-  }
-
-  .navLink {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-    white-space: nowrap;
-  }
-  .courseSublist {
-    padding-left: 0;
-    text-align: center;
+    flex-direction: column;
+    gap: 4px;
   }
 }
 
