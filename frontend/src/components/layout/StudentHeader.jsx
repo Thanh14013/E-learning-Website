@@ -84,19 +84,9 @@ export default function StudentHeader() {
   const resolveLink = (notif) => {
     const courseId = notif?.metadata?.courseId || notif?.metadata?.courseID;
 
-    // Rule 1: Teacher -> Strict Teacher Routes
-    if (user?.role === 'teacher') {
-      if (courseId) {
-        // Analytics for Discussion/Enrollment (Requested)
-        if (notif.type === 'course' ||
-          notif.type === 'discussion' ||
-          (notif.metadata?.action === 'enrollment')) {
-          return `/teacher/courses/${courseId}/analytics`;
-        }
-
-        // Default Teacher Catch-all
-        return `/teacher/courses/${courseId}/analytics`;
-      }
+    // Rule 1: Teacher -> ALWAYS redirect to analytics if courseId exists
+    if (user?.role === 'teacher' && courseId) {
+      return `/teacher/courses/${courseId}/analytics`;
     }
 
     // Rule 2: Student (or generic) -> /courses/:id
@@ -104,7 +94,8 @@ export default function StudentHeader() {
       notif.type === 'course' ||
       notif.type === 'discussion' ||
       notif.type === 'session' ||
-      notif.type === 'session_live'
+      notif.type === 'session_live' ||
+      notif.type === 'progress'
     )) {
       return `/courses/${courseId}`;
     }

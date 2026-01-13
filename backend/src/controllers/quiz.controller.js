@@ -165,7 +165,7 @@ export const getQuizDetail = async (req, res) => {
           isTeacherOrAdmin = true;
           console.log("   ✅ User is the Teacher/Owner");
         }
-        
+
         console.log("   ✅ Enrolled:", isEnrolled);
       }
     }
@@ -406,103 +406,112 @@ export const submitQuiz = async (req, res) => {
       try {
         const lessonId = quiz.lessonId;
         let progress = await Progress.findOne({ userId, lessonId });
-        
+
         // We use the helper to update the completion status based on video + quiz
         if (progress) {
           const wasCompleted = progress.isCompleted;
           progress = await checkAndUpdateLessonCompletion(userId, lessonId, progress);
-          
+
           // Only notify if `isCompleted` CHANGED from false to true
           if (!wasCompleted && progress.isCompleted) {
-             const lesson = await import("../models/lesson.model.js").then(m => m.default.findById(lessonId));
-             const chapter = await import("../models/chapter.model.js").then(m => m.default.findById(lesson.chapterId));
-             const courseId = chapter.courseId;
-             const course = await Course.findById(courseId);
-             const Notification = await import("../models/notification.model.js").then(m => m.default);
+            const lesson = await import("../models/lesson.model.js").then(m => m.default.findById(lessonId));
+            const chapter = await import("../models/chapter.model.js").then(m => m.default.findById(lesson.chapterId));
+            const courseId = chapter.courseId;
+            const course = await Course.findById(courseId);
+            const Notification = await import("../models/notification.model.js").then(m => m.default);
 
-             // CHECK COURSE COMPLETION
-             const allChapters = await import("../models/chapter.model.js").then(m => m.default.find({ courseId }));
-             const allChapterIds = allChapters.map(c => c._id);
-             const allLessons = await import("../models/lesson.model.js").then(m => m.default.find({ chapterId: { $in: allChapterIds } }));
-             const totalLessons = allLessons.length;
-             
-             const completedCount = await Progress.countDocuments({
-               userId,
-               isCompleted: true,
-               courseId,
-             });
+            // CHECK COURSE COMPLETION
+            const allChapters = await import("../models/chapter.model.js").then(m => m.default.find({ courseId }));
+            const allChapterIds = allChapters.map(c => c._id);
+            const allLessons = await import("../models/lesson.model.js").then(m => m.default.find({ chapterId: { $in: allChapterIds } }));
+            const totalLessons = allLessons.length;
 
-             const isCourseCompleted = completedCount === totalLessons;
+            const completedCount = await Progress.countDocuments({
+              userId,
+              isCompleted: true,
+              courseId,
+            });
 
-             // 1. Notify Student
-             await Notification.create({
-               userId,
-               type: 'progress',
-               title: 'Lesson Completed!',
-               content: `You completed "${lesson.title}" in ${course?.title}. Progress: ${completedCount}/${totalLessons} lessons`,
-               link: `/courses/${courseId}/lessons/${lessonId}`,
-               isRead: false,
-             });
-             
-             // Socket to Student
-             if (req.io) {
-                req.io.of("/notification").to(userId.toString()).emit("notification:new", {
-                  type: 'progress',
-                  title: 'Lesson Completed!',
-                  content: `Progress: ${completedCount}/${totalLessons} lessons`,
+            const isCourseCompleted = completedCount === totalLessons;
+
+            // 1. Notify Student
+            await Notification.create({
+              userId,
+              type: 'progress',
+              title: 'Lesson Completed!',
+              content: `You completed "${lesson.title}" in ${course?.title}. Progress: ${completedCount}/${totalLessons} lessons`,
+              link: `/courses/${courseId}/lessons/${lessonId}`,
+              isRead: false,
+            });
+
+            // Socket to Student
+            if (req.io) {
+              req.io.of("/notification").to(userId.toString()).emit("notification:new", {
+                type: 'progress',
+                title: 'Lesson Completed!',
+                content: `Progress: ${completedCount}/${totalLessons} lessons`,
+              });
+
+              // Emit progress update
+              req.io.of("/progress").emit("progress:updated", {
+                userId,
+                lessonId,
+                progress,
+                courseCompleted: isCourseCompleted,
+                completedCount,
+                totalLessons,
+              });
+            }
+
+            // 2. Notify Teacher
+            if (course.teacherId) {
+              // If Course Finished
+              if (isCourseCompleted) {
+                await Notification.create({
+                  userId: course.teacherId,
+                  type: 'course',
+                  title: 'Student Completed Course',
+                  content: `${req.user.fullName} has completed 100% of your course "${course.title}"`,
+                  link: `/teacher/courses/${courseId}/analytics`,
+                  metadata: {
+                    courseId,
+                    userId: req.user.id
+                  },
+                  isRead: false,
                 });
-                
-                // Emit progress update
-                req.io.of("/progress").emit("progress:updated", {
-                  userId,
-                  lessonId,
-                  progress,
-                  courseCompleted: isCourseCompleted,
-                  completedCount,
-                  totalLessons,
-                });
-             }
-
-             // 2. Notify Teacher
-             if (course.teacherId) {
-                // If Course Finished
-                if (isCourseCompleted) {
-                    await Notification.create({
-                        userId: course.teacherId,
-                        type: 'course',
-                        title: 'Student Completed Course',
-                        content: `${req.user.fullName} has completed 100% of your course "${course.title}"`,
-                        link: `/courses/${courseId}/analytics`,
-                        isRead: false,
-                    });
-                    if (req.io) {
-                         req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
-                            type: 'course',
-                            title: 'Student Completed Course',
-                            content: `${req.user.fullName} has completed 100% of your course "${course.title}"`,
-                            courseId: courseId,
-                         });
-                    }
-                } else {
-                    // Lesson Finished
-                    await Notification.create({
-                        userId: course.teacherId,
-                        type: 'progress',
-                        title: 'Student Completed Lesson',
-                        content: `${req.user.fullName} has completed lesson "${lesson.title}" in "${course.title}"`,
-                        link: `/courses/${courseId}/analytics`,
-                        isRead: false,
-                    });
-                    if (req.io) {
-                         req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
-                            type: 'progress',
-                            title: 'Student Completed Lesson',
-                            content: `${req.user.fullName} completed "${lesson.title}"`,
-                            courseId: courseId,
-                         });
-                    }
+                if (req.io) {
+                  req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
+                    type: 'course',
+                    title: 'Student Completed Course',
+                    content: `${req.user.fullName} has completed 100% of your course "${course.title}"`,
+                    courseId: courseId,
+                  });
                 }
-             }
+              } else {
+                // Lesson Finished
+                await Notification.create({
+                  userId: course.teacherId,
+                  type: 'progress',
+                  title: 'Student Completed Lesson',
+                  content: `${req.user.fullName} has completed lesson "${lesson.title}" in "${course.title}"`,
+                  link: `/teacher/courses/${courseId}/analytics`,
+                  metadata: {
+                    courseId,
+                    lessonId,
+                    userId: req.user.id
+                  },
+                  isRead: false,
+                });
+                if (req.io) {
+                  req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
+                    type: 'progress',
+                    title: 'Student Completed Lesson',
+                    content: `${req.user.fullName} completed "${lesson.title}"`,
+                    courseId: courseId,
+                  });
+                }
+              }
+            }
           }
         }
       } catch (progressErr) {
