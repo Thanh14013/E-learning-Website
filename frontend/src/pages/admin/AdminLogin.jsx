@@ -7,8 +7,8 @@ const AdminLogin = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { login } = useAuth();
-    const [email, setEmail] = useState("admin@admin.com");
-    const [password, setPassword] = useState("Admin123");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 

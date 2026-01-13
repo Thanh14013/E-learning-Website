@@ -644,7 +644,7 @@ const CourseDetailPage = () => {
             course.description && (
               <div className={styles.sectionBox}>
                 <h3>Course Description</h3>
-                <p className={styles.description}>{course.description}</p>
+                <div className={styles.description} dangerouslySetInnerHTML={{ __html: course.description }} />
               </div>
             )
           }
