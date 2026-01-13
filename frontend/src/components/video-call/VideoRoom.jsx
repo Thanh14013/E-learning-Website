@@ -20,12 +20,45 @@ function RemoteVideo({ participant }) {
     useEffect(() => {
         if (videoRef.current && participant.stream) {
             videoRef.current.srcObject = participant.stream;
+            videoRef.current.play().catch(e => console.warn("Remote play failed", e));
         }
     }, [participant.stream]);
 
+    // Choose class based on context (isMain is passed if it's the spotlight)
+    const videoClass = participant.isMain ? styles.mainVideoElement : styles.videoElement;
+    const containerClass = participant.isMain ? styles.mainVideoWrapper : styles.videoContainer;
+
+    if (participant.isMain) {
+        // Special render for Spotlight (No container wrapper here because parent does it? 
+        // Actually parent creates wrapper. Let's just return the inner content or manage style.)
+        // Parent code: <div className={styles.mainVideoWrapper}> <RemoteVideo ... /> </div>
+        // So here we validly render the VIDEO tag.
+        return (
+            <>
+                <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className={styles.mainVideoElement}
+                    style={{ display: (!participant.isVideoOn || !participant.stream) ? 'none' : 'block' }}
+                />
+                {(!participant.isVideoOn || !participant.stream) && (
+                    <div className={styles.mainLoadingOverlay}>
+                        <div className={styles.avatarLarge}>User</div>
+                        <h3>{participant.userName}</h3>
+                        <span className={styles.statusText}>Camera Off</span>
+                    </div>
+                )}
+                {participant.isVideoOn && participant.stream && (
+                    <div className={styles.mainVideoLabel}>{participant.userName} </div>
+                )}
+            </>
+        )
+    }
+
+    // Default Card Render (Hidden/Sidebar usage)
     return (
         <div className={styles.videoContainer}>
-            {/* Always render video for Audio to work, even if video is off */}
             <video
                 ref={videoRef}
                 autoPlay
@@ -33,16 +66,9 @@ function RemoteVideo({ participant }) {
                 className={styles.videoElement}
                 style={{ display: (!participant.isVideoOn || !participant.stream) ? 'none' : 'block' }}
             />
-
             {(!participant.isVideoOn || !participant.stream) ? (
                 <div className={styles.videoPlaceholder}>
-                    <div className={styles.avatar}>
-                        {participant.userName ? participant.userName.charAt(0).toUpperCase() : '?'}
-                    </div>
                     <span className={styles.placeholderName}>{participant.userName}</span>
-                    <span className={styles.statusText}>
-                        {!participant.isVideoOn ? 'Camera Off' : ''}
-                    </span>
                 </div>
             ) : (
                 <div className={styles.nameTag}>{participant.userName}</div>
@@ -590,32 +616,90 @@ const VideoRoom = () => {
                     </div>
                 </div>
 
-                {/* Video Grid */}
-                <div className={styles.videoGrid}>
-                    {/* Local: Show for everyone */}
-                    <div className={styles.videoWrapper}>
-                        <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoElement} />
-                        <div className={styles.nameTag}>You ({isHost ? 'Host' : 'Student'})</div>
-                    </div>
+                {/* Spotlight Layout: Teacher Focused */}
+                <div className={styles.spotlightContainer}>
+                    {/* LOGIC:
+                        - If I am Host: Show ME (LocalStream) in Main Area.
+                        - If I am Student: Show Host (RemoteStream) in Main Area.
+                    */}
 
-                    {/* Remote: Show all other participants */}
+                    {isHost ? (
+                        /* TEACHER VIEW: Sees Self */
+                        <div className={styles.mainVideoWrapper}>
+                            <video
+                                ref={localVideoRef}
+                                autoPlay
+                                muted
+                                playsInline
+                                className={styles.mainVideoElement}
+                            />
+                            <div className={styles.mainVideoLabel}>
+                                You (Host)
+                                {!isVideoEnabled && <span className={styles.statusText}>Camera Off</span>}
+                            </div>
+                        </div>
+                    ) : (
+                        /* STUDENT VIEW: Sees Teacher */
+                        <div className={styles.mainVideoWrapper}>
+                            {(() => {
+                                // Find Host Participant
+                                // Note: Session hostId might be populated object or string
+                                const hostIdStr = session.hostId?._id || session.hostId;
+                                const hostParticipant = participants.get(hostIdStr);
+
+                                if (hostParticipant) {
+                                    return (
+                                        <>
+                                            <RemoteVideo participant={{ ...hostParticipant, isMain: true }} />
+                                        </>
+                                    )
+                                } else {
+                                    return (
+                                        <div className={styles.mainLoadingOverlay}>
+                                            <h3>Waiting for Teacher...</h3>
+                                            <p>The host hasn't joined or video is loading.</p>
+                                        </div>
+                                    )
+                                }
+                            })()}
+                        </div>
+                    )}
+
+                    {/* HIDDEN / BACKGROUND VIDEOS */}
+                    {/* We must keep these mounted for WebRTC to receive/send streams, 
+                        but we hide them visually as per user request "No student screen" */}
+
+                    {/* 1. Student Self View (Hidden for Student) */}
+                    {!isHost && (
+                        <div className={styles.hiddenVideo}>
+                            {/* Muted local video for connection purposes */}
+                            <video ref={localVideoRef} autoPlay muted playsInline />
+                        </div>
+                    )}
+
+                    {/* 2. Other Students (Hidden for everyone for now, focused on Teacher) */}
                     {Array.from(participants.values())
-                        .filter(p => p.userId !== (user._id || user.id)) // Filter out self just in case, though map handles it
+                        .filter(p => {
+                            const hostIdStr = session.hostId?._id || session.hostId;
+                            return p.userId !== (user._id || user.id) && p.userId !== hostIdStr;
+                        })
                         .map(p => (
-                            <div key={p.userId} className={styles.videoWrapper}>
+                            <div key={p.userId} className={styles.hiddenVideo}>
                                 <RemoteVideo participant={p} />
                             </div>
-                        ))}
+                        ))
+                    }
                 </div>
 
                 {/* Bottom Controls */}
                 <div className={styles.controlsBar}>
                     {/* Everyone gets controls now */}
                     <>
-                        <button onClick={() => setIsAudioEnabled(webrtcService.toggleAudio())} className={!isAudioEnabled ? styles.controlOff : ''}>
+                        {/* UPDATE: Use simple state toggles, rely on useEffect to call service */}
+                        <button onClick={() => setIsAudioEnabled(prev => !prev)} className={!isAudioEnabled ? styles.controlOff : ''}>
                             {isAudioEnabled ? '🎤 Mute' : '🎤 Unmute'}
                         </button>
-                        <button onClick={() => setIsVideoEnabled(webrtcService.toggleVideo())} className={!isVideoEnabled ? styles.controlOff : ''}>
+                        <button onClick={() => setIsVideoEnabled(prev => !prev)} className={!isVideoEnabled ? styles.controlOff : ''}>
                             {isVideoEnabled ? '📷 Stop Video' : '📷 Start Video'}
                         </button>
                         <button onClick={() => {

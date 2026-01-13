@@ -457,47 +457,65 @@ class WebRTCService {
   }
 
   /**
+   * Set local audio state
+   * @param {boolean} enabled
+   */
+  setAudioEnabled(enabled) {
+    if (!this.localStream) return false;
+    const audioTrack = this.localStream.getAudioTracks()[0];
+    if (audioTrack) {
+        audioTrack.enabled = enabled;
+        if (this.socket) {
+            this.socket.emit("session:toggle-audio", {
+                sessionId: this.sessionId,
+                enabled: enabled,
+            });
+        }
+        return enabled;
+    }
+    return false;
+  }
+
+  /**
    * Toggle local audio
+   * @deprecated Use setAudioEnabled instead
    * @returns {boolean} New audio state (true = enabled)
    */
   toggleAudio() {
     if (!this.localStream) return false;
-
     const audioTrack = this.localStream.getAudioTracks()[0];
-    if (audioTrack) {
-      audioTrack.enabled = !audioTrack.enabled;
+    return this.setAudioEnabled(!audioTrack.enabled);
+  }
 
-      if (this.socket) {
-        this.socket.emit("session:toggle-audio", {
-          sessionId: this.sessionId,
-          enabled: audioTrack.enabled,
-        });
-      }
-      return audioTrack.enabled;
+  /**
+   * Set local video state
+   * @param {boolean} enabled
+   */
+  setVideoEnabled(enabled) {
+    if (!this.localStream) return false;
+    const videoTrack = this.localStream.getVideoTracks()[0];
+    if (videoTrack) {
+        videoTrack.enabled = enabled;
+        if (this.socket) {
+            this.socket.emit("session:toggle-video", {
+                sessionId: this.sessionId,
+                enabled: enabled,
+            });
+        }
+        return enabled;
     }
     return false;
   }
 
   /**
    * Toggle local video
+   * @deprecated Use setVideoEnabled instead for better state control
    * @returns {boolean} New video state (true = enabled)
    */
   toggleVideo() {
     if (!this.localStream) return false;
-
     const videoTrack = this.localStream.getVideoTracks()[0];
-    if (videoTrack) {
-      videoTrack.enabled = !videoTrack.enabled;
-
-      if (this.socket) {
-        this.socket.emit("session:toggle-video", {
-          sessionId: this.sessionId,
-          enabled: videoTrack.enabled,
-        });
-      }
-      return videoTrack.enabled;
-    }
-    return false;
+    return this.setVideoEnabled(!videoTrack.enabled);
   }
 
   /**
