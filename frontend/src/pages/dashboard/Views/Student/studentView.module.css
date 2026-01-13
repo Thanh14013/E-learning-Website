@@ -1,6 +1,6 @@
-.courseList {
+.coursesGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--spacing-3);
 }
 
@@ -34,13 +34,9 @@
     gap: 12px;
     margin-bottom: 24px;
     min-width: 0;
+    width: 100%;
   }
 
-  @media (max-width: 768px) {
-    .coursesGrid {
-      grid-template-columns: 1fr;
-    }
-  }
 
   /* Pagination styles */
   .pagination {
@@ -78,7 +74,6 @@
   }
   .courseCard {
     width: 100%;
-    max-width: 400px;
     margin: 0 auto;
     background-color: var(--bg-card);
     border: 1px solid var(--color-gray-200);
@@ -308,7 +303,6 @@
     box-shadow: var(--shadow-md);
     border: 1px solid var(--color-gray-200);
     color: var(--text-primary);
-    min-width: 380px;
   }
   .sectionHeader {
     margin-bottom: var(--spacing-3);
@@ -338,23 +332,28 @@
     font-weight: 600;
     color: var(--color-student-primary);
   }
-  .courseListWrapper {
-    max-width: calc((var(--card-width) * 2) + var(--gap));
+  .coursesGridWrapper {
     margin: 0 auto;
   }
-@media (max-width: 1200px) {
-  .courseList {
-    grid-template-columns: repeat(2, 1fr);
+  @media (max-width: 1200px) {
+    .coursesGrid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .rightSidebar {
+      width: 260px;
+      min-width: 260px;
+    }
   }
-  .rightSidebar {
-    width: 260px;
-    min-width: 260px;
+
+  @media (max-width: 768px) {
+    .coursesGrid {
+      grid-template-columns: 1fr;
+    }
   }
-}
 
 /* Mobile: 1 course per row */
-@media (max-width: 640px) {
-  .courseList {
+  @media (max-width: 640px) {
+  .coursesGrid {
     grid-template-columns: 1fr;
     gap: var(--spacing-2);
   }

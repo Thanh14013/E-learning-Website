@@ -34,7 +34,6 @@ const CreateCourse = () => {
   const [errors, setErrors] = useState({});
 
   // Categories and levels
-  // Categories and levels
   const categories = [
     "Programming", "Frontend", "Full Stack", "Backend", "DevOps",
     "Nodejs", "Reactjs", "Java", "Python", "C++",

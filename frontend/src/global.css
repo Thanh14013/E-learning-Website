@@ -96,12 +96,11 @@
 
 /* 3. CSS Reset & Base Styles
    ========================================================================== */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent; 
 }
 
 html {
@@ -204,15 +203,47 @@ pre {
   overflow-x: auto;
 }
 
+/* --- Responsive Typography Overrides --- */
+@media (max-width: 768px) {
+  :root {
+    /* Adjust base metrics for smaller screens */
+    --font-size-base: 14px; 
+    --spacing-1: 0.25rem;
+    --spacing-2: 0.75rem;
+    --spacing-3: 1rem;
+    --spacing-4: 1.5rem;
+    --spacing-5: 2rem;
+    --spacing-6: 3rem;
+  }
+
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+}
+
 /* 6. Layout & Container
    ========================================================================== */
 .container {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1280px; /* Default Fallback */
   margin-left: auto;
   margin-right: auto;
-  padding-left: var(--spacing-3);
-  padding-right: var(--spacing-3);
+  padding-left: var(--spacing-2);
+  padding-right: var(--spacing-2);
+}
+
+/* Responsive Breakpoints for Container */
+@media (min-width: 640px) {
+  .container { max-width: 640px; padding-left: var(--spacing-3); padding-right: var(--spacing-3); }
+}
+@media (min-width: 768px) {
+  .container { max-width: 768px; }
+}
+@media (min-width: 1024px) {
+  .container { max-width: 1024px; }
+}
+@media (min-width: 1280px) {
+  .container { max-width: 1280px; }
 }
 
 /* 7. Component Base Styles
@@ -522,5 +553,26 @@ input:-webkit-autofill::first-line {
   }
   .prose-content a {
     color: var(--color-info);
+  }
+}
+
+/* 11. Responsive Utilities
+   ========================================================================== */
+/* Display Utilities */
+.hidden-mobile { display: none !important; }
+.hidden-desktop { display: block !important; }
+
+@media (min-width: 768px) {
+  .hidden-mobile { display: block !important; }
+  .hidden-desktop { display: none !important; }
+}
+
+/* Flex Direction Utilities */
+.flex-col-mobile {
+  flex-direction: column;
+}
+@media (min-width: 768px) {
+  .flex-col-mobile {
+    flex-direction: row;
   }
 }

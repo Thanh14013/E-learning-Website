@@ -9,7 +9,7 @@ import styles from "./dashboard.module.css";
 // --- COMPONENT SIDEBAR TRÁI (NÂNG CẤP VỚI LOGIC THU GỌN) ---
 const NavigationSidebar = ({ enrolledCourses = [] }) => {
   // State để quản lý trạng thái mở/đóng của "My courses"
-  const [isCoursesExpanded, setIsCoursesExpanded] = useState(true);
+  const [isCoursesExpanded, setIsCoursesExpanded] = useState(false);
 
   const toggleCourses = () => {
     setIsCoursesExpanded(prevState => !prevState);
