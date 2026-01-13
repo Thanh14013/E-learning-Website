@@ -106,7 +106,12 @@ export default function SessionScheduler() {
             await api.put(`/teacher/sessions/${sessionId}/start`);
             toastService.success('Session started');
 
-            // Refresh data to update UI (session will move from upcoming to live)
+            // Optimistically update status to 'live'
+            setSessions(prev =>
+                prev.map(s => s._id === sessionId ? { ...s, status: 'live' } : s)
+            );
+
+            // Also fetch fresh data
             fetchData();
         } catch (error) {
             console.error('Error starting session:', error);

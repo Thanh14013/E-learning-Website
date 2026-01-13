@@ -98,6 +98,7 @@ const VideoRoom = () => {
 
     // Host Controls State
     const [joinRequests, setJoinRequests] = useState([]);
+    const [waitingHostInfo, setWaitingHostInfo] = useState(null);
 
     const [showEndSessionModal, setShowEndSessionModal] = useState(false);
     const [kickModal, setKickModal] = useState({ isOpen: false, userId: null });
@@ -259,7 +260,13 @@ const VideoRoom = () => {
             setParticipants(prev => {
                 if (prev.has(userId)) return prev;
                 const next = new Map(prev);
-                next.set(userId, { userId, userName: finalName, avatar, isAudioOn: !isMuted, isVideoOn: !isVideoOff });
+                next.set(userId, {
+                    userId,
+                    userName: finalName,
+                    avatar,
+                    isAudioOn: !isMuted,
+                    isVideoOn: !isVideoOff
+                });
                 return next;
             });
             toastService.info(`${finalName} joined`);
@@ -274,7 +281,12 @@ const VideoRoom = () => {
             });
         };
 
-        const handleWaiting = () => setViewMode('waiting');
+        const handleWaiting = (e) => {
+            if (e.detail?.hostName) {
+                setWaitingHostInfo(e.detail);
+            }
+            setViewMode('waiting');
+        };
 
         const handleApproved = () => {
             setViewMode('room');
@@ -475,11 +487,12 @@ const VideoRoom = () => {
 
     // View: Waiting Room
     if (viewMode === 'waiting') {
+        const hostName = waitingHostInfo?.hostName || session.hostId?.fullName || session.hostId?.email || "the host";
         return (
             <div className={styles.waitingRoom}>
                 <div className={styles.waitingContent}>
                     <h2>⏳ Waiting for Host</h2>
-                    <p>You have joined the lobby. Please wait for the host ({session.teacherId?.fullName}) to let you in.</p>
+                    <p>You have joined the lobby. Please wait for the host ({hostName}) to let you in.</p>
                 </div>
             </div>
         );

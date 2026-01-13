@@ -136,7 +136,12 @@ class WebRTCService {
         // Dispatch to UI to show placeholder
         window.dispatchEvent(
           new CustomEvent("session:user-joined", {
-            detail: { userId: p.userId, userName: p.userName },
+            detail: { 
+                userId: p.userId, 
+                userName: p.userName,
+                isMuted: !p.isAudioOn, // Map to UI expectation
+                isVideoOff: !p.isVideoOn // Map to UI expectation
+            },
           })
         );
       });
@@ -157,14 +162,19 @@ class WebRTCService {
     // New user joined (We are existing user)
     socket.on(
       "session:participant-joined",
-      ({ userId, userName, socketId }) => {
+      ({ userId, userName, socketId, isVideoOn, isAudioOn }) => {
         console.log(`[WebRTC] Participant joined: ${userName} (${userId})`);
         this.socketMap.set(userId, socketId);
 
         // Dispatch event for UI
         window.dispatchEvent(
           new CustomEvent("session:user-joined", {
-            detail: { userId, userName },
+            detail: { 
+                userId, 
+                userName,
+                isMuted: !isAudioOn, // Map to UI expectation
+                isVideoOff: !isVideoOn // Map to UI expectation
+            },
           })
         );
         // Note: We don't create peer here, we wait for their Offer.

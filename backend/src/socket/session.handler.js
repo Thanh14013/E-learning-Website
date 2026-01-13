@@ -39,7 +39,7 @@ export const initializeSessionNamespace = (io) => {
         }
 
         // Validate session exists and is live
-        const session = await LiveSession.findById(sessionId);
+        const session = await LiveSession.findById(sessionId).populate('hostId', 'fullName avatar');
         if (!session) {
           socket.emit("session:error", { message: "Session not found" });
           return;
@@ -64,7 +64,7 @@ export const initializeSessionNamespace = (io) => {
         }
 
         // Check if host
-        const isHost = session.hostId.toString() === socket.user.id;
+        const isHost = session.hostId._id.toString() === socket.user.id;
 
         // Check if already participant (active)
         const isParticipant = session.participants.some(
@@ -81,7 +81,9 @@ export const initializeSessionNamespace = (io) => {
           );
           socket.join(`waiting:${sessionId}`);
           socket.emit("session:waiting", {
-            message: "Waiting for host to accept...",
+            message: `Waiting for host (${session.hostId.fullName}) to accept...`,
+            hostName: session.hostId.fullName,
+            hostAvatar: session.hostId.avatar
           });
 
           // Notify Host (broadcast to all in session room to be safe, or check if Host is there)
@@ -123,6 +125,9 @@ export const initializeSessionNamespace = (io) => {
           userName: socket.userName,
           role: socket.user.role,
           socketId: socket.id, // Needed for WebRTC signaling target
+          // Default to true/false based on DB or assume true on join? usually true
+          isVideoOn: true,
+          isAudioOn: true
         });
 
         // Send list of existing participants to the new user
@@ -132,11 +137,16 @@ export const initializeSessionNamespace = (io) => {
           room.forEach((socketId) => {
             const participantSocket = sessionNamespace.sockets.get(socketId);
             if (participantSocket && participantSocket.id !== socket.id) {
+               // Try to find status in DB for accuracy
+               const pRecord = session.participants.find(p => p.userId.toString() === participantSocket.user.id);
+
               participants.push({
                 userId: participantSocket.user.id,
                 userName: participantSocket.userName,
                 role: participantSocket.user.role,
                 socketId: participantSocket.id,
+                isVideoOn: pRecord ? pRecord.isVideoOn : true,
+                isAudioOn: pRecord ? pRecord.isAudioOn : true
               });
             }
           });
