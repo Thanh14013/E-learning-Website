@@ -6,7 +6,7 @@ import { useDiscussions } from '../../contexts/DiscussionContext';
 import api from '../../services/api';
 import toast from '../../services/toastService';
 import socketService from '../../services/socketService';
-import styles from './courseDetail.module.css';
+import styles from './CourseDetail.module.css';
 import CourseContentAccordion from '../../components/course/CourseContentAccordion.jsx';
 import DiscussionModal from '../../components/discussion/DiscussionModal.jsx';
 import DiscussionForm from '../../components/course/DiscussionForm.jsx';

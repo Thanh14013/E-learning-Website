@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import styles from "./login.module.css";
+import styles from "./Login.module.css";
 import { FcGoogle } from "react-icons/fc";
 
 const Login = () => {
