@@ -837,10 +837,8 @@ const LessonDetail = () => {
                                     onSuccess={(newDiscussion) => {
                                         setShowCreateDiscussion(false);
                                         toast.success('Discussion created successfully!');
-                                        // Add new discussion to the beginning and refetch
+                                        // Add new discussion to the beginning
                                         setDiscussions(prev => [newDiscussion, ...prev]);
-                                        // Also refetch to ensure sync with server
-                                        fetchLessonDiscussions();
                                     }}
                                     onCancel={() => setShowCreateDiscussion(false)}
                                 />

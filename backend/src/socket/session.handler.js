@@ -229,56 +229,64 @@ export const initializeSessionNamespace = (io) => {
         if (!entry) return;
 
         await session.removeFromWaitingRoom(userId);
-        
+
         // Add to participants + DB
-        await session.addParticipant(userId, entry.socketId, entry.userName, entry.avatar);
+        await session.addParticipant(userId, entry.socketId);
 
         // Notify user
         if (entry.socketId) {
-           const userSocket = sessionNamespace.sockets.get(entry.socketId);
-           if (userSocket) {
-             userSocket.leave(`waiting:${sessionId}`);
-             userSocket.join(`session:${sessionId}`);
-             
-             // Tell user they are in
-             userSocket.emit("session:approved", {
-                sessionId,
-                message: "Request approved",
-             });
-             
-             // Send them the participants list so they can connect (important!)
-             // We can construct it locally or query DB.
-             // Actually, the user client expects `session:participants-list` to start initiating peers?
-             // Or they wait for `participant-joined` events? 
-             // Usually join flow emits `session:participants-list` to the joiner.
-             // existing participants get `session:participant-joined`.
-             
-             // Let's send participants list to the approved user
-             const updatedSession = await LiveSession.findById(sessionId); // refetch for participants
-             userSocket.emit("session:participants-list", {
-                 participants: updatedSession.participants
-                   .filter(p => !p.leftAt && p.userId.toString() !== userId) // exclude self
-                   .map(p => ({
-                     userId: p.userId,
-                     userName: p.userName || "User",
-                     socketId: p.socketId,
-                     isMuted: p.isMuted,
-                     isVideoOff: p.isVideoOff
-                 }))
-             });
-           }
+          const userSocket = sessionNamespace.sockets.get(entry.socketId);
+          if (userSocket) {
+            userSocket.leave(`waiting:${sessionId}`);
+            userSocket.join(`session:${sessionId}`);
+
+            // Update socket info
+            userSocket.sessionId = sessionId;
+            userSocket.userName = entry.userName; // Restoration from waiting room entry if needed, but socketAuth has it too. 
+            // Actually userSocket was connected so it has socket.userName from auth. 
+            // But let's ensure consistency if name strictly came from waiting room entry? 
+            // SocketAuth is authority.
+
+            // Tell user they are in
+            userSocket.emit("session:approved", {
+              sessionId,
+              message: "Request approved",
+            });
+
+            // Send them the active participants list so they can connect
+            const room = sessionNamespace.adapter.rooms.get(`session:${sessionId}`);
+            const participants = [];
+
+            if (room) {
+              room.forEach((sid) => {
+                const pSocket = sessionNamespace.sockets.get(sid);
+                // Exclude self
+                if (pSocket && pSocket.id !== entry.socketId) {
+                  participants.push({
+                    userId: pSocket.user.id,
+                    userName: pSocket.userName || "User",
+                    role: pSocket.user.role,
+                    socketId: pSocket.id,
+                    // Could fetch mute state from DB if critical, but for now active state
+                  });
+                }
+              });
+            }
+
+            userSocket.emit("session:participants-list", { participants });
+          }
         }
-        
+
         // Broadcast to ALL (including Host)
         sessionNamespace.to(`session:${sessionId}`).emit("session:participant-joined", {
-            userId: entry.userId,
-            userName: entry.userName,
-            socketId: entry.socketId,
-            avatar: entry.avatar,
-            isMuted: true,
-            isVideoOff: true 
+          userId: entry.userId,
+          userName: entry.userName,
+          socketId: entry.socketId,
+          avatar: entry.avatar,
+          isMuted: true,
+          isVideoOff: true
         });
-        
+
         console.log(`✅ User ${userId} approved by host`);
       } catch (error) {
         console.error("Error approving request:", error.message);
@@ -301,7 +309,7 @@ export const initializeSessionNamespace = (io) => {
         const entry = session.waitingRoom.find(
           (p) => p.userId.toString() === userId
         );
-        
+
         await session.removeFromWaitingRoom(userId);
 
         if (entry && entry.socketId) {
@@ -309,10 +317,10 @@ export const initializeSessionNamespace = (io) => {
             sessionId,
             message: "Request denied by host",
           });
-           const userSocket = sessionNamespace.sockets.get(entry.socketId);
-           if (userSocket) {
-             userSocket.leave(`waiting:${sessionId}`);
-           }
+          const userSocket = sessionNamespace.sockets.get(entry.socketId);
+          if (userSocket) {
+            userSocket.leave(`waiting:${sessionId}`);
+          }
         }
         console.log(`❌ User ${userId} denied by host`);
       } catch (error) {
@@ -339,28 +347,28 @@ export const initializeSessionNamespace = (io) => {
 
         if (participant) {
           await session.removeParticipant(userId);
-          
+
           if (participant.socketId) {
             sessionNamespace.to(participant.socketId).emit("session:kicked", {
               sessionId,
               message: "You have been removed from the session",
             });
-            
-             const userSocket = sessionNamespace.sockets.get(participant.socketId);
-             if (userSocket) {
-               userSocket.leave(`session:${sessionId}`);
-             }
-             
-             // Broadcast to others that they left (or kicked)
+
+            const userSocket = sessionNamespace.sockets.get(participant.socketId);
+            if (userSocket) {
+              userSocket.leave(`session:${sessionId}`);
+            }
+
+            // Broadcast to others that they left (or kicked)
             socket.to(`session:${sessionId}`).emit("session:participant-left", {
-                userId: userId,
-                userName: participant.userName || "User",
+              userId: userId,
+              userName: participant.userName || "User",
             });
           }
         }
         console.log(`👢 User ${userId} kicked by host`);
       } catch (error) {
-         console.error("Error kicking participant:", error.message);
+        console.error("Error kicking participant:", error.message);
       }
     });
 

@@ -94,9 +94,13 @@ export default function StudentHeader() {
       return `/teacher/courses/${courseId}/analytics`;
     }
 
-    // Student discussion fallback to course learn discussions tab
+    // Student discussion
     if (user?.role !== 'teacher' && notif?.type === 'discussion' && courseId) {
-      return `/courses/${courseId}/learn?tab=discussions`;
+      const lessonId = notif?.metadata?.lessonId;
+      if (lessonId) {
+        return `/courses/${courseId}/lessons/${lessonId}`;
+      }
+      return `/courses/${courseId}`;
     }
 
     // Force session notifications to course detail
