@@ -72,7 +72,7 @@ export const initializeSessionNamespace = (io) => {
         );
 
         // Waiting Room Logic - Enforced for all non-host users
-        if (!isHost && !isParticipant) {
+        if (!isHost) {
           await session.addToWaitingRoom(
             socket.user.id,
             socket.id,

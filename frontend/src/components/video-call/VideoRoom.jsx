@@ -215,9 +215,11 @@ const VideoRoom = () => {
     // Ensure video element gets stream when mounted/available (Fix for Teacher Black Screen)
     useEffect(() => {
         if (localVideoRef.current && localStream) {
+            console.log('[VideoRoom] Attaching local stream to video element');
             localVideoRef.current.srcObject = localStream;
+            localVideoRef.current.play().catch(e => console.error('Local video play failed:', e));
         }
-    }, [localStream, isHost]); // Re-run when Host view mounts
+    }, [localStream, isHost, viewMode]); // Re-run when Host view mounts/viewMode changes
 
     // 3. Event Listeners
     useEffect(() => {
