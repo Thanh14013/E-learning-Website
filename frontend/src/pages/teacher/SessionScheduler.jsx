@@ -61,8 +61,8 @@ export default function SessionScheduler() {
             const coursesResponse = await api.get('/teacher/courses');
             setCourses(coursesResponse.data.data || []);
 
-            // Fetch sessions
-            const sessionsResponse = await api.get('/teacher/sessions');
+            // Fetch sessions with higher limit to avoid pagination issues
+            const sessionsResponse = await api.get('/teacher/sessions?limit=100');
             setSessions(sessionsResponse.data.data || []);
 
         } catch (error) {
@@ -136,7 +136,7 @@ export default function SessionScheduler() {
     const filterSessionsByStatus = (status) => {
         const now = new Date();
 
-        return sessions.filter(session => {
+        const filtered = sessions.filter(session => {
             const scheduledAt = new Date(session.scheduledAt);
 
             switch (status) {
@@ -150,15 +150,40 @@ export default function SessionScheduler() {
                     return true;
             }
         });
+
+        // Add sorting
+        return filtered.sort((a, b) => {
+            const dateA = new Date(a.scheduledAt);
+            const dateB = new Date(b.scheduledAt);
+
+            if (status === 'upcoming') {
+                return dateA - dateB; // Ascending (nearest first)
+            } else {
+                return dateB - dateA; // Descending (newest first) for past/live
+            }
+        });
     };
 
     const [activeTab, setActiveTab] = useState('upcoming');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 9;
+
+    // Reset page on tab change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab]);
 
     // ... existing fetchData ...
 
     // Helper to get sessions for the currrent view
     const getCurrentSessions = () => {
-        return filterSessionsByStatus(activeTab);
+        const sorted = filterSessionsByStatus(activeTab);
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return {
+            paginated: sorted.slice(startIndex, startIndex + ITEMS_PER_PAGE),
+            total: sorted.length,
+            totalPages: Math.ceil(sorted.length / ITEMS_PER_PAGE)
+        };
     };
 
     if (loading) {
@@ -197,13 +222,44 @@ export default function SessionScheduler() {
 
             {/* Sessions Grid */}
             <SessionsView
-                sessions={getCurrentSessions()}
+                sessions={getCurrentSessions().paginated}
                 onEdit={handleEditSession}
                 onDelete={handleDeleteSession}
                 onStart={handleStartSession}
                 onEnd={handleEndSession}
                 onViewDetail={(sessionId) => setViewingHistoryId(sessionId)}
             />
+
+            {/* Pagination Controls */}
+            {getCurrentSessions().totalPages > 1 && (
+                <div className={styles.pagination}>
+                    <button
+                        className={styles.pageBtn}
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                    >
+                        ← Prev
+                    </button>
+
+                    {Array.from({ length: getCurrentSessions().totalPages }, (_, i) => i + 1).map(page => (
+                        <button
+                            key={page}
+                            className={`${styles.pageBtn} ${currentPage === page ? styles.pageBtnActive : ''}`}
+                            onClick={() => setCurrentPage(page)}
+                        >
+                            {page}
+                        </button>
+                    ))}
+
+                    <button
+                        className={styles.pageBtn}
+                        onClick={() => setCurrentPage(p => Math.min(getCurrentSessions().totalPages, p + 1))}
+                        disabled={currentPage === getCurrentSessions().totalPages}
+                    >
+                        Next →
+                    </button>
+                </div>
+            )}
 
             {/* Create/Edit Modal */}
             {showCreateModal && (

@@ -85,13 +85,14 @@ export default function StudentHeader() {
     const courseId = notif?.metadata?.courseId || notif?.metadata?.courseID;
 
     // Enrollment -> teacher analytics
-    if (user?.role === 'teacher' && notif?.type === 'course' && notif?.metadata?.action === 'enrollment' && courseId) {
-      return `/teacher/courses/${courseId}/analytics`;
+    // Enrollment -> teacher course detail
+    if (user?.role === 'teacher' && notif?.type === 'course' && courseId) {
+      return `/teacher/courses/${courseId}`;
     }
 
-    // Discussion -> teacher analytics
-    if (user?.role === 'teacher' && notif?.type === 'discussion' && courseId) {
-      return `/teacher/courses/${courseId}/analytics`;
+    // Discussion -> teacher discussion detail
+    if (user?.role === 'teacher' && notif?.type === 'discussion' && notif?.metadata?.discussionId) {
+      return `/discussions/${notif.metadata.discussionId}`;
     }
 
     // Student discussion
