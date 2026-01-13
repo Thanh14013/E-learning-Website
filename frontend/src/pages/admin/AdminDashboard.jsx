@@ -65,7 +65,7 @@ const AdminDashboard = () => {
         <div className={styles.dashboard}>
             <div className={styles.header}>
                 <div>
-                    <h1 className={styles.title}>Welcome back, {user?.fullName?.split(' ')[0]} 👋</h1>
+                    <h1 className={styles.title}>Welcome back, {user?.fullName?.split(' ')[0]}</h1>
                     <p className={styles.subtitle}>Here is what's happening on your platform today.</p>
                 </div>
             </div>

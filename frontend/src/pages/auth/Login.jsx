@@ -71,7 +71,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const res = await login(email, password);
+      const res = await login(email, password, ['student', 'teacher']);
 
       if (res.success) {
         handlePostLogin(res.user);

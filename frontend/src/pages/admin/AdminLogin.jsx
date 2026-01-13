@@ -18,7 +18,7 @@ const AdminLogin = () => {
         setLoading(true);
 
         try {
-            const res = await login(email, password);
+            const res = await login(email, password, ['admin']);
 
             if (res.success && res.user?.role === "admin") {
                 const redirectTo = location.state?.from?.pathname || "/admin/dashboard";

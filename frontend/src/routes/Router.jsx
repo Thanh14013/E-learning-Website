@@ -134,6 +134,7 @@ const router = createBrowserRouter([
       </AdminRoute>
     ),
     children: [
+      { index: true, element: <Navigate to="dashboard" replace /> },
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <UserManagement /> },
       { path: "moderation", element: <ContentModeration /> },

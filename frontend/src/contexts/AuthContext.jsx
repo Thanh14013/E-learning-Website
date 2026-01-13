@@ -30,10 +30,22 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Đăng nhập
-  const login = async (email, password) => {
+  const login = async (email, password, allowedRoles = []) => {
     try {
       const res = await api.post("/auth/login", { email, password });
       const { user, tokens } = res.data;
+
+      // Check for allowed roles if specified
+      if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+        // If it's an admin trying to login to student portal, show "Account not found"
+        // simulating non-existence
+        if (user.role === 'admin') {
+          throw { response: { status: 404, data: { message: "Account does not exist!" } } };
+        }
+        // For other mismatch cases, maybe generic error, but requirement specific for admin
+        // Let's stick to the "Account does not exist" behavior for safety/obscurity
+        throw { response: { status: 404, data: { message: "Account does not exist!" } } };
+      }
 
       const userData = {
         _id: user._id,

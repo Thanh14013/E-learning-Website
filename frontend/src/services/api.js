@@ -39,7 +39,8 @@ api.interceptors.response.use(
     const parsedError = handleApiError(error, error.config?.url);
 
     // Handle authentication errors (401)
-    if (isAuthenticationError(error)) {
+    // Skip redirect for login endpoints so we don't kick user out of login page on failed attempt
+    if (isAuthenticationError(error) && !error.config?.url?.includes('/auth/login')) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
