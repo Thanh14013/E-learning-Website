@@ -280,7 +280,7 @@ export const startSession = async (req, res) => {
 
     const session = await LiveSession.findById(id).populate(
       "courseId",
-      "title enrolledStudents"
+      "title enrolledStudents teacherId"
     );
 
     if (!session) {
@@ -312,10 +312,15 @@ export const startSession = async (req, res) => {
     await session.save();
 
     // Notify enrolled students session started
-    const enrolledStudents = (session.courseId.enrolledStudents || []).map(
-      (id) => ({ _id: id })
-    );
-    await notifySessionStarted(enrolledStudents, session, session.courseId);
+    try {
+        const enrolledStudents = (session.courseId.enrolledStudents || []).map(
+          (id) => ({ _id: id })
+        );
+        await notifySessionStarted(enrolledStudents, session, session.courseId);
+    } catch (notifyError) {
+        console.error("Failed to send session start notifications:", notifyError);
+        // Continue execution - do not fail the request
+    }
 
     // Broadcast session live notification via Socket.IO
     if (req.io) {

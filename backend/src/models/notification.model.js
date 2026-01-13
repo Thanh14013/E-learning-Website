@@ -36,6 +36,7 @@ const notificationSchema = new mongoose.Schema(
         "quiz_graded",
         "discussion",
         "session",
+        "session_live",
         "progress",
         "custom",
       ],

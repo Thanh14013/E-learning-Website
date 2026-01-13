@@ -185,7 +185,7 @@ export const notifySessionStarted = async (
     title: "Live Session In Progress",
     content: `Session "${session?.title ?? "Live Session"
       }" has started. Join now!`,
-    link: courseId ? `/courses/${courseId}` : "/courses",
+    link: `/session/${sessionId}`,
     metadata: {
       courseId,
       sessionId,
