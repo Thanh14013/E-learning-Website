@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import toast from "../../services/toastService";
 import Testimonials from "../../components/homepage/Testimonials";
-import styles from "./home.module.css";
+import styles from "./Home.module.css";
 import imgHome from "../../assets/img-home.jpeg";
 
 
@@ -62,7 +62,7 @@ export function Home() {
         <div className={styles.heroContent}>
           <h1 className={styles.title}>Welcome to <span>MasterDev</span></h1>
           <p className={styles.subtitle}>
-              Build the skills you need to launch your tech career. Dive into interactive lessons with instant feedback, build a professional portfolio, and solve problems alongside a community of passionate developers.
+            Build the skills you need to launch your tech career. Dive into interactive lessons with instant feedback, build a professional portfolio, and solve problems alongside a community of passionate developers.
           </p>
 
           {/* Search Bar */}
