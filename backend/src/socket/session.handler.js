@@ -347,15 +347,17 @@ export const initializeSessionNamespace = (io) => {
         });
 
         if (participant) {
+          const participantSocketId = participant.socketId; // Capture before removal!
+          
           await session.removeParticipant(userId);
 
-          if (participant.socketId) {
-            sessionNamespace.to(participant.socketId).emit("session:kicked", {
+          if (participantSocketId) {
+            sessionNamespace.to(participantSocketId).emit("session:kicked", {
               sessionId,
               message: "You have been removed from the session",
             });
 
-            const userSocket = sessionNamespace.sockets.get(participant.socketId);
+            const userSocket = sessionNamespace.sockets.get(participantSocketId);
             if (userSocket) {
               userSocket.leave(`session:${sessionId}`);
             }
