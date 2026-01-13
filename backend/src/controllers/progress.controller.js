@@ -172,7 +172,7 @@ export const markLessonCompleted = async (req, res) => {
       console.log('❌ Chapter not found:', lesson.chapterId);
       return res.status(404).json({ message: "Chapter not found" });
     }
-    
+
     const courseId = chapter.courseId;
     console.log('📚 Course ID:', courseId.toString());
 
@@ -223,7 +223,7 @@ export const markLessonCompleted = async (req, res) => {
     const allChapterIds = allChapters.map(c => c._id);
     const allLessons = await Lesson.find({ chapterId: { $in: allChapterIds } });
     const totalLessons = allLessons.length;
-    
+
     const completedCount = await Progress.countDocuments({
       userId,
       isCompleted: true,
@@ -240,91 +240,100 @@ export const markLessonCompleted = async (req, res) => {
 
     // Create notification for lesson completion (ONLY IF NEWLY COMPLETED)
     if (!wasCompleted) {
-        const course = await Course.findById(courseId);
-        
-        await Notification.create({
-          userId,
-          type: 'progress',
-          title: 'Lesson Completed!',
-          content: `You completed "${lesson.title}" in ${course?.title}. Progress: ${completedCount}/${totalLessons} lessons`,
-          link: `/courses/${courseId}/lessons/${lessonId}`,
-          isRead: false,
-        });
-    
-        // If Course is fully completed (100%), notify the Teacher
-        if (isCourseCompleted && course.teacherId) {
-            try {
-                await Notification.create({
-                    userId: course.teacherId,
-                    type: 'course',
-                    title: 'Student Completed Course',
-                    content: `${user.fullName} has completed 100% of your course "${course.title}"`,
-                    link: `/courses/${courseId}/analytics`,
-                    isRead: false,
-                });
-                
-                 // Real-time socket for teacher
-                if (req.io) {
-                     req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
-                        type: 'course',
-                        title: 'Student Completed Course',
-                        message: `${user.fullName} has completed 100% of your course "${course.title}"`,
-                        courseId: courseId,
-                     });
-                }
-            } catch (errNotify) {
-                console.error('Failed to notify teacher of course completion:', errNotify);
-            }
-        } else if (course.teacherId) {
-            // Also notify teacher for individual lesson completion
-            try {
-                 await Notification.create({
-                    userId: course.teacherId,
-                    type: 'progress',
-                    title: 'Student Completed Lesson',
-                    content: `${user.fullName} has completed lesson "${lesson.title}" in "${course.title}"`,
-                    link: `/courses/${courseId}/analytics`,
-                    isRead: false,
-                });
-    
-                if (req.io) {
-                     req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
-                        type: 'progress',
-                        title: 'progress', // Frontend expects 'type' often to be just 'progress' for icon? Or maybe title? 
-                        title: 'Student Completed Lesson',
-                        message: `${user.fullName} completed "${lesson.title}"`,
-                        courseId: courseId,
-                     });
-                }
-            } catch (errNotify) {
-                 console.error('Failed to notify teacher of lesson completion:', errNotify);
-            }
-        }
-    
-        // Emit notification via socket (if available) - Student
-        if (req.io) {
-          try {
-            req.io.of("/notification").to(userId.toString()).emit("notification:new", {
-              type: 'progress',
-              title: 'Lesson Completed!',
-              content: `Progress: ${completedCount}/${totalLessons} lessons`,
+      const course = await Course.findById(courseId);
+
+      await Notification.create({
+        userId,
+        type: 'progress',
+        title: 'Lesson Completed!',
+        content: `You completed "${lesson.title}" in ${course?.title}. Progress: ${completedCount}/${totalLessons} lessons`,
+        link: `/courses/${courseId}/lessons/${lessonId}`,
+        isRead: false,
+      });
+
+      // If Course is fully completed (100%), notify the Teacher
+      if (isCourseCompleted && course.teacherId) {
+        try {
+          await Notification.create({
+            userId: course.teacherId,
+            type: 'course',
+            title: 'Student Completed Course',
+            content: `${user.fullName} has completed 100% of your course "${course.title}"`,
+            link: `/teacher/courses/${courseId}/analytics`,
+            metadata: {
+              courseId,
+              userId: user._id
+            },
+            isRead: false,
+          });
+
+          // Real-time socket for teacher
+          if (req.io) {
+            req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
+              type: 'course',
+              title: 'Student Completed Course',
+              message: `${user.fullName} has completed 100% of your course "${course.title}"`,
+              courseId: courseId,
             });
-          } catch (socketErr) {
-            console.error('Socket emit error:', socketErr);
           }
+        } catch (errNotify) {
+          console.error('Failed to notify teacher of course completion:', errNotify);
         }
+      } else if (course.teacherId) {
+        // Also notify teacher for individual lesson completion
+        try {
+          await Notification.create({
+            userId: course.teacherId,
+            type: 'progress',
+            title: 'Student Completed Lesson',
+            content: `${user.fullName} has completed lesson "${lesson.title}" in "${course.title}"`,
+            link: `/teacher/courses/${courseId}/analytics`,
+            metadata: {
+              courseId,
+              lessonId,
+              userId: user._id
+            },
+            isRead: false,
+          });
+
+          if (req.io) {
+            req.io.of("/notification").to(course.teacherId.toString()).emit("notification:new", {
+              type: 'progress',
+              title: 'progress', // Frontend expects 'type' often to be just 'progress' for icon? Or maybe title? 
+              title: 'Student Completed Lesson',
+              message: `${user.fullName} completed "${lesson.title}"`,
+              courseId: courseId,
+            });
+          }
+        } catch (errNotify) {
+          console.error('Failed to notify teacher of lesson completion:', errNotify);
+        }
+      }
+
+      // Emit notification via socket (if available) - Student
+      if (req.io) {
+        try {
+          req.io.of("/notification").to(userId.toString()).emit("notification:new", {
+            type: 'progress',
+            title: 'Lesson Completed!',
+            content: `Progress: ${completedCount}/${totalLessons} lessons`,
+          });
+        } catch (socketErr) {
+          console.error('Socket emit error:', socketErr);
+        }
+      }
     }
-    
+
     // Always emit progress:updated
     if (req.io) {
-         req.io.of("/progress").emit("progress:updated", {
-           userId,
-           lessonId,
-           progress,
-           courseCompleted: isCourseCompleted,
-           completedCount,
-           totalLessons,
-         });
+      req.io.of("/progress").emit("progress:updated", {
+        userId,
+        lessonId,
+        progress,
+        courseCompleted: isCourseCompleted,
+        completedCount,
+        totalLessons,
+      });
     }
 
     return res.json({
@@ -338,7 +347,7 @@ export const markLessonCompleted = async (req, res) => {
     console.error('Stack:', err.stack);
     return res
       .status(500)
-      .json({ 
+      .json({
         message: "Server error when marking completed",
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
       });
@@ -379,8 +388,8 @@ export const getDashboardStats = async (req, res) => {
         const chapterIds = chapters.map(c => c._id);
 
         // Get all lessons
-        const totalLessons = await Lesson.countDocuments({ 
-          chapterId: { $in: chapterIds } 
+        const totalLessons = await Lesson.countDocuments({
+          chapterId: { $in: chapterIds }
         });
 
         // Get completed lessons
@@ -390,8 +399,8 @@ export const getDashboardStats = async (req, res) => {
           isCompleted: true
         });
 
-        const progressPercentage = totalLessons > 0 
-          ? Math.round((completedLessons / totalLessons) * 100) 
+        const progressPercentage = totalLessons > 0
+          ? Math.round((completedLessons / totalLessons) * 100)
           : 0;
 
         // Consider passed if >= 80% completion
