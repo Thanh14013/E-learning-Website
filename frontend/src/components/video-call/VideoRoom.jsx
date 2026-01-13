@@ -24,8 +24,9 @@ const VideoRoom = () => {
     // Media State
     const [localStream, setLocalStream] = useState(null);
     const localVideoRef = useRef(null);
-    const [isAudioEnabled, setIsAudioEnabled] = useState(true);
-    const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+    // Media State: Students default to OFF, Host defaults to ON
+    const [isAudioEnabled, setIsAudioEnabled] = useState(isHost);
+    const [isVideoEnabled, setIsVideoEnabled] = useState(isHost);
     const [isScreenSharing, setIsScreenSharing] = useState(false);
 
     // Filter participants to exclude the local user (handled by local video)
@@ -76,27 +77,51 @@ const VideoRoom = () => {
         }
     }, [session, isHost]);
 
-    // 3. Initialize Local Stream (Lobby) - HOST ONLY
+    // 3. Initialize Local Stream (Lobby)
     useEffect(() => {
         if (!isLoading && session) {
             const initLocal = async () => {
-                // Initialize local stream for EVERYONE (Host & Students)
-                // if (!isHost) return; // Removed restriction
+                // Determine if media should be on by default
+                // For host: YES. For student: NO (they manually enable in lobby)
+                // Actually, logic is: init stream if User WANTS it. 
+                // But initially, state is set based on isHost. 
+                // So if !isHost, isVideoEnabled is false.
+
+                // However, webrtcService.initializeLocalStream() requests permission immediately.
+                // If we want to start OFF, we shouldn't call this yet? 
+                // OR we call it but mute tracks?
+
+                // Better approach: Only initialize if isHost is true. 
+                // Students initialize when they click "Camera On" in lobby?
+                // The current component structure expects 'localStream' to exist to show preview.
+
+                // Let's stick to: Always init stream for preview, but mute audio/video tracks if state is false.
+                // But wait, the previous fix enabled init for everyone.
 
                 try {
                     const stream = await webrtcService.initializeLocalStream();
                     setLocalStream(stream);
+
+                    // Apply initial state
+                    stream.getAudioTracks().forEach(t => t.enabled = isAudioEnabled);
+                    stream.getVideoTracks().forEach(t => t.enabled = isVideoEnabled);
+
                     if (localVideoRef.current) {
                         localVideoRef.current.srcObject = stream;
                     }
                 } catch (err) {
                     console.error('Local stream init error', err);
-                    toastService.error('Could not access camera/microphone');
+                    if (isHost) {
+                        // Only complain loudly if host fails. Students might just have denied permission.
+                        toastService.error('Could not access camera/microphone');
+                    }
                 }
             };
             initLocal();
         }
-    }, [isLoading, session, isHost]);
+    }, [isLoading, session, isHost]); // Added dependencies to re-run if state changes? No, just run once. Wait, isAudio/VideoEnabled are state.
+    // We shouldn't depend on them for INIT. We init once.
+
 
     // Ensure video element gets stream when mounted/available (Fix for Teacher Black Screen)
     useEffect(() => {
@@ -244,6 +269,14 @@ const VideoRoom = () => {
         };
 
         // Attach listeners
+        const handleSessionEnded = (e) => {
+            console.log("Session force ended");
+            toastService.info("The host has ended the session.");
+            webrtcService.leaveSession();
+            navigate('/dashboard'); // Or back to course: `/courses/${session.courseId}` if available
+        };
+
+        // Attach listeners
         window.addEventListener('webrtc:stream', handleRemoteStream);
         window.addEventListener('webrtc:peer-removed', handlePeerRemoved);
         window.addEventListener('session:user-joined', handleUserJoined);
@@ -252,12 +285,26 @@ const VideoRoom = () => {
         window.addEventListener('session:approved', handleApproved);
         window.addEventListener('session:denied', handleDenied);
         window.addEventListener('session:kicked', handleKicked);
+        window.addEventListener('session:ended', handleSessionEnded); // Added listener
         window.addEventListener('session:join-request', handleJoinRequest);
         window.addEventListener('session:chat-message', handleMessage);
         window.addEventListener('session:participant-video-toggled', handleVideoToggle);
         window.addEventListener('session:participant-audio-toggled', handleAudioToggle);
 
         return () => {
+            window.removeEventListener('webrtc:stream', handleRemoteStream);
+            window.removeEventListener('webrtc:peer-removed', handlePeerRemoved);
+            window.removeEventListener('session:user-joined', handleUserJoined);
+            window.removeEventListener('session:user-left', handleUserLeft);
+            window.removeEventListener('session:waiting', handleWaiting);
+            window.removeEventListener('session:approved', handleApproved);
+            window.removeEventListener('session:denied', handleDenied);
+            window.removeEventListener('session:kicked', handleKicked);
+            window.removeEventListener('session:ended', handleSessionEnded); // Removed listener
+            window.removeEventListener('session:join-request', handleJoinRequest);
+            window.removeEventListener('session:chat-message', handleMessage);
+            window.removeEventListener('session:participant-video-toggled', handleVideoToggle);
+            window.removeEventListener('session:participant-audio-toggled', handleAudioToggle);
             window.removeEventListener('webrtc:stream', handleRemoteStream);
             window.removeEventListener('webrtc:peer-removed', handlePeerRemoved);
             window.removeEventListener('session:user-joined', handleUserJoined);
@@ -471,21 +518,15 @@ const VideoRoom = () => {
 
                 {/* Video Grid */}
                 <div className={styles.videoGrid}>
-                    {/* Local: Only show if I am the Host */}
-                    {isHost && (
-                        <div className={styles.videoWrapper}>
-                            <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoElement} />
-                            <div className={styles.nameTag}>You (Host)</div>
-                        </div>
-                    )}
+                    {/* Local: Show for everyone */}
+                    <div className={styles.videoWrapper}>
+                        <video ref={localVideoRef} autoPlay muted playsInline className={styles.videoElement} />
+                        <div className={styles.nameTag}>You ({isHost ? 'Host' : 'Student'})</div>
+                    </div>
 
-                    {/* Remote: Only show if the participant is the Host */}
+                    {/* Remote: Show all other participants */}
                     {Array.from(participants.values())
-                        .filter(p => {
-                            // Check if participant is Host
-                            const hostId = session.hostId._id || session.hostId;
-                            return p.userId === hostId;
-                        })
+                        .filter(p => p.userId !== (user._id || user.id)) // Filter out self just in case, though map handles it
                         .map(p => (
                             <div key={p.userId} className={styles.videoWrapper}>
                                 <RemoteVideo participant={p} />
@@ -648,26 +689,30 @@ const RemoteVideo = ({ participant }) => {
         }
     }, [participant.stream]);
 
-    // If no video/stream, show placeholder
-    if (!participant.isVideoOn || !participant.stream) {
-        return (
-            <div className={styles.videoPlaceholder}>
-                <div className={styles.avatar}>
-                    {participant.userName ? participant.userName.charAt(0).toUpperCase() : '?'}
-                </div>
-                <span className={styles.placeholderName}>{participant.userName}</span>
-                {/* Removed "Connecting..." text as requested */}
-                <span className={styles.statusText}>
-                    {!participant.isVideoOn ? 'Camera Off' : ''}
-                </span>
-            </div>
-        );
-    }
-
     return (
         <div className={styles.videoContainer}>
-            <video ref={videoRef} autoPlay playsInline className={styles.videoElement} />
-            <div className={styles.nameTag}>{participant.userName}</div>
+            {/* Always render video for Audio to work, even if video is off */}
+            <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className={styles.videoElement}
+                style={{ display: (!participant.isVideoOn || !participant.stream) ? 'none' : 'block' }}
+            />
+
+            {(!participant.isVideoOn || !participant.stream) ? (
+                <div className={styles.videoPlaceholder}>
+                    <div className={styles.avatar}>
+                        {participant.userName ? participant.userName.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <span className={styles.placeholderName}>{participant.userName}</span>
+                    <span className={styles.statusText}>
+                        {!participant.isVideoOn ? 'Camera Off' : ''}
+                    </span>
+                </div>
+            ) : (
+                <div className={styles.nameTag}>{participant.userName}</div>
+            )}
         </div>
     );
 };

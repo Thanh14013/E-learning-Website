@@ -104,6 +104,7 @@ export default function StudentHeader() {
       notif.type === 'discussion' ||
       notif.type === 'session' ||
       notif.type === 'session_live' ||
+      notif.type === 'session_ended' ||
       notif.type === 'progress'
     )) {
       return `/courses/${courseId}`;
