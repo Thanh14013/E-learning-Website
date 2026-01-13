@@ -102,7 +102,8 @@ export function Register() {
       }
     } catch (err) {
       console.error("Registration error:", err);
-      setError("An error occurred. Please try again later.");
+      const msg = err.response?.data?.message || "An error occurred. Please try again later.";
+      setError(msg);
     } finally {
       setLoading(false);
     }

@@ -138,6 +138,15 @@ export const errorHandler = (err, req, res, next) => {
     // JWT invalid token
     if (err.name === 'JsonWebTokenError') error = handleJWTError();
 
+    // Multer Error (File Upload)
+    if (err.name === 'MulterError') {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        error = new AppError('File size is too large. Maximum size is 5MB.', 400);
+      } else {
+        error = new AppError(err.message, 400);
+      }
+    }
+
     // Send error response
     sendErrorProd(error, res);
   }
