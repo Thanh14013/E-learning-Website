@@ -214,27 +214,44 @@ export const notifyDiscussionCreated = async (
   );
   if (!course) return;
 
-  const recipients = uniqueUserIds([
-    course.teacherId,
-    ...(course.enrolledStudents || []),
-  ]).filter((id) => id !== toId(creator?.id));
+  // Split recipients into teacher and students
+  const teacherId = toId(course.teacherId);
+  const creatorId = toId(creator?.id);
 
-  await createNotifications(recipients, {
-    type: "discussion",
-    title: "New Discussion",
-    content: `${creator?.fullName ?? "A user"} created a new discussion "${discussion?.title ?? "new discussion"
-      }".
-Join the conversation!`,
-    link:
-      discussion?._id
-        ? `/discussions/${discussion._id}`
-        : undefined,
-    metadata: {
-      courseId: toId(courseId),
-      discussionId: toId(discussion?._id ?? discussion?.id),
-      creatorId: toId(creator?.id),
-    },
-  });
+  const isTeacherRecipient = teacherId !== creatorId;
+  const studentRecipients = (course.enrolledStudents || [])
+    .map(id => toId(id))
+    .filter(id => id !== creatorId && id !== teacherId);
+
+  // Notify Teacher if applicable
+  if (isTeacherRecipient) {
+    await createNotifications([teacherId], {
+      type: "discussion",
+      title: "New Discussion",
+      content: `${creator?.fullName ?? "A user"} created a new discussion "${discussion?.title ?? "new discussion"}"`,
+      link: `/teacher/courses/${courseId}`,
+      metadata: {
+        courseId: toId(courseId),
+        discussionId: toId(discussion?._id),
+        creatorId
+      }
+    });
+  }
+
+  // Notify Students
+  if (studentRecipients.length > 0) {
+    await createNotifications(studentRecipients, {
+      type: "discussion",
+      title: "New Discussion",
+      content: `${creator?.fullName ?? "A user"} created a new discussion "${discussion?.title ?? "new discussion"}".`,
+      link: `/courses/${courseId}`,
+      metadata: {
+        courseId: toId(courseId),
+        discussionId: toId(discussion?._id),
+        creatorId
+      }
+    });
+  }
 };
 
 export const notifyDiscussionLiked = async (
@@ -243,18 +260,18 @@ export const notifyDiscussionLiked = async (
   discussion,
   liker
 ) => {
+  // Determine if target is teacher
+  const course = await Course.findById(courseId).select("teacherId");
+  const isTargetTeacher = course && toId(course.teacherId) === toId(targetUserId);
+
   await createNotifications([targetUserId], {
     type: "discussion",
     title: "Your Discussion Received a Like",
-    content: `${liker?.fullName ?? "A user"} liked your discussion "${discussion?.title ?? "your discussion"
-      }".`,
-    link:
-      discussion?._id
-        ? `/discussions/${discussion._id}`
-        : undefined,
+    content: `${liker?.fullName ?? "A user"} liked your discussion "${discussion?.title ?? "your discussion"}"`,
+    link: isTargetTeacher ? `/teacher/courses/${courseId}` : `/courses/${courseId}`,
     metadata: {
       courseId: toId(courseId),
-      discussionId: toId(discussion?._id ?? discussion?.id),
+      discussionId: toId(discussion?._id),
       likerId: toId(liker?.id),
     },
   });
@@ -295,20 +312,20 @@ export const notifyCommentCreated = async (
   commenter,
   discussionTitle
 ) => {
+  // Determine if target is teacher
+  const course = await Course.findById(courseId).select("teacherId");
+  const isTargetTeacher = course && toId(course.teacherId) === toId(targetUserId);
+
   await createNotifications([targetUserId], {
     type: "discussion",
     title: "New Comment on Your Discussion",
-    content: `${commenter?.fullName ?? "A user"
-      } commented on your discussion "${discussionTitle ?? "your discussion"}".`,
-    link:
-      comment?.discussionId
-        ? `/discussions/${comment.discussionId}`
-        : undefined,
+    content: `${commenter?.fullName ?? "A user"} commented on your discussion "${discussionTitle ?? "your discussion"}".`,
+    link: isTargetTeacher ? `/teacher/courses/${courseId}` : `/courses/${courseId}`,
     metadata: {
       courseId: toId(courseId),
       discussionId: toId(comment?.discussionId),
-      commentId: toId(comment?._id ?? comment?.id),
-      commenterId: toId(commenter?.id ?? commenter?._id),
+      commentId: toId(comment?._id),
+      commenterId: toId(commenter?.id),
     },
   });
 };
@@ -320,21 +337,21 @@ export const notifyCommentReply = async (
   commenter,
   discussionTitle
 ) => {
+  // Determine if target is teacher
+  const course = await Course.findById(courseId).select("teacherId");
+  const isTargetTeacher = course && toId(course.teacherId) === toId(targetUserId);
+
   await createNotifications([targetUserId], {
     type: "discussion",
     title: "Reply to Your Comment",
-    content: `${commenter?.fullName ?? "A user"
-      } replied to your comment in discussion "${discussionTitle ?? ""}".`,
-    link:
-      comment?.discussionId
-        ? `/discussions/${comment.discussionId}`
-        : undefined,
+    content: `${commenter?.fullName ?? "A user"} replied to your comment in discussion "${discussionTitle ?? ""}".`,
+    link: isTargetTeacher ? `/teacher/courses/${courseId}` : `/courses/${courseId}`,
     metadata: {
       courseId: toId(courseId),
       discussionId: toId(comment?.discussionId),
-      commentId: toId(comment?._id ?? comment?.id),
+      commentId: toId(comment?._id),
       parentId: toId(comment?.parentId),
-      commenterId: toId(commenter?.id ?? commenter?._id),
+      commenterId: toId(commenter?.id),
     },
   });
 };

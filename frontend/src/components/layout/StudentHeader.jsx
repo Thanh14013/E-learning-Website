@@ -84,28 +84,26 @@ export default function StudentHeader() {
   const resolveLink = (notif) => {
     const courseId = notif?.metadata?.courseId || notif?.metadata?.courseID;
 
-    // Enrollment -> teacher analytics
-    // Enrollment -> teacher course detail
-    if (user?.role === 'teacher' && notif?.type === 'course' && courseId) {
-      return `/teacher/courses/${courseId}`;
-    }
-
-    // Discussion -> teacher discussion detail
-    if (user?.role === 'teacher' && notif?.type === 'discussion' && notif?.metadata?.discussionId) {
-      return `/discussions/${notif.metadata.discussionId}`;
-    }
-
-    // Student discussion
-    if (user?.role !== 'teacher' && notif?.type === 'discussion' && courseId) {
-      const lessonId = notif?.metadata?.lessonId;
-      if (lessonId) {
-        return `/courses/${courseId}/lessons/${lessonId}`;
+    // Rule 1: Teacher -> /teacher/courses/:id for course/discussion
+    if (user?.role === 'teacher') {
+      if (courseId && (
+        notif.type === 'course' ||
+        notif.type === 'discussion' ||
+        // Also capture enrollment specific actions if recorded as 'course' type
+        (notif.metadata?.action === 'enrollment')
+      )) {
+        return `/teacher/courses/${courseId}`;
       }
-      return `/courses/${courseId}`;
     }
 
-    // Force session notifications to course detail
-    if ((notif?.type === 'session' || notif?.type === 'session_live') && courseId) {
+    // Rule 2: Student (or generic) -> /courses/:id for course/discussion/session
+    // This applies to students AND catches session notifications for everyone (unless overridden)
+    if (courseId && (
+      notif.type === 'course' ||
+      notif.type === 'discussion' ||
+      notif.type === 'session' ||
+      notif.type === 'session_live'
+    )) {
       return `/courses/${courseId}`;
     }
 
