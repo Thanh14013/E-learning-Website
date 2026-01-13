@@ -5,6 +5,7 @@ import webrtcService from '../../services/webrtcService';
 import api from '../../services/api';
 import toastService from '../../services/toastService';
 import { Button } from '../common/Button';
+import { Modal } from '../common/Modal';
 import styles from './VideoRoom.module.css';
 
 /**
@@ -97,7 +98,9 @@ const VideoRoom = () => {
 
     // Host Controls State
     const [joinRequests, setJoinRequests] = useState([]);
+
     const [showEndSessionModal, setShowEndSessionModal] = useState(false);
+    const [kickModal, setKickModal] = useState({ isOpen: false, userId: null });
 
     const isHost = session?.hostId === user?._id || session?.hostId?._id === user?._id;
 
@@ -407,8 +410,15 @@ const VideoRoom = () => {
 
 
     const kickUser = (uid) => {
-        if (!window.confirm("Kick this user?")) return;
-        webrtcService.kickParticipant(uid);
+        setKickModal({ isOpen: true, userId: uid });
+    };
+
+    const handleConfirmKick = () => {
+        if (kickModal.userId) {
+            webrtcService.kickParticipant(kickModal.userId);
+            toastService.success("Participant removed from session");
+            setKickModal({ isOpen: false, userId: null });
+        }
     };
 
     // End Session (Host only)
@@ -793,6 +803,29 @@ const VideoRoom = () => {
                     </div>
                 )
             }
+
+
+            {/* Kick Confirmation Modal */}
+            {kickModal.isOpen && (
+                <Modal
+                    isOpen={kickModal.isOpen}
+                    onClose={() => setKickModal({ isOpen: false, userId: null })}
+                    title="Remove Participant"
+                >
+                    <div className={styles.modalBody}>
+                        <p>Are you sure you want to remove this participant?</p>
+                        <p className={styles.modalWarning}>⚠️ They will be disconnected from the session.</p>
+                        <div className={styles.modalActions} style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
+                            <Button variant="secondary" onClick={() => setKickModal({ isOpen: false, userId: null })}>
+                                Cancel
+                            </Button>
+                            <Button variant="danger" onClick={handleConfirmKick}>
+                                Remove
+                            </Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
         </div >
     );
 };

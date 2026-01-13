@@ -27,33 +27,7 @@ export default function SessionScheduler() {
     const [editingSession, setEditingSession] = useState(null);
     const [viewingHistoryId, setViewingHistoryId] = useState(null);
 
-    useEffect(() => {
-        if (user?.role !== 'teacher' && user?.role !== 'admin') {
-            toastService.error('You do not have access');
-            navigate('/teacher/dashboard');
-            return;
-        }
-
-        fetchData();
-    }, []);
-
-    // Listen for session ended events
-    useEffect(() => {
-        const handleSessionEnded = (data) => {
-            console.log('[SessionScheduler] Session ended:', data);
-            // Refresh data to update UI
-            fetchData();
-        };
-
-        // Listen to session ended events
-        window.addEventListener('session:ended', handleSessionEnded);
-
-        return () => {
-            window.removeEventListener('session:ended', handleSessionEnded);
-        };
-    }, []);
-
-    const fetchData = async () => {
+    const fetchData = React.useCallback(async () => {
         try {
             setLoading(true);
 
@@ -71,7 +45,33 @@ export default function SessionScheduler() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        if (user?.role !== 'teacher' && user?.role !== 'admin') {
+            toastService.error('You do not have access');
+            navigate('/teacher/dashboard');
+            return;
+        }
+
+        fetchData();
+    }, [fetchData, user, navigate]);
+
+    // Listen for session events (Live, Ended)
+    useEffect(() => {
+        const handleSessionUpdate = () => {
+            console.log('[SessionScheduler] Session update received');
+            fetchData();
+        };
+
+        window.addEventListener('session:ended', handleSessionUpdate);
+        window.addEventListener('session:live', handleSessionUpdate);
+
+        return () => {
+            window.removeEventListener('session:ended', handleSessionUpdate);
+            window.removeEventListener('session:live', handleSessionUpdate);
+        };
+    }, [fetchData]);
 
     const handleCreateSession = () => {
         setEditingSession(null);
@@ -126,7 +126,7 @@ export default function SessionScheduler() {
         try {
             await api.put(`/teacher/sessions/${sessionId}/end`);
             toastService.success('Session ended');
-            window.location.reload();
+            fetchData();
         } catch (error) {
             console.error('Error ending session:', error);
             toastService.error('Unable to end session');
