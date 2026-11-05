@@ -5,7 +5,7 @@
 .teacherDashboard {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-4);
+  gap: 16px;
 }
 
 /* Loading State */
@@ -42,6 +42,8 @@
 }
 
 .sectionHeader {
+  flex-wrap: wrap;
+  gap: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -75,32 +77,33 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
-  margin-bottom: var(--spacing-6);
+  margin-bottom: 16px;
 }
 
 /* KPI Row - 3 Columns (Revenue removed) */
 .kpiRow {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-6); /* Increased spacing between rows */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px; /* Increased spacing between rows */
 }
 
 .statsRowBottom {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-2);
 }
 
 /* Fallback for responsiveness */
 .chartsRow {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--spacing-6);
-  margin-bottom: var(--spacing-6);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 .chartCard {
+  min-width: 0;
   background-color: var(--color-surface);
   border-radius: 16px; /* Softer borders */
   padding: var(--spacing-4);
@@ -216,8 +219,8 @@
 .secondaryStatsRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-6);
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {
@@ -486,7 +489,7 @@
 .twoColumnLayout {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-4);
+  gap: 16px;
 }
 
 /* Recent Activity */
@@ -701,7 +704,7 @@
   }
 
   .quickStats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -711,6 +714,8 @@
   }
 
   .sectionHeader {
+  flex-wrap: wrap;
+  gap: 12px;
     flex-direction: column;
     align-items: flex-start;
     gap: var(--spacing-2);
